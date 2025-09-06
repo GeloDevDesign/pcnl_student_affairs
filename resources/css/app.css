@@ -43,6 +43,6 @@ body {
     --size-selector: 0.28125rem;
     --size-field: 0.28125rem;
     --border: 1px;
-    --depth: 1;
-    /* --noise: 1; */
+    --depth: 0;
+    --noise: 0;
 }
