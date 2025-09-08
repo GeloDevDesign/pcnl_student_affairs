@@ -3,12 +3,12 @@
 <template>
   <header class="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-white shadow-sm z-30">
     <div class="flex items-center justify-between h-full px-6">
-      <!-- Mobile Menu Icon -->
-      <div class="lg:hidden">
+      <!-- Mobile Menu Button -->
+      <label for="mobile-drawer" class="lg:hidden cursor-pointer">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
-      </div>
+      </label>
       
       <!-- Title -->
       <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
