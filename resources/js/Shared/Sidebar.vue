@@ -8,6 +8,7 @@ const menuItems = [
 </script>
 
 <template>
+    <!-- MOBILE SIDENAV -->
     <nav class="drawer lg:hidden">
         <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
         <div class="drawer-side">
@@ -67,6 +68,8 @@ const menuItems = [
             </aside>
         </div>
     </nav>
+
+    <!-- DESKTOP SIDENAV -->
     <nav
         class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-40 hidden lg:block"
     >
