@@ -1,16 +1,21 @@
 <script setup>
-import { ref, reactive } from "vue";
-
-const header = ref("Layout header");
-const footer = ref("footer page");
+import Sidebar from "./Sidebar.vue";
+import Header from "./Header.vue";
 </script>
 
 <template>
-    <h1>{{ header }}</h1>
-    <div class="px-10">
-        <slot></slot>
+    <div class="min-h-screen bg-gray-50">
+        <!-- Desktop Sidebar -->
+        <Sidebar />
+
+        <!-- Header -->
+        <Header />
+
+        <!-- Main Content -->
+        <main class="pt-16 lg:ml-64">
+            <section class="p-6">
+                <slot></slot>
+            </section>
+        </main>
     </div>
-    <footer>
-        {{ footer }}
-    </footer>
 </template>
