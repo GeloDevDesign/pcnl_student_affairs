@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   @vite('resources/js/app.js')
   @inertiaHead
-
+  <title>{{ isset($pageTitle) ? $pageTitle : 'Laravel' }}</title>
   {{-- @routes --}}
   {{-- <link rel="icon" type="image/png" href="{{ asset('/smart_logo.png') }}"> --}}
 </head>
