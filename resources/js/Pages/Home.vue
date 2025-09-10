@@ -9,9 +9,9 @@ defineProps({
 </script>
 
 <template>
-      <Head :title="pageTitle" /> 
-    <Layout>
-        <div class="max-w-7xl mx-auto">
+ 
+    <Layout :pageTitle="pageTitle">
+        <div class="w-full">
             <!-- Welcome Section -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">
