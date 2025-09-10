@@ -5,6 +5,13 @@ const menuItems = [
     { name: "Services", active: false },
     { name: "Contact", active: false },
 ];
+
+defineProps({
+    isCollapsed: {
+        type: Boolean,
+        default: false
+    }
+});
 </script>
 
 <template>
@@ -71,16 +78,19 @@ const menuItems = [
 
     <!-- DESKTOP SIDENAV -->
     <nav
-        class="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-40 hidden lg:block"
+        :class="[
+            'fixed top-0 left-0 h-full bg-white shadow-lg z-40 hidden lg:block transition-all duration-300',
+            isCollapsed ? 'w-20' : 'w-64'
+        ]"
     >
         <!-- Logo -->
-        <div class="h-16 flex items-center px-6 border-b border-gray-200">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200 overflow-hidden">
             <div
-                class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center"
+                class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center flex-shrink-0"
             >
                 <span class="text-white font-bold">L</span>
             </div>
-            <span class="ml-3 text-xl font-semibold text-gray-900">Logo</span>
+            <span v-show="!isCollapsed" class="ml-3 text-xl font-semibold text-gray-900 whitespace-nowrap">Logo</span>
         </div>
 
         <!-- Menu Items -->
@@ -91,13 +101,14 @@ const menuItems = [
                     :key="item.name"
                     href="#"
                     :class="[
-                        'block px-3 py-2 text-sm font-medium rounded-lg',
+                        'block px-3 py-2 text-sm font-medium rounded-lg text-center',
                         item.active
                             ? 'bg-blue-50 text-blue-700'
                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                     ]"
                 >
-                    {{ item.name }}
+                    <span :class="{ 'hidden': isCollapsed }">{{ item.name }}</span>
+                    <span v-if="isCollapsed" class="text-lg">{{ item.name[0] }}</span>
                 </a>
             </nav>
         </div>
