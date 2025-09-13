@@ -87,7 +87,7 @@ class AuthController extends Controller
 
                 $user->save();
 
-                event(new PasswordReset($user));
+                // event(new PasswordReset($user));
             }
         );
 

@@ -17,6 +17,7 @@ Route::get('/login', function () {
 
 
 Route::get('/', function () {
+    
     return Inertia::render('Home', [
         'pageTitle' => 'Admin - Dashboard'
     ]);
