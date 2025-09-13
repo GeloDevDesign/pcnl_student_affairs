@@ -11,17 +11,13 @@ Route::get('/login', function () {
             'surname' => 'Serenuela'
         ]
     ]);
-})->name('login');
+})->middleware('guest')->name('login');
 
 
 
 
 Route::get('/', function () {
     return Inertia::render('Home', [
-        'pageTitle' => 'Admin - Dashboard',
-        'user' =>  [
-            'name' => 'Angelo',
-            'surname' => 'Serenuela'
-        ]
+        'pageTitle' => 'Admin - Dashboard'
     ]);
-})->name('home');
+})->name('home')->middleware(['auth', 'role:admin,student']);
