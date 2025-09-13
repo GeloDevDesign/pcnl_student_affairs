@@ -1,0 +1,13 @@
+<script setup>
+defineProps({
+ 
+});
+</script>
+
+<template>
+    <fieldset class="fieldset">
+        <legend class="fieldset-legend">What is your name?</legend>
+        <input type="text" class="input" placeholder="Type here" />
+        <p class="label">Optional</p>
+    </fieldset>
+</template>
