@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/login', function () {
-    return Inertia::render('Login', [
+    return Inertia::render('Auth/Login', [
         'pageTitle' => 'PNCL Student Affairs - Login',
         'user' =>  [
             'name' => 'Angelo',
