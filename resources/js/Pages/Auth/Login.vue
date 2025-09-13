@@ -1,9 +1,11 @@
 <script setup>
 import { ref, reactive } from "vue";
-
+import { useModalAlert } from "../../composables/useModalAlert";
 import { User, Lock, Play } from "lucide-vue-next";
 import { Form } from "@inertiajs/vue3";
-// Props (if needed)
+
+const { modalAlert } = useModalAlert();
+
 defineProps({});
 
 const formCredentials = reactive({
@@ -47,6 +49,20 @@ const formCredentials = reactive({
                     action="/login"
                     method="post"
                     class="flex flex-col gap-6 w-full -mt-28 -ml-25 p-4"
+                    @success="
+                        modalAlert(
+                            'Success',
+                            'You have logged in successfully!',
+                            'success'
+                        )
+                    "
+                    @error="
+                        modalAlert(
+                            'Login Failed',
+                            'Invalid credentials. Please check your email and password.',
+                            'error'
+                        )
+                    "
                     #default="{ errors, processing }"
                 >
                     <label
@@ -96,8 +112,8 @@ const formCredentials = reactive({
                     </div>
 
                     <button
-                        :disabled="processing"
                         type="submit"
+                        :disabled="processing"
                         class="bg-white w-44 h-12 rounded-full text-sm font-semibold text-blue-900 border border-blue-500 relative overflow-hidden z-10 text-left shadow-md transition-all duration-500 hover:text-white group"
                         style="box-shadow: 2px 4px 1px #054497"
                     >

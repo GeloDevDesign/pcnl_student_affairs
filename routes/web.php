@@ -5,7 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 
 
-Route::inertia('/login', 'Auth/Login')->name('login');
+Route::inertia('/login', 'Auth/Login')->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
 
 Route::get('/', function () {
