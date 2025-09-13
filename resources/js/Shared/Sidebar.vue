@@ -9,8 +9,8 @@ const menuItems = [
 defineProps({
     isCollapsed: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
 });
 </script>
 
@@ -41,8 +41,8 @@ defineProps({
 
                 <!-- Menu Items -->
                 <div class="py-6">
-                    <ul class="menu px-3 space-y-2">
-                        <li>
+                    <ul class="menu px-3 space-y-2 w-full">
+                        <li class="">
                             <a
                                 href="#"
                                 class="bg-blue-50 text-blue-700 px-3 py-2 text-sm font-medium rounded-lg"
@@ -80,17 +80,23 @@ defineProps({
     <nav
         :class="[
             'fixed top-0 left-0 h-full bg-white shadow-lg z-40 hidden lg:block transition-all duration-300',
-            isCollapsed ? 'w-20' : 'w-64'
+            isCollapsed ? 'w-20' : 'w-64',
         ]"
     >
         <!-- Logo -->
-        <div class="h-16 flex items-center px-6 border-b border-gray-200 overflow-hidden">
+        <div
+            class="h-16 flex items-center px-6 border-b border-gray-200 overflow-hidden"
+        >
             <div
                 class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center flex-shrink-0"
             >
                 <span class="text-white font-bold">L</span>
             </div>
-            <span v-show="!isCollapsed" class="ml-3 text-xl font-semibold text-gray-900 whitespace-nowrap">Logo</span>
+            <span
+                v-show="!isCollapsed"
+                class="ml-3 text-xl font-semibold text-gray-900 whitespace-nowrap"
+                >Logo</span
+            >
         </div>
 
         <!-- Menu Items -->
@@ -101,14 +107,18 @@ defineProps({
                     :key="item.name"
                     href="#"
                     :class="[
-                        'block px-3 py-2 text-sm font-medium rounded-lg text-center',
+                        'block px-3 py-2 text-sm font-medium rounded-lg text-start',
                         item.active
                             ? 'bg-blue-50 text-blue-700'
                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                     ]"
                 >
-                    <span :class="{ 'hidden': isCollapsed }">{{ item.name }}</span>
-                    <span v-if="isCollapsed" class="text-lg">{{ item.name[0] }}</span>
+                    <span :class="{ hidden: isCollapsed }">{{
+                        item.name
+                    }}</span>
+                    <span v-if="isCollapsed" class="text-lg text-center">{{
+                        item.name[0]
+                    }}</span>
                 </a>
             </nav>
         </div>
