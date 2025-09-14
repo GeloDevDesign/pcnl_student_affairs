@@ -2,23 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
-Route::get('/login', function () {
-    return Inertia::render('Login', [
-        'pageTitle' => 'PNCL Student Affairs - Login',
-        'user' =>  [
-            'name' => 'Angelo',
-            'surname' => 'Serenuela'
-        ]
-    ]);
-})->middleware('guest')->name('login');
+use App\Http\Controllers\AuthController;
 
 
-
+Route::inertia('/login', 'Auth/Login')->middleware('guest')->name('login');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::get('/', function () {
-    
-    return Inertia::render('Home', [
-        'pageTitle' => 'Admin - Dashboard'
-    ]);
-})->name('home')->middleware(['auth', 'role:admin,student']);
+    return Inertia::render('Home');
+})->middleware(['auth'])
+    ->name('home');

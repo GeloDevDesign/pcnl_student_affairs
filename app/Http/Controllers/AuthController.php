@@ -10,10 +10,14 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class AuthController extends Controller
 {
-    public function index(Request $request) {}
+    public function index(Request $request)
+    {
+        return Inertia::render('Auth/Login');
+    }
 
     public function register(Request $request)
     {
@@ -39,22 +43,20 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $validated = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
         ]);
-        $user = User::where('id_number', $validated['email'])->first();
 
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
-            return back()->withErrors([
-                'email' => 'Invalid Credentials'
-            ]);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+            return to_route('home');
         }
 
-        $request->session()->regenerate();
-
-        // add a succcess message here 
-        return redirect()->route('home');
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
     public function forgot_password(Request $request)
@@ -94,5 +96,16 @@ class AuthController extends Controller
         return $status === Password::PasswordReset
             ? redirect()->route('login')->with('status', __($status))
             : back()->withErrors(['email' => [__($status)]]);
+    }
+
+
+    public function logout(Request $request)
+    {
+        Auth::logout(); // Logs out the currently authenticated user
+
+        $request->session()->invalidate(); // Invalidates the current session
+        $request->session()->regenerateToken(); // Regenerates the CSRF token for future requests
+
+        return redirect('/'); // Redirects to the desired page after logout (e.g., homepage or login page)
     }
 }

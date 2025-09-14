@@ -19,10 +19,18 @@ defineProps({
         <Sidebar :is-collapsed="isCollapsed" />
 
         <!-- Header -->
-        <Header @toggle-sidebar="isCollapsed = !isCollapsed" :is-collapsed="isCollapsed" />
+        <Header
+            @toggle-sidebar="isCollapsed = !isCollapsed"
+            :is-collapsed="isCollapsed"
+        />
 
         <!-- Main Content -->
-        <main :class="['pt-16 transition-all duration-300', isCollapsed ? 'lg:ml-20 ' : 'lg:ml-64'] ">
+        <main
+            :class="[
+                'pt-16 transition-all duration-300 ',
+                isCollapsed ? 'lg:ml-20 ' : 'lg:ml-64',
+            ]"
+        >
             <section class="p-6">
                 <slot></slot>
             </section>
