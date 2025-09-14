@@ -1,18 +1,9 @@
 <script setup>
 import { ref, reactive } from "vue";
-import NavLink from "../components/NavLink.vue";
+import { router } from "@inertiajs/vue3";
 
-const navList = [
-    { buttonName: "Home", route: "/", icon: "home.svg" },
-    { buttonName: "Evaluate", route: "/evaluate", icon: "eval.svg" },
-    { buttonName: "SCC Officers", route: "/officers", icon: "ssc.svg" },
-    { buttonName: "Concerns", route: "/concerns", icon: "concerns.svg" },
-    {
-        buttonName: "Lost & Found",
-        route: "/lost-found",
-        icon: "lostandfound.svg",
-    },
-];
+import NavLink from "../components/NavLink.vue";
+import Swal from "sweetalert2";
 
 defineProps({
     isCollapsed: {
@@ -20,6 +11,26 @@ defineProps({
         default: false,
     },
 });
+
+const logout = () => {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You will be logged out of your session.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, logout",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Perform the actual logout
+            // If using Inertia:
+            router.post("/logout");
+            // Or if you want to redirect to a logout route:
+            // window.location.href = "/logout";
+        }
+    });
+};
 </script>
 
 <template>
@@ -181,6 +192,7 @@ defineProps({
             <nav class="space-y-2 px-3 pb-20">
                 <Link
                     href="/settings"
+                    :isCollapsed="isCollapsed"
                     method="GET"
                     as="button"
                     preserve-scroll
@@ -201,11 +213,9 @@ defineProps({
                     </span>
                 </Link>
 
-                <Link
+                <button
+                    @click="logout"
                     href="/settings"
-                    method="GET"
-                    as="button"
-                    preserve-scroll
                     class="cursor-pointer flex items-center gap-6 px-3 py-2 text-sm rounded-lg w-full text-left hover:cursor"
                 >
                     <!-- ICON SLOT -->
@@ -221,7 +231,7 @@ defineProps({
                     <span v-if="!isCollapsed" class="duration-300 text-red-500">
                         Logout
                     </span>
-                </Link>
+                </button>
             </nav>
         </div>
     </nav>

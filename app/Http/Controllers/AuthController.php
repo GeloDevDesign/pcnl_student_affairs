@@ -97,4 +97,15 @@ class AuthController extends Controller
             ? redirect()->route('login')->with('status', __($status))
             : back()->withErrors(['email' => [__($status)]]);
     }
+
+
+    public function logout(Request $request)
+    {
+        Auth::logout(); // Logs out the currently authenticated user
+
+        $request->session()->invalidate(); // Invalidates the current session
+        $request->session()->regenerateToken(); // Regenerates the CSRF token for future requests
+
+        return redirect('/'); // Redirects to the desired page after logout (e.g., homepage or login page)
+    }
 }
