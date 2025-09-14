@@ -11,7 +11,7 @@
   @inertiaHead
 
   {{-- @routes --}}
-  {{-- <link rel="icon" type="image/png" href="{{ asset('/smart_logo.png') }}"> --}}
+  <link rel="icon" type="image/png" href="{{ asset('/icons/logo.svg') }}">
 
 
 </head>

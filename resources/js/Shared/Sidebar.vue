@@ -23,11 +23,7 @@ const logout = () => {
         confirmButtonText: "Yes, logout",
     }).then((result) => {
         if (result.isConfirmed) {
-            // Perform the actual logout
-            // If using Inertia:
             router.post("/logout");
-            // Or if you want to redirect to a logout route:
-            // window.location.href = "/logout";
         }
     });
 };
@@ -116,7 +112,7 @@ const logout = () => {
 
         <!-- Menu Items -->
         <div class="py-6 flex flex-col justify-between h-full">
-            <nav class="space-y-2 px-3">
+            <nav class="space-y-4 px-3">
                 <!-- Home -->
                 <NavLink route="/" buttonName="Home" :isCollapsed="isCollapsed">
                     <template #icon>
@@ -189,7 +185,7 @@ const logout = () => {
                 </NavLink>
             </nav>
 
-            <nav class="space-y-2 px-3 pb-20">
+            <nav class="space-y-4 px-3 pb-20">
                 <Link
                     href="/settings"
                     :isCollapsed="isCollapsed"

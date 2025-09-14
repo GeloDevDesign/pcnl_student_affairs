@@ -8,7 +8,7 @@ defineProps({
     },
 });
 
-const emit = defineEmits(["toggleSidebar"]);
+const emit = defineEmits(["toggle-sidebar"]);
 </script>
 
 <template>

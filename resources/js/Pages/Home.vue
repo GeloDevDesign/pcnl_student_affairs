@@ -15,7 +15,7 @@ defineProps({
             <!-- Welcome Section -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">
-                    Welcome to Dashboard
+                    Welcome to Dashboard  {{ $page.auth}}
                 </h2>
                 <p class="text-gray-600">
                     This is your home page content area.
