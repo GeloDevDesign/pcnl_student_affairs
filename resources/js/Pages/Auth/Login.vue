@@ -24,7 +24,7 @@ const formCredentials = reactive({
         >
             <div class="flex items-center gap-3">
                 <img
-                    src="../../../../public/icons/logo.svg"
+                    src="/public/icons/logo.svg"
                     alt="Logo"
                     class="h-[60px] w-auto"
                 />
