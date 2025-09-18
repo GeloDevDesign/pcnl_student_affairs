@@ -1,6 +1,8 @@
 <script setup>
 import { Head } from "@inertiajs/vue3";
 import Layout from "../shared/Layout.vue";
+import Banner from "../components/Banner.vue";
+import NavCard from "../components/NavCard.vue";
 
 defineProps({
     pageTitle: String,
@@ -9,13 +11,60 @@ defineProps({
 </script>
 
 <template>
- 
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
+            <Banner :pageName="'DASHBOARD'" />
+
+            <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8">
+                <NavCard
+                    :cardTitle="'ANNOUNCEMENTS'"
+                    :cardDescription="'Post annoucements'"
+                >
+                    <template #icon> 
+                        <img
+                            src="/public/icons/announce.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
+                    </template>
+                </NavCard>
+
+                <NavCard
+                    :cardTitle="'ANNOUNCEMENTS'"
+                    :cardDescription="'Post annoucements'"
+                >
+                    <template #icon>
+                        <img
+                            src="/public/icons/events.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
+                    </template>
+                </NavCard>
+
+                <NavCard
+                    :cardTitle="'ANNOUNCEMENTS'"
+                    :cardDescription="'Post annoucements'"
+                >
+                    <template #icon>
+                        <img
+                            src="/public/icons/book.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
+                    </template>
+                </NavCard>
+            </div>
             <!-- Welcome Section -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">
-                    Welcome to Dashboard  {{ $page.auth}}
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                        Welcome to Dashboard
+
+                        <span class="text-primary">
+                            {{ $page.props.auth.user.role }}</span
+                        >
+                    </h2>
                 </h2>
                 <p class="text-gray-600">
                     This is your home page content area.
