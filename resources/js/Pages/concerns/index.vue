@@ -1,8 +1,8 @@
 <script setup>
 import { Head } from "@inertiajs/vue3";
-import Layout from "../shared/Layout.vue";
-import Banner from "../components/Banner.vue";
-import NavCard from "../components/NavCard.vue";
+import Layout from "../../shared/Layout.vue";
+import Banner from "../../components/Banner.vue";
+import NavCard from "../../components/NavCard.vue";
 
 defineProps({
     pageTitle: String,

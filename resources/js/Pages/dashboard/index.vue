@@ -1,9 +1,9 @@
 <script setup>
 import { Head } from "@inertiajs/vue3";
-import Layout from "../shared/Layout.vue";
-import Banner from "../components/Banner.vue";
-import NavCard from "../components/NavCard.vue";
-import Search from "../components/Search.vue";
+import Layout from "../../shared/Layout.vue";
+import Banner from "../../components/Banner.vue";
+import NavCard from "../../components/NavCard.vue";
+import Search from "../../components/Search.vue";
 
 defineProps({
     pageTitle: String,
@@ -24,6 +24,7 @@ defineProps({
                 class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
             >
                 <NavCard
+                    :cardRouter="'/dashboard/welcome'"
                     :cardTitle="'ANNOUNCEMENTS'"
                     :cardDescription="'Post annoucements'"
                 >
@@ -36,7 +37,10 @@ defineProps({
                     </template>
                 </NavCard>
 
+                
+
                 <NavCard
+                    :cardRouter="'/dashboard/event'"
                     :cardTitle="'ANNOUNCEMENTS'"
                     :cardDescription="'Post annoucements'"
                 >
@@ -50,6 +54,7 @@ defineProps({
                 </NavCard>
 
                 <NavCard
+                    :cardRouter="'/dashboard/hand-book'"
                     :cardTitle="'ANNOUNCEMENTS'"
                     :cardDescription="'Post annoucements'"
                 >
@@ -62,7 +67,10 @@ defineProps({
                     </template>
                 </NavCard>
             </div>
-           
+
+            <div>
+                <RouterView />
+            </div>
         </div>
     </Layout>
 </template>

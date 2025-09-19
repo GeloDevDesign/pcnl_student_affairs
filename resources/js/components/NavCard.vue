@@ -1,4 +1,5 @@
 <script setup>
+import { RouterView, RouterLink } from "vue-router";
 defineProps({
     cardTitle: {
         type: String,
@@ -8,11 +9,16 @@ defineProps({
         type: String,
         default: "No description available",
     },
+    cardRouter: {
+        type: String,
+        default: "/",
+    },
 });
 </script>
 
 <template>
-    <div
+    <RouterLink
+        :to="cardRouter"
         role="button"
         tabindex="0"
         class="w-full shadow-sm h-28 bg-white rounded-lg p-4 flex items-center gap-4 border border-transparent cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:border-primary hover:shadow-lg"
@@ -27,12 +33,16 @@ defineProps({
         </slot>
 
         <div class="flex-1">
-            <h3 class="text-primary font-bold lg:text-lg md:text-base text-sm truncate">
+            <h3
+                class="text-primary font-bold lg:text-lg md:text-base text-sm truncate"
+            >
                 {{ cardTitle }}
             </h3>
-            <p class="text-gray-700 lg:text-sm  md:text-sm text-xs opacity-80 font-medium truncate">
+            <p
+                class="text-gray-700 lg:text-sm md:text-sm text-xs opacity-80 font-medium truncate"
+            >
                 {{ cardDescription }}
             </p>
         </div>
-    </div>
+    </RouterLink>
 </template>

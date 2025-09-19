@@ -5,12 +5,13 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 
 
-Route::inertia('/login', 'Auth/Login')->middleware('guest')->name('login');
+
+Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::get('/', function () {
-    return Inertia::render('Home', [
+    return Inertia::render('dashboard/index', [
         'pageTitle' => 'PCNL - Dashboard'
     ]);
 })->middleware(['auth'])
@@ -19,7 +20,7 @@ Route::get('/', function () {
 
 
 Route::get('/evaluate', function () {
-    return Inertia::render('Evaluate', [
+    return Inertia::render('evaluate/index', [
         'pageTitle' => 'PCNL - Evaluate'
     ]);
 })->middleware(['auth'])
@@ -28,7 +29,7 @@ Route::get('/evaluate', function () {
 
 
 Route::get('/scc-officers', function () {
-    return Inertia::render('SSCOfficer', [
+    return Inertia::render('ssc-officers/index', [
         'pageTitle' => 'PCNL - SCC Officers'
     ]);
 })->middleware(['auth'])
@@ -36,7 +37,7 @@ Route::get('/scc-officers', function () {
 
 
 Route::get('/concerns', function () {
-    return Inertia::render('Concerns', [
+    return Inertia::render('concerns/index', [
         'pageTitle' => 'PCNL - Concerns'
     ]);
 })->middleware(['auth'])
@@ -45,7 +46,7 @@ Route::get('/concerns', function () {
 
 
 Route::get('/lost-found', function () {
-    return Inertia::render('LostAndFound', [
+    return Inertia::render('lost-and-found/index', [
         'pageTitle' => 'PNCL - Lost & Found'
     ]);
 })->middleware(['auth'])

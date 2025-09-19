@@ -1,8 +1,8 @@
 <script setup>
 import { Head } from "@inertiajs/vue3";
-import Layout from "../shared/Layout.vue";
-import Banner from "../components/Banner.vue";
-import NavCard from "../components/NavCard.vue";
+import Layout from "../../shared/Layout.vue";
+import Banner from "../../components/Banner.vue";
+import NavCard from "../../components/NavCard.vue";
 
 defineProps({
     pageTitle: String,
@@ -13,7 +13,7 @@ defineProps({
 <template>
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
-            <Banner :pageName="'SSC OFFICERS'" />
+            <Banner :pageName="'EVALUATE'" />
 
             <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8">
                 <NavCard
