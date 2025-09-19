@@ -141,7 +141,7 @@ const logout = () => {
 
                 <!-- SCC Officers -->
                 <NavLink
-                    route="/public/officers"
+                    route="/scc-officers"
                     buttonName="SCC Officers"
                     :isCollapsed="isCollapsed"
                 >
@@ -156,7 +156,7 @@ const logout = () => {
 
                 <!-- Concerns -->
                 <NavLink
-                    route="/public/concerns"
+                    route="/concerns"
                     buttonName="Concerns"
                     :isCollapsed="isCollapsed"
                 >
@@ -171,7 +171,7 @@ const logout = () => {
 
                 <!-- Lost & Found -->
                 <NavLink
-                    route="/public/lost-found"
+                    route="/lost-found"
                     buttonName="Lost & Found"
                     :isCollapsed="isCollapsed"
                 >
