@@ -1,81 +1,60 @@
 <script setup>
-defineProps({
+import { defineProps, defineEmits } from "vue";
+
+const props = defineProps({
     pageName: {
         type: String,
         default: "Home",
     },
+    breadCrumbPages: {
+        type: Array,
+        default: () => [],
+    },
+    // 🔑 add this
+    currentPage: {
+        type: String,
+        default: "",
+    },
 });
+
+const emit = defineEmits(["breadcrumb-click"]);
+
+function handleCrumbClick(page) {
+    emit("breadcrumb-click", page);
+}
 </script>
 
 <template>
-    <div class="w-full py-8 flex items-center justify-between">
-        <!-- Left side: page title -->
-        <div>
+    <div
+        class="w-full py-8 flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0 md:space-x-4"
+    >
+        <div class="md:w-1/3 w-full">
             <h4 class="lg:text-4xl md:text-3xl text-2xl font-bold text-primary">
                 {{ pageName }}
             </h4>
+
             <div class="breadcrumbs text-sm">
                 <ul>
-                    <li>
-                        <a>
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                class="h-4 w-4 stroke-current"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                ></path>
-                            </svg>
-                            Home
+                    <li v-for="(crumb, index) in breadCrumbPages" :key="index">
+                        <a
+                            href="#"
+                            @click="handleCrumbClick(crumb)"
+                            :class="[
+                                'transition-opacity duration-300 cursor-pointer',
+                                crumb.toLowerCase() ===
+                                currentPage.toLowerCase()
+                                    ? 'text-primary opacity-100 font-semibold'
+                                    : 'opacity-40 hover:opacity-70',
+                            ]"
+                        >
+                            {{ crumb }}
                         </a>
-                    </li>
-                    <li>
-                        <a>
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                class="h-4 w-4 stroke-current"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                ></path>
-                            </svg>
-                            Documents
-                        </a>
-                    </li>
-                    <li>
-                        <span class="inline-flex items-center gap-2">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                class="h-4 w-4 stroke-current"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                ></path>
-                            </svg>
-                            Add Document
-                        </span>
                     </li>
                 </ul>
             </div>
         </div>
 
-        <!-- Right side: slot content -->
-        <div class="w-full">
+        <div class="md:w-2/3 w-full">
             <slot name="entity-actions" />
         </div>
     </div>

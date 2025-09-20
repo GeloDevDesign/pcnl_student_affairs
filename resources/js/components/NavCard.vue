@@ -1,6 +1,8 @@
 <script setup>
-import { RouterView, RouterLink } from "vue-router";
-defineProps({
+import { ref, reactive } from "vue";
+import { defineEmits } from "vue";
+
+const props = defineProps({
     cardTitle: {
         type: String,
         default: "NO CARD NAME",
@@ -9,16 +11,24 @@ defineProps({
         type: String,
         default: "No description available",
     },
-    cardRouter: {
+    cardValue: {
         type: String,
-        default: "/",
+        default: "No description available",
     },
 });
+
+const emit = defineEmits(["navigate-action"]);
+
+const navigate = () => {
+    emit("navigate-action", props.cardValue);
+};
+
+
 </script>
 
 <template>
-    <RouterLink
-        :to="cardRouter"
+    <div
+        @click="navigate"
         role="button"
         tabindex="0"
         class="w-full shadow-sm h-28 bg-white rounded-lg p-4 flex items-center gap-4 border border-transparent cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:border-primary hover:shadow-lg"
@@ -44,5 +54,5 @@ defineProps({
                 {{ cardDescription }}
             </p>
         </div>
-    </RouterLink>
+    </div>
 </template>

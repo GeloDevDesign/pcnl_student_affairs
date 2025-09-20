@@ -3,8 +3,15 @@ import { ref } from "vue";
 </script>
 
 <template>
-    <div class="join w-full flex justify-end ">
-        <input class="input join-item rounded-l-full bg-white w-1/3" placeholder="Search..." />
-        <button class="btn btn-primary join-item rounded-r-full">Search</button>
-    </div>
+  <div class="join flex justify-end w-auto">
+    <input
+      class="input join-item rounded-l-full bg-white lg:input-md md:input-md input-sm"
+      placeholder="Search..."
+    />
+    <button
+      class="btn btn-primary lg:btn-md md:btn-md btn-sm  join-item rounded-r-full"
+    >
+      Search
+    </button>
+  </div>
 </template>

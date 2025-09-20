@@ -4,7 +4,6 @@ import "../css/app.css";
 import { createApp, h } from "vue";
 import { createInertiaApp, Link } from "@inertiajs/vue3";
 
-import router from "./router/router.js";
 
 createInertiaApp({
     resolve: (name) => {
@@ -14,7 +13,6 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(router)
             .component("Link", Link)
             .mount(el);
     },
