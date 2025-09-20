@@ -1,11 +1,16 @@
 <script setup>
 import { ref, reactive, onMounted } from "vue";
 import { useForm } from "@inertiajs/vue3";
-
+import { Form, usePage } from "@inertiajs/vue3";
+import { useToastAlert } from "../../composables/useToastAlert.js";
 import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
 import Pagination from "../../components/Pagination.vue";
 
+const { toastAlert } = useToastAlert();
+
+const page = usePage();
+const isLoading = ref(false);
 const form = useForm({
     title: "",
     details: "",
@@ -16,14 +21,17 @@ const props = defineProps({
 });
 
 const handleSubmit = ({ closeModal }) => {
+    isLoading.value = true;
     form.post("/announcements", {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
             closeModal();
+            toastAlert(page.props.flash.success, "success");
+            isLoading.value = false;
         },
         onError: () => {
-            alert("error");
+            isLoading.value = false;
         },
     });
 };
@@ -32,12 +40,13 @@ const handleSubmit = ({ closeModal }) => {
 <template>
     <div class="w-full flex justify-end mb-4">
         <ModalAction
+            :isLoading="isLoading"
             :modalTitle="'Announcement Form'"
             :buttonName="'Post New Announcement'"
             :buttonAction="'Post Announcement'"
             @submit-form="handleSubmit"
         >
-            <form action="/announcements" method="post" class="space-y-2">
+            <Form action="/announcements" method="post" class="space-y-2">
                 <InputFields
                     v-model="form.title"
                     :label="'Title'"
@@ -53,7 +62,7 @@ const handleSubmit = ({ closeModal }) => {
                     :placeholder="'Details for announcement'"
                     :errors="$page.props.errors.details"
                 />
-            </form>
+            </Form>
         </ModalAction>
     </div>
     <div class="overflow-x-auto bg-white">

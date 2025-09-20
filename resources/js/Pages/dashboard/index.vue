@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { Head } from "@inertiajs/vue3";
+import { Form } from '@inertiajs/vue3'
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
 

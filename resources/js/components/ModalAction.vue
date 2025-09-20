@@ -19,6 +19,10 @@ defineProps({
         type: String,
         default: "No Modal title",
     },
+    isLoading: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(["submit-form"]);
@@ -49,11 +53,15 @@ const submitRequest = () => {
                     <div class="w-full flex justify-end gap-2 mt-2">
                         <button class="btn btn-sm btn-soft">Close</button>
                         <button
+                            :disabled="isLoading"
                             type="button"
                             class="btn btn-primary btn-sm"
                             @click="submitRequest"
                         >
                             {{ buttonAction }}
+                            <span v-if="isLoading"
+                                class="loading loading-spinner loading-xs"
+                            ></span>
                         </button>
                     </div>
                 </form>
