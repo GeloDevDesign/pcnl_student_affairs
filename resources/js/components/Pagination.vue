@@ -9,13 +9,18 @@ defineProps({
 </script>
 
 <template>
-    <div class="flex justify-between items-center mt-2">
-        <div class="text-sm text-gray-600">
+    <div
+        class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+        <!-- Page info -->
+        <div class="text-sm text-gray-600 text-center sm:text-left">
             Showing page {{ data.current_page }} of {{ data.last_page }}
         </div>
-        <div class="join">
+
+        <!-- Pagination links -->
+        <div class="join flex flex-wrap justify-center sm:justify-end">
             <Link
-                v-for="(link, index) in data.links"
+                v-for="link in data.links"
                 :key="link.label"
                 :href="link.url || '/'"
                 preserve-scroll

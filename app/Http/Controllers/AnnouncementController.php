@@ -21,7 +21,7 @@ class AnnouncementController extends Controller
 
         return Inertia::render('dashboard/index', [
             'pageTitle' => 'PCNL - Dashboard',
-            'announcement' => $query->paginate(10),
+            'announcement' => $query->paginate(10)->onEachSide(1),
         ]);
     }
 
