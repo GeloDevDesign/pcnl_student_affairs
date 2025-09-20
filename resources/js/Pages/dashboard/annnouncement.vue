@@ -69,14 +69,16 @@ const handleSubmit = ({ closeModal }) => {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="ann in announcement.data" :key="ann.id">
-                    <th>{{ 1 }}</th>
+                <tr v-for="(ann, index) in announcement.data" :key="ann.id">
+                    <th>
+                        {{
+                            (announcement.current_page - 1) *
+                                announcement.per_page +
+                            (index + 1)
+                        }}
+                    </th>
                     <td>{{ ann.title }}</td>
-                    <td>
-                        <p class="opacity-80">
-                            {{ ann.details }}
-                        </p>
-                    </td>
+                    <td>{{ ann.details }}</td>
                     <td>{{ ann.created_at }}</td>
                     <td class="space-x-2">
                         <button class="btn btn-xs btn-secondary">Edit</button>
@@ -87,5 +89,5 @@ const handleSubmit = ({ closeModal }) => {
         </table>
     </div>
 
-   <Pagination :data="announcement" />
+    <Pagination :data="announcement" />
 </template>

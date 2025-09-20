@@ -8,11 +8,20 @@ use App\Models\Announcement;
 
 class AnnouncementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query  = Announcement::with('user')->latest();
+
+        $query->when($request->input('search'), function ($q, $search) {
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('details', 'like', '%' . $search . '%');
+            });
+        });
+
         return Inertia::render('dashboard/index', [
             'pageTitle' => 'PCNL - Dashboard',
-            'announcement' => Announcement::with('user')->latest()->paginate(10),
+            'announcement' => $query->paginate(10),
         ]);
     }
 

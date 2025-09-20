@@ -1,7 +1,8 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { Head } from "@inertiajs/vue3";
-import { useNavigatePage } from "../../composables/userNavigatePage";
+import { useNavigatePageStore } from "../../stores/NavigatePageStore";
+import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
 
 import Layout from "../../shared/Layout.vue";
 import Banner from "../../components/Banner.vue";
@@ -13,7 +14,8 @@ import Handbook from "./hand-book.vue";
 import Event from "./event.vue";
 import Annnouncement from "./annnouncement.vue";
 
-const { currentPage, navigatePage } = useNavigatePage("home");
+const pageStore = useNavigatePageStore();
+const { applySearch } = useSearchAndFilter("home");
 
 defineProps({
     pageTitle: String,
@@ -27,6 +29,8 @@ const breadCrumbPages = reactive([
     "Event",
     "Hand-Books",
 ]);
+
+
 </script>
 
 <template>
@@ -35,11 +39,14 @@ const breadCrumbPages = reactive([
             <Banner
                 :pageName="'DASHBOARD'"
                 :breadCrumbPages="breadCrumbPages"
-                :currentPage="currentPage"
-                @breadcrumb-click="(page) => navigatePage(page.toLowerCase())"
+                :currentPage="pageStore.currentPage"
+                @breadcrumb-click="(page) => pageStore.navigatePage(page)"
             >
                 <template #entity-actions>
-                    <Search v-if="currentPage !== 'event'" />
+                    <Search
+                        @query-search="applySearch"
+                        v-if="pageStore.currentPage !== 'event'"
+                    />
                 </template>
             </Banner>
 
@@ -50,7 +57,7 @@ const breadCrumbPages = reactive([
                     :cardTitle="'ANNOUNCEMENTS'"
                     :cardDescription="'Post annoucements'"
                     :cardValue="'annnouncement'"
-                    @navigate-action="navigatePage"
+                    @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
                         <img
@@ -65,7 +72,7 @@ const breadCrumbPages = reactive([
                     :cardTitle="'Events'"
                     :cardDescription="'Add / Create Events'"
                     :cardValue="'event'"
-                    @navigate-action="navigatePage"
+                    @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
                         <img
@@ -80,7 +87,7 @@ const breadCrumbPages = reactive([
                     :cardTitle="'HAND-BOOKS'"
                     :cardDescription="'View to see hand-books'"
                     :cardValue="'hand-books'"
-                    @navigate-action="navigatePage"
+                    @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
                         <img
@@ -94,11 +101,11 @@ const breadCrumbPages = reactive([
 
             <Annnouncement
                 :announcement="announcement"
-                v-if="currentPage === 'annnouncement'"
+                v-if="pageStore.currentPage === 'annnouncement'"
             />
-            <Welcome v-if="currentPage === 'home'" />
-            <Event v-if="currentPage === 'event'" />
-            <Handbook v-if="currentPage === 'hand-books'" />
+            <Welcome v-if="pageStore.currentPage === 'home'" />
+            <Event v-if="pageStore.currentPage === 'event'" />
+            <Handbook v-if="pageStore.currentPage === 'hand-books'" />
         </div>
     </Layout>
 </template>

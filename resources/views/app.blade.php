@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  @routes
   @vite('resources/js/app.js')
 
   @inertiaHead
@@ -17,6 +18,7 @@
 </head>
 
 <body>
+
   @inertia
 </body>
 
