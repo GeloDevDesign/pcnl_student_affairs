@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AnnouncementController;
 
 
 
@@ -10,12 +11,9 @@ Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::get('/', function () {
-    return Inertia::render('dashboard/index', [
-        'pageTitle' => 'PCNL - Dashboard'
-    ]);
-})->middleware(['auth'])
-    ->name('home');
+// Announcements Routes
+Route::get('/', [AnnouncementController::class, 'index'])->middleware(['auth'])->name('home');
+Route::post('/announcements', [AnnouncementController::class, 'store'])->middleware(['auth'])->name('announcements.store');
 
 
 

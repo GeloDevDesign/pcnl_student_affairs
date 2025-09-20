@@ -59,7 +59,7 @@ const logout = () => {
                     <nav class="space-y-4 px-3">
                         <!-- Home -->
                         <NavLink
-                            route="/"
+                            route="announcements.index"
                             buttonName="Home"
                             :isCollapsed="isCollapsed"
                         >

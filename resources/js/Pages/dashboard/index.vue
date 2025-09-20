@@ -18,6 +18,7 @@ const { currentPage, navigatePage } = useNavigatePage("home");
 defineProps({
     pageTitle: String,
     user: Object,
+    announcement: Object,
 });
 
 const breadCrumbPages = reactive([
@@ -38,7 +39,7 @@ const breadCrumbPages = reactive([
                 @breadcrumb-click="(page) => navigatePage(page.toLowerCase())"
             >
                 <template #entity-actions>
-                    <Search />
+                    <Search v-if="currentPage !== 'event'" />
                 </template>
             </Banner>
 
@@ -91,7 +92,10 @@ const breadCrumbPages = reactive([
                 </NavCard>
             </div>
 
-            <Annnouncement v-if="currentPage === 'annnouncement'" />
+            <Annnouncement
+                :announcement="announcement"
+                v-if="currentPage === 'annnouncement'"
+            />
             <Welcome v-if="currentPage === 'home'" />
             <Event v-if="currentPage === 'event'" />
             <Handbook v-if="currentPage === 'hand-books'" />
