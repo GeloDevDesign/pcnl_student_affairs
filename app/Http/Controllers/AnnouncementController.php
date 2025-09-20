@@ -12,7 +12,7 @@ class AnnouncementController extends Controller
     {
         return Inertia::render('dashboard/index', [
             'pageTitle' => 'PCNL - Dashboard',
-            'announcement' => Announcement::with('user')->latest()->get(),
+            'announcement' => Announcement::with('user')->latest()->paginate(10),
         ]);
     }
 

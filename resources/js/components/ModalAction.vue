@@ -37,7 +37,7 @@ const submitRequest = () => {
     >
         {{ buttonName }}
     </button>
-    <dialog id="my_modal_1" class="modal">
+    <dialog ref="dialogRef" id="my_modal_1" class="modal">
         <div class="modal-box">
             <h3 class="text-lg font-bold">{{ modalTitle }}</h3>
 

@@ -4,6 +4,7 @@ import { useForm } from "@inertiajs/vue3";
 
 import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
+import Pagination from "../../components/Pagination.vue";
 
 const form = useForm({
     title: "",
@@ -19,10 +20,10 @@ const handleSubmit = ({ closeModal }) => {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
-            closeModal(); // ✅ Close modal only on success
+            closeModal();
         },
         onError: () => {
-            // ❌ Do nothing so modal stays open
+            alert("error");
         },
     });
 };
@@ -68,18 +69,15 @@ const handleSubmit = ({ closeModal }) => {
                 </tr>
             </thead>
             <tbody>
-                <tr
-                    v-for="announcement in announcement"
-                    :key="announcement.id"
-                >
+                <tr v-for="ann in announcement.data" :key="ann.id">
                     <th>{{ 1 }}</th>
-                    <td>{{ announcement.title }}</td>
+                    <td>{{ ann.title }}</td>
                     <td>
                         <p class="opacity-80">
-                            {{ announcement.details }}
+                            {{ ann.details }}
                         </p>
                     </td>
-                    <td>{{ announcement.created_at }}</td>
+                    <td>{{ ann.created_at }}</td>
                     <td class="space-x-2">
                         <button class="btn btn-xs btn-secondary">Edit</button>
                         <button class="btn btn-xs btn-error">Delete</button>
@@ -88,4 +86,6 @@ const handleSubmit = ({ closeModal }) => {
             </tbody>
         </table>
     </div>
+
+   <Pagination :data="announcement" />
 </template>
