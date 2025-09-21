@@ -10,6 +10,10 @@ const props = defineProps({
     placeholder: String,
     readonly: Boolean,
     errors: String,
+    selectionItems: {
+        type: Array,
+        default: [],
+    },
 });
 
 // expose v-model
@@ -25,7 +29,7 @@ function handleFileChange(e) {
 <template>
     <div class="w-full">
         <!-- For text/other inputs -->
-        <fieldset v-if="props.type !== 'file'" class="fieldset w-full">
+        <fieldset v-if="props.type === 'text'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
@@ -49,8 +53,32 @@ function handleFileChange(e) {
             </p>
         </fieldset>
 
+        <fieldset v-if="props.type === 'select'" class="fieldset w-full">
+            <legend class="fieldset-legend font-semibold">
+                {{ props.label }}
+            </legend>
+            <select v-model="model" class="select w-full">
+                <option disabled value="">
+                    {{ props.placeholder || "Select an option" }}
+                </option>
+                <option
+                    v-for="(item, index) in props.selectionItems"
+                    :key="index"
+                    :value="item.value"
+                >
+                    {{ item.text }}
+                </option>
+            </select>
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
+        </fieldset>
+
         <!-- For file input -->
-        <fieldset v-else class="fieldset w-full">
+        <fieldset v-if="props.type === 'file'" class="fieldset w-full">
             <legend class="fieldset-legend">{{ props.label }}</legend>
             <input
                 type="file"

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HandBookController;
+use App\Http\Controllers\ItemController;
 
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
@@ -34,7 +35,7 @@ Route::middleware(['auth', 'role:admin'])
             ->name('update');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])
             ->name('destroy');
-    });
+});
 
 Route::middleware(['auth', 'role:admin'])
     ->name('hand-books.')
@@ -48,6 +49,21 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::get('/hand-books/{handbook}/download', [HandBookController::class, 'download'])
             ->name('download');
+    });
+
+
+Route::get('/lost-and-found', [ItemController::class, 'index'])->middleware(['auth'])->name('lost-and-found');
+
+
+Route::middleware(['auth', 'role:admin'])
+    ->name('items.')
+    ->group(function () {
+        Route::post('/items', [ItemController::class, 'store'])
+            ->name('store');
+        Route::patch('/items/{item}', [ItemController::class, 'update'])
+            ->name('update');
+        Route::delete('/items/{item}', [ItemController::class, 'destroy'])
+            ->name('destroy');
     });
 
 
@@ -77,9 +93,4 @@ Route::get('/concerns', function () {
 
 
 
-Route::get('/lost-found', function () {
-    return Inertia::render('lost-and-found/index', [
-        'pageTitle' => 'PNCL - Lost & Found'
-    ]);
-})->middleware(['auth'])
-    ->name('evaluate');
+

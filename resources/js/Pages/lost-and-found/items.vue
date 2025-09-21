@@ -1,7 +1,6 @@
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { router, useForm } from "@inertiajs/vue3";
-import { Form, usePage } from "@inertiajs/vue3";
+import { ref } from "vue";
+import { router, useForm, usePage } from "@inertiajs/vue3";
 import { useToastAlert } from "../../composables/useToastAlert.js";
 import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
@@ -9,27 +8,26 @@ import Pagination from "../../components/Pagination.vue";
 import Swal from "sweetalert2";
 
 const { toastAlert } = useToastAlert();
-
 const page = usePage();
 const isLoading = ref(false);
 const selectedItem = ref(null);
 const dialogRef = ref(null);
 
 const form = useForm({
-    title: "",
-    details: "",
+    name: "",
+    description: "",
+    status: 0,
+    image_url: null,
 });
 
 const props = defineProps({
-    announcements: Object,
-  
+    items: Object,
     errors: Object,
 });
 
-const handleSubmit = ({ closeModal }) => {
+function handleSubmit({ closeModal }) {
     isLoading.value = true;
-
-    form.post("/announcements", {
+    form.post("/items", {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
@@ -37,66 +35,61 @@ const handleSubmit = ({ closeModal }) => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
-            isLoading.value = false;
-        },
+        onError: () => (isLoading.value = false),
     });
-};
+}
 
-const handleUpadte = () => {
+function handleUpdate() {
     isLoading.value = true;
-    form.patch(`/announcements/${selectedItem.value.id}`, {
+
+    form.patch(`/items/${selectedItem.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
+            form.reset();
             dialogRef.value.close();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
-            isLoading.value = false;
-        },
+        onError: () => (isLoading.value = false),
     });
-};
+}
 
-const handleDelete = async (entity) => {
-    // Show confirm dialog
+async function handleDelete(entity) {
     const { isConfirmed } = await Swal.fire({
-        title: "DELETE ANNOUNCEMENT",
-        text: `Are you sure you want to delete "${entity.title}"?`,
+        title: "DELETE ITEM",
+        text: `Are you sure you want to delete "${entity.name}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, delete it!",
         confirmButtonColor: "#e3342f",
         cancelButtonColor: "#6b7280",
     });
-
     if (!isConfirmed) return;
 
     isLoading.value = true;
-
-    router.delete(`/announcements/${entity.id}`, {
+    router.delete(`/items/${entity.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
-            isLoading.value = false;
-        },
+        onError: () => (isLoading.value = false),
     });
-};
+}
 
-const resetPopulate = () => {
+function resetPopulate() {
     form.reset();
-};
+    form.image_url = null;
+}
 
-const populateFormEdit = (entity) => {
+function populateFormEdit(entity) {
+    console.log(entity);
     form.reset();
     form.clearErrors();
     selectedItem.value = entity;
-    form.title = entity.title;
-    form.details = entity.details;
-};
+    form.name = entity.name;
+    form.description = entity.description;
+}
 </script>
 
 <template>
@@ -104,119 +97,165 @@ const populateFormEdit = (entity) => {
         <ModalAction
             v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"
-            :modalTitle="'Announcement Form'"
-            :buttonName="'Post New Announcement'"
+            :modalTitle="'Lost Item Form'"
+            :buttonName="'Upload Lost Item'"
             :buttonAction="
-                isLoading ? 'Posting Announcement...' : 'Post Announcement'
+                isLoading ? 'Uploading Lost Item...' : 'Upload Lost Item'
             "
             @reset-form="resetPopulate"
             @submit-form="handleSubmit"
         >
-            <Form class="space-y-2">
+            <form class="space-y-2" method="POST">
                 <InputFields
-                    v-model="form.title"
-                    :label="'Title'"
+                    v-model="form.name"
+                    :label="'Item Name'"
                     :type="'text'"
-                    :placeholder="'Title of announcement'"
-                    :errors="form.errors.title"
+                    :placeholder="'Name of the Lost item'"
+                    :errors="form.errors.name"
                 />
 
                 <InputFields
-                    v-model="form.details"
-                    :label="'Details'"
+                    v-model="form.description"
+                    :label="'Description'"
                     :type="'text'"
-                    :placeholder="'Details for announcement'"
-                    :errors="form.errors.details"
+                    :placeholder="'Description for event'"
+                    :errors="form.errors.description"
                 />
-            </Form>
+
+                <InputFields
+                    v-model="form.image_url"
+                    label="Upload Image"
+                    type="file"
+                    :errors="form.errors.image_url"
+                />
+            </form>
         </ModalAction>
     </div>
-    <div class="overflow-x-auto bg-white">
-        <table class="table">
-            <!-- head -->
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Title</th>
-                    <th>Details</th>
-                    <th>Date Created</th>
-                    <th  v-if="$page.props.auth.user.role === 'admin'">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(ann, index) in announcements.data" :key="ann.id">
-                    <th>
-                        {{
-                            (announcements.current_page - 1) *
-                                announcements.per_page +
-                            (index + 1)
-                        }}
-                    </th>
-                    <td>{{ ann.title }}</td>
-                    <td>{{ ann.details }}</td>
-                    <td>{{ ann.created_at }}</td>
-                    <td class="space-x-2"  v-if="$page.props.auth.user.role === 'admin'">
-                        <button
-                            class="btn btn-primary btn-xs text-white"
-                            @click="populateFormEdit(ann)"
-                            onclick="my_modal_2.showModal()"
-                        >
-                            Edit
-                        </button>
-                        <button
-                            class="btn btn-xs btn-error"
-                            @click="handleDelete(ann)"
-                        >
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+
+    <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 w-full gap-4">
+        <div
+            class="card bg-white w-full shadow-sm"
+            v-for="(item, index) in items.data || []"
+            :key="item.id"
+        >
+            <figure>
+                <img
+                    :src="
+                        item.image_url
+                            ? `/storage/${item.image_url}`
+                            : '/fallback-image.png'
+                    "
+                    class="w-full h-48 object-cover rounded-md p-6"
+                    alt="Lost Item Image"
+                />
+            </figure>
+            <div class="card-body">
+                <h2 class="card-title mb-2">
+                    {{ item.name }}
+                    <div class="badge badge-soft badge-primary badge-sm">
+                        {{ item.status_text }}
+                    </div>
+                </h2>
+                <p class="text-sm opacity-60">
+                    {{ item.description }}
+                </p>
+                <div class="flex items-center">
+                    <p class="text-xs opacity-50 font-bold">Date Uploaded :</p>
+                    <span class="text-xs opacity-50">{{
+                        item.formatted_uploaded_at
+                    }}</span>
+                </div>
+                <div class="card-actions justify-end">
+                    <button
+                        class="btn btn-primary btn-xs text-white"
+                        @click="populateFormEdit(item)"
+                        onclick="my_modal_2.showModal()"
+                    >
+                        Update
+                    </button>
+                    <button
+                        class="btn btn-xs btn-error"
+                        @click="handleDelete(item)"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <Pagination :data="announcements" />
+    <Pagination :data="items" />
 
     <dialog ref="dialogRef" id="my_modal_2" class="modal">
         <div class="modal-box">
             <h3 class="text-lg font-bold">
-                Update Announcement
-                <span class="text-primary">{{ selectedItem?.title }}</span>
+                Update Handbook
+                <span class="text-primary">{{ selectedItem?.name }}</span>
             </h3>
             <div ref="dialogRef" class="modal-action">
                 <form method="dialog" class="w-full">
                     <div class="w-full">
-                        <Form
-                            :action="`/announcements/${selectedItem}`"
-                            method="post"
-                            class="space-y-2"
-                        >
+                        <form class="space-y-2">
                             <InputFields
-                                v-model="form.title"
-                                :label="'Title'"
+                                v-model="form.name"
+                                :label="'Item Name'"
                                 :type="'text'"
-                                :placeholder="'Title of announcement'"
-                                :errors="form.errors.title"
+                                :placeholder="'Name of lost item'"
+                                :errors="form.errors.name"
                             />
 
                             <InputFields
-                                v-model="form.details"
-                                :label="'Details'"
+                                v-model="form.description"
+                                :label="'Description'"
                                 :type="'text'"
-                                :placeholder="'Details for announcement'"
-                                :errors="form.errors.details"
+                                :placeholder="'Description for event'"
+                                :errors="form.errors.description"
                             />
-                        </Form>
+
+                            <InputFields
+                                v-model="form.status"
+                                label="Status"
+                                type="select"
+                                :selectionItems="[
+                                    { value: 0, text: 'Not Found' },
+                                    { value: 1, text: 'Resolve' },
+                                    { value: 2, text: 'Archive' },
+                                ]"
+                                :errors="form.errors.status"
+                            />
+
+                            <InputFields
+                                v-model="form.file_url"
+                                label="Hand-Book File"
+                                type="file"
+                                :errors="form.errors.file_url"
+                            />
+
+                            <div
+                                role="alert"
+                                class="alert alert-warning alert-soft"
+                            >
+                                <span class="text-warning font-medium">
+                                    ⚠️ Note: Uploading a new file will remove
+                                    the existing file and replace it with the
+                                    new version.
+                                </span>
+                            </div>
+                        </form>
                     </div>
                     <div class="w-full flex justify-end gap-2 mt-2">
                         <button class="btn btn-sm btn-soft">Close</button>
                         <button
                             :disabled="isLoading"
-                            @click="handleUpadte"
+                            @click="handleUpdate"
                             type="button"
                             class="btn btn-primary btn-sm"
                         >
-                            Update Announcement
+                            {{
+                                isLoading
+                                    ? "Updating Hand-Book..."
+                                    : "Update Hand-Boook"
+                            }}
                             <span
                                 v-if="isLoading"
                                 class="loading loading-spinner loading-xs"

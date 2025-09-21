@@ -58,6 +58,12 @@ class User extends Authenticatable
         return $this->hasMany(Event::class);
     }
 
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
+
+
     public function handBooks()
     {
         return $this->hasMany(HandBook::class);

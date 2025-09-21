@@ -13,21 +13,12 @@ import Search from "../../components/Search.vue";
 import Items from "./items.vue";
 
 const pageStore = useNavigatePageStore();
-const searchIndex = ref("announcement");
 
-watch(
-    () => pageStore.currentPage,
-    (newVal, oldVal) => {
-        searchIndex.value = newVal;
-    }
-);
-const { applySearch } = useSearchAndFilter(searchIndex);
+const { applySearch } = useSearchAndFilter("lost-found");
 
 defineProps({
     pageTitle: String,
-    announcements: Object,
-    handBooks: Object,
-    events: Object,
+    items: Object,
 });
 
 const breadCrumbPages = ["Items"];
@@ -43,25 +34,22 @@ const breadCrumbPages = ["Items"];
                 @breadcrumb-click="(page) => pageStore.navigatePage(page)"
             >
                 <template #entity-actions>
-                    <Search
-                        @query-search="applySearch"
-                        v-if="pageStore.currentPage !== 'home'"
-                    />
+                    <Search @query-search="applySearch" />
                 </template>
             </Banner>
 
             <div
-                class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
+                class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-4"
             >
                 <NavCard
-                    :cardTitle="'ANNOUNCEMENTS'"
-                    :cardDescription="'Post annoucements'"
+                    :cardTitle="'LOST & FOUND'"
+                    :cardDescription="'Post Item'"
                     :cardValue="'announcement'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
                         <img
-                            src="/public/icons/announce.svg"
+                            src="/public/icons/lost.svg"
                             alt=""
                             class="w-16 h-16"
                         />
@@ -69,7 +57,7 @@ const breadCrumbPages = ["Items"];
                 </NavCard>
             </div>
 
-            <Annnouncement :announcements="announcements" />
+            <Items :items="items" />
         </div>
     </Layout>
 </template>
