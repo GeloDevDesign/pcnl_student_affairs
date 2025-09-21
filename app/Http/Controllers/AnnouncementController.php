@@ -28,8 +28,7 @@ class AnnouncementController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-
+            'title' => 'required|string|max:255|min:5',
             'details' => 'required|string',
         ]);
 
@@ -37,5 +36,25 @@ class AnnouncementController extends Controller
         $request->user()->announcements()->create($validated);
 
         return redirect()->back()->with('success', 'Announcement created successfully.');
+    }
+
+    public function update(Request $request, Announcement $announcement)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255|min:5',
+            'details' => 'required|string',
+        ]);
+
+        $announcement->update($validated);
+
+        return redirect()->back()->with('success', 'Announcement updated successfully.');
+    }
+
+
+    public function destroy(Announcement $announcement)
+    {
+        $announcement->delete();
+
+        return redirect()->back()->with('success', 'Announcement updated successfully.');
     }
 }
