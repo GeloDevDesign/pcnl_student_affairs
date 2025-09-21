@@ -5,21 +5,33 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Announcement;
+use App\Models\Event;
 
 class AnnouncementController extends Controller
 {
     public function index(Request $request)
     {
-        $query  = Announcement::with('user')->latest();
+        $announcement  = Announcement::with('user')->latest();
 
-        $query->when($request->filled('search'), function ($q) use ($request) {
-            $q->whereAny(['title', 'details'], 'like', '%' . $request->search . '%');
-        });
 
-        
+        if ($request->page === 'announcement') {
+            $announcement->when($request->filled('search'), function ($q) use ($request) {
+                $q->whereAny(['title', 'details'], 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $event = Event::with('user')->latest();
+        if ($request->page === 'event') {
+            $event->when($request->filled('search'), function ($q) use ($request) {
+                $q->whereAny(['title', 'description'], 'like', '%' . $request->search . '%');
+            });
+        }
+
+
         return Inertia::render('dashboard/index', [
             'pageTitle' => 'PCNL - Dashboard',
-            'announcement' => $query->paginate(10)->onEachSide(1),
+            'announcements' => $announcement->paginate(10)->onEachSide(1),
+            'events' => $event->paginate(10)->onEachSide(1),
         ]);
     }
 

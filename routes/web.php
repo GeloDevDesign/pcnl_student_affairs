@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnnouncementController;
-
+use App\Http\Controllers\EventController;
 
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
@@ -22,7 +22,18 @@ Route::middleware(['auth', 'role:admin'])
             ->name('update');
         Route::delete('/announcements/{announcement}', [AnnouncementController::class, 'destroy'])
             ->name('destroy');
-});
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->name('events.')
+    ->group(function () {
+        Route::post('/events', [EventController::class, 'store'])
+            ->name('store');
+        Route::patch('/events/{event}', [EventController::class, 'update'])
+            ->name('update');
+        Route::delete('/events/{event}', [EventController::class, 'destroy'])
+            ->name('destroy');
+    });
 
 
 Route::get('/evaluate', function () {

@@ -21,7 +21,7 @@ const form = useForm({
 });
 
 const props = defineProps({
-    announcement: Object,
+    announcements: Object,
     errors: Object,
 });
 
@@ -31,6 +31,7 @@ const handleSubmit = ({ closeModal }) => {
     form.post("/announcements", {
         preserveScroll: true,
         onSuccess: () => {
+            form.reset();
             closeModal();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
@@ -103,7 +104,9 @@ const populateFormEdit = (entity) => {
             :isLoading="isLoading"
             :modalTitle="'Announcement Form'"
             :buttonName="'Post New Announcement'"
-            :buttonAction="'Post Announcement'"
+            :buttonAction="
+                isLoading ? 'Posting Announcement...' : 'Post Announcement'
+            "
             @reset-form="resetPopulate"
             @submit-form="handleSubmit"
         >
@@ -139,11 +142,11 @@ const populateFormEdit = (entity) => {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(ann, index) in announcement.data" :key="ann.id">
+                <tr v-for="(ann, index) in announcements.data" :key="ann.id">
                     <th>
                         {{
-                            (announcement.current_page - 1) *
-                                announcement.per_page +
+                            (announcements.current_page - 1) *
+                                announcements.per_page +
                             (index + 1)
                         }}
                     </th>
@@ -170,7 +173,7 @@ const populateFormEdit = (entity) => {
         </table>
     </div>
 
-    <Pagination :data="announcement" />
+    <Pagination :data="announcements" />
 
     <dialog ref="dialogRef" id="my_modal_2" class="modal">
         <div class="modal-box">
