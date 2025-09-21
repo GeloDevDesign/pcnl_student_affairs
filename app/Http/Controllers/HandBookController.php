@@ -36,27 +36,26 @@ class HandBookController extends Controller
     /**
      * Update an existing handbook.
      */
-    public function update(Request $request, HandBook $handBook)
+    public function update(Request $request, HandBook $handbook)
     {
         $validated = $request->validate([
             'title'       => 'required|string|max:255|min:5',
             'description' => 'required|string',
-            // File is optional when updating
-            'file'        => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'file_url'        => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 
         // Replace file only if a new one was uploaded
         if ($request->hasFile('file')) {
             // Delete old file if it exists
-            if ($handBook->file_url) {
-                Storage::disk('public')->delete($handBook->file_url);
+            if ($handbook->file_url) {
+                Storage::disk('public')->delete($handbook->file_url);
             }
 
-            $filename = time() . '-' . $request->file('file')->getClientOriginalName();
-            $validated['file_url'] = $request->file('file')->storeAs('handbooks', $filename, 'public');
+            $filename = time() . '-' . $request->file('file_url')->getClientOriginalName();
+            $validated['file_url'] = $request->file('file_url')->storeAs('handbooks', $filename, 'public');
         }
 
-        $handBook->update($validated);
+        $handbook->update($validated);
 
         return redirect()->back()->with('success', 'Handbook updated successfully!');
     }
@@ -64,13 +63,13 @@ class HandBookController extends Controller
     /**
      * Delete a handbook and its stored file.
      */
-    public function destroy(HandBook $handBook)
+    public function destroy(HandBook $handbook)
     {
-        if ($handBook->file_url) {
-            Storage::disk('public')->delete($handBook->file_url);
+        if ($handbook->file_url) {
+            Storage::disk('public')->delete($handbook->file_url);
         }
 
-        $handBook->delete();
+        $handbook->delete();
 
         return redirect()->back()->with('success', 'Handbook deleted successfully!');
     }

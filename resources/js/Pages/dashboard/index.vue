@@ -22,13 +22,13 @@ watch(
     () => pageStore.currentPage,
     (newVal, oldVal) => {
         searchIndex.value = newVal;
+      
     }
 );
 const { applySearch } = useSearchAndFilter(searchIndex);
 
 defineProps({
     pageTitle: String,
-    user: Object,
     announcements: Object,
     handBooks: Object,
     events: Object,
@@ -104,6 +104,7 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
             </div>
 
             <Annnouncement
+                
                 :announcements="announcements"
                 v-if="pageStore.currentPage === 'announcement'"
             />

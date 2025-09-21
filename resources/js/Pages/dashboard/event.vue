@@ -102,6 +102,7 @@ const populateFormEdit = (entity) => {
 <template>
     <div class="w-full flex justify-end mb-4">
         <ModalAction
+        v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"
             :modalTitle="'Event Form'"
             :buttonName="'Create New Event'"
@@ -145,7 +146,7 @@ const populateFormEdit = (entity) => {
                     <th>Title</th>
                     <th>Description</th>
                     <th>Event Date</th>
-                    <th>Action</th>
+                    <th v-if="$page.props.auth.user.role === 'admin'">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -159,7 +160,7 @@ const populateFormEdit = (entity) => {
                     <td>{{ event.title }}</td>
                     <td>{{ event.description }}</td>
                     <td>{{ event.date }}</td>
-                    <td class="space-x-2">
+                    <td class="space-x-2" v-if="$page.props.auth.user.role === 'admin'">
                         <button
                             class="btn btn-primary btn-xs text-white"
                             @click="populateFormEdit(event)"

@@ -40,7 +40,7 @@ function handleSubmit({ closeModal }) {
 
 function handleUpdate() {
     isLoading.value = true;
-    console.log(form);
+
     form.patch(`/hand-books/${selectedItem.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
@@ -81,6 +81,7 @@ function resetPopulate() {
 }
 
 function populateFormEdit(entity) {
+    console.log(entity);
     form.reset();
     form.clearErrors();
     selectedItem.value = entity;
@@ -93,6 +94,7 @@ function populateFormEdit(entity) {
 <template>
     <div class="w-full flex justify-end mb-4">
         <ModalAction
+            v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"
             :modalTitle="'Hand-Book Form'"
             :buttonName="'Create New Hand-Book'"
@@ -137,7 +139,9 @@ function populateFormEdit(entity) {
                     <th>Title</th>
                     <th>Description</th>
                     <th>File</th>
-                    <th>Action</th>
+                    <th v-if="$page.props.auth.user.role === 'admin'">
+                        Action
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -160,7 +164,10 @@ function populateFormEdit(entity) {
                         </a>
                     </td>
 
-                    <td class="space-x-2">
+                    <td
+                        class="space-x-2"
+                        v-if="$page.props.auth.user.role === 'admin'"
+                    >
                         <button
                             class="btn btn-primary btn-xs text-white"
                             @click="populateFormEdit(hbooks)"
@@ -221,13 +228,23 @@ function populateFormEdit(entity) {
                                 type="file"
                                 :errors="form.errors.file_url"
                             />
+                            <div
+                                role="alert"
+                                class="alert alert-warning alert-soft"
+                            >
+                                <span class="text-warning font-medium">
+                                    ⚠️ Note: Uploading a new file will remove
+                                    the existing file and replace it with the
+                                    new version.
+                                </span>
+                            </div>
                         </form>
                     </div>
                     <div class="w-full flex justify-end gap-2 mt-2">
                         <button class="btn btn-sm btn-soft">Close</button>
                         <button
                             :disabled="isLoading"
-                            @click="handleUpadte"
+                            @click="handleUpdate"
                             type="button"
                             class="btn btn-primary btn-sm"
                         >

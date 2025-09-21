@@ -41,9 +41,9 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::post('/hand-books', [HandBookController::class, 'store'])
             ->name('store');
-        Route::patch('/hand-books/{hand-book}', [HandBookController::class, 'update'])
+        Route::patch('/hand-books/{handbook}', [HandBookController::class, 'update'])
             ->name('update');
-        Route::delete('/hand-books/{hand-book}', [HandBookController::class, 'destroy'])
+        Route::delete('/hand-books/{handbook}', [HandBookController::class, 'destroy'])
             ->name('destroy');
 
         Route::get('/hand-books/{handbook}/download', [HandBookController::class, 'download'])

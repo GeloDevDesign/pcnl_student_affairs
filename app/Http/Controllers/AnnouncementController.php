@@ -32,7 +32,7 @@ class AnnouncementController extends Controller
 
         $handBooks = HandBook::with('user')->latest();
         if ($request->page === 'hand-books') {
-            $event->when($request->filled('search'), function ($q) use ($request) {
+            $handBooks->when($request->filled('search'), function ($q) use ($request) {
                 $q->whereAny(['title', 'description'], 'like', '%' . $request->search . '%');
             });
         }

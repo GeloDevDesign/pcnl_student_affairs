@@ -22,6 +22,7 @@ const form = useForm({
 
 const props = defineProps({
     announcements: Object,
+  
     errors: Object,
 });
 
@@ -101,6 +102,7 @@ const populateFormEdit = (entity) => {
 <template>
     <div class="w-full flex justify-end mb-4">
         <ModalAction
+            v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"
             :modalTitle="'Announcement Form'"
             :buttonName="'Post New Announcement'"
@@ -138,7 +140,7 @@ const populateFormEdit = (entity) => {
                     <th>Title</th>
                     <th>Details</th>
                     <th>Date Created</th>
-                    <th>Action</th>
+                    <th  v-if="$page.props.auth.user.role === 'admin'">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -153,7 +155,7 @@ const populateFormEdit = (entity) => {
                     <td>{{ ann.title }}</td>
                     <td>{{ ann.details }}</td>
                     <td>{{ ann.created_at }}</td>
-                    <td class="space-x-2">
+                    <td class="space-x-2"  v-if="$page.props.auth.user.role === 'admin'">
                         <button
                             class="btn btn-primary btn-xs text-white"
                             @click="populateFormEdit(ann)"
