@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Announcement;
 use App\Models\Event;
+use App\Models\HandBook;
 
 class AnnouncementController extends Controller
 {
@@ -20,6 +21,7 @@ class AnnouncementController extends Controller
             });
         }
 
+
         $event = Event::with('user')->latest();
         if ($request->page === 'event') {
             $event->when($request->filled('search'), function ($q) use ($request) {
@@ -28,8 +30,17 @@ class AnnouncementController extends Controller
         }
 
 
+        $handBooks = HandBook::with('user')->latest();
+        if ($request->page === 'hand-books') {
+            $event->when($request->filled('search'), function ($q) use ($request) {
+                $q->whereAny(['title', 'description'], 'like', '%' . $request->search . '%');
+            });
+        }
+
+
         return Inertia::render('dashboard/index', [
             'pageTitle' => 'PCNL - Dashboard',
+            'handBooks' => $handBooks->paginate(10)->onEachSide(1),
             'announcements' => $announcement->paginate(10)->onEachSide(1),
             'events' => $event->paginate(10)->onEachSide(1),
         ]);

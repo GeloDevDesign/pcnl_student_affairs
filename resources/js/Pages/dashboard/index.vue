@@ -19,7 +19,7 @@ const pageStore = useNavigatePageStore();
 const searchIndex = ref("announcement");
 
 watch(
-    () => pageStore.currentPage, 
+    () => pageStore.currentPage,
     (newVal, oldVal) => {
         searchIndex.value = newVal;
     }
@@ -30,6 +30,7 @@ defineProps({
     pageTitle: String,
     user: Object,
     announcements: Object,
+    handBooks: Object,
     events: Object,
 });
 
@@ -108,7 +109,10 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
             />
             <Welcome v-if="pageStore.currentPage === 'home'" />
             <Event :events="events" v-if="pageStore.currentPage === 'event'" />
-            <Handbook v-if="pageStore.currentPage === 'hand-books'" />
+            <Handbook
+                :handBooks="handBooks"
+                v-if="pageStore.currentPage === 'hand-books'"
+            />
         </div>
     </Layout>
 </template>

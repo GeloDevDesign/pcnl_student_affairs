@@ -1,6 +1,5 @@
 <script setup>
 import { defineProps, defineModel } from "vue";
-import { ref, computed, watch } from "vue";
 
 const props = defineProps({
     label: String,
@@ -10,23 +9,29 @@ const props = defineProps({
     },
     placeholder: String,
     readonly: Boolean,
-    errors: String || "",
+    errors: String,
 });
 
-const model = defineModel({
-    required: true,
-});
+// expose v-model
+const model = defineModel({ required: true });
+
+function handleFileChange(e) {
+    // Always grab the first file only
+    const file = e.target.files[0] || null;
+    model.value = file;
+}
 </script>
 
 <template>
     <div class="w-full">
-        <fieldset class="fieldset w-full">
+        <!-- For text/other inputs -->
+        <fieldset v-if="props.type !== 'file'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
             <label
                 class="input w-full"
-                :class="props.errors ? ' border-1 border-red-500' : ''"
+                :class="props.errors ? 'border-1 border-red-500' : ''"
             >
                 <slot></slot>
                 <input
@@ -40,7 +45,23 @@ const model = defineModel({
                 v-if="props.errors"
                 class="text-red-400 font-semibold bg-red-100 p-1"
             >
-                {{ props.errors || "" }}
+                {{ props.errors }}
+            </p>
+        </fieldset>
+
+        <!-- For file input -->
+        <fieldset v-else class="fieldset w-full">
+            <legend class="fieldset-legend">{{ props.label }}</legend>
+            <input
+                type="file"
+                @change="handleFileChange"
+                class="file-input w-full file-input-primary"
+            />
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
             </p>
         </fieldset>
     </div>

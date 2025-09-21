@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\HandBookController;
 
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
@@ -33,6 +34,20 @@ Route::middleware(['auth', 'role:admin'])
             ->name('update');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])
             ->name('destroy');
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->name('hand-books.')
+    ->group(function () {
+        Route::post('/hand-books', [HandBookController::class, 'store'])
+            ->name('store');
+        Route::patch('/hand-books/{hand-book}', [HandBookController::class, 'update'])
+            ->name('update');
+        Route::delete('/hand-books/{hand-book}', [HandBookController::class, 'destroy'])
+            ->name('destroy');
+
+        Route::get('/hand-books/{handbook}/download', [HandBookController::class, 'download'])
+            ->name('download');
     });
 
 
