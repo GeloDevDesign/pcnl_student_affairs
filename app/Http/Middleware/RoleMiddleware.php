@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
@@ -15,9 +16,10 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
+        $user  = $request->user();
 
 
-        if ($request->user && in_array($request->user->role, $roles)) {
+        if ($user && in_array($user->role, $roles)) {
             return $next($request);
         }
 
@@ -25,8 +27,8 @@ class RoleMiddleware
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->withErrors([
-            'message' => 'You are not authorized to access this area.',
-        ]);
+        return redirect()->route('login')->withErrors(
+            'You are not authorized to access this area.',
+        );
     }
 }

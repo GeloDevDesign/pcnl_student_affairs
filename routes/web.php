@@ -13,9 +13,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 // Announcements Routes
 Route::get('/', [AnnouncementController::class, 'index'])->middleware(['auth'])->name('home');
-Route::post('/announcements', [AnnouncementController::class, 'store'])->middleware(['auth'])->name('announcements.store');
-Route::patch('/announcements/{announcements}', [AnnouncementController::class, 'update'])->middleware(['auth'])->name('announcements.store');
-Route::delete('/announcements', [AnnouncementController::class, 'destroy'])->middleware(['auth'])->name('announcements.store');
+Route::middleware(['auth', 'role:admin'])
+    ->name('announcements.')
+    ->group(function () {
+        Route::post('/announcements', [AnnouncementController::class, 'store'])
+            ->name('store');
+        Route::patch('/announcements/{announcement}', [AnnouncementController::class, 'update'])
+            ->name('update');
+        Route::delete('/announcements/{announcement}', [AnnouncementController::class, 'destroy'])
+            ->name('destroy');
+});
 
 
 Route::get('/evaluate', function () {

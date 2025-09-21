@@ -12,13 +12,11 @@ class AnnouncementController extends Controller
     {
         $query  = Announcement::with('user')->latest();
 
-        $query->when($request->input('search'), function ($q, $search) {
-            $q->where(function ($subQuery) use ($search) {
-                $subQuery->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('details', 'like', '%' . $search . '%');
-            });
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $q->whereAny(['title', 'details'], 'like', '%' . $request->search . '%');
         });
 
+        
         return Inertia::render('dashboard/index', [
             'pageTitle' => 'PCNL - Dashboard',
             'announcement' => $query->paginate(10)->onEachSide(1),
