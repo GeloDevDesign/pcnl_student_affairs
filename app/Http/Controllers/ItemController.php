@@ -17,7 +17,7 @@ class ItemController extends Controller
         $items = Item::with('user')->latest();
 
         // Optional search for lost items
-        if ($request->page === 'lost') {
+        if ($request->page === 'lost-found') {
             $items->when($request->filled('search'), function ($q) use ($request) {
                 $q->where(function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->search . '%')

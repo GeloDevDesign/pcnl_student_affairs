@@ -6,7 +6,7 @@ export function useSearchAndFilter(pageRef) {
         announcement: "home",
         event: "home",
         "hand-books": "home",
-        "lost-found": "lost-and-found",
+        "lost-found": "lost-found",
     };
 
     function applySearch(value) {

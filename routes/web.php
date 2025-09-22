@@ -52,7 +52,7 @@ Route::middleware(['auth', 'role:admin'])
     });
 
 
-Route::get('/lost-and-found', [ItemController::class, 'index'])->middleware(['auth'])->name('lost-and-found');
+Route::get('/lost-and-found', [ItemController::class, 'index'])->middleware(['auth'])->name('lost-found');
 
 
 Route::middleware(['auth', 'role:admin'])

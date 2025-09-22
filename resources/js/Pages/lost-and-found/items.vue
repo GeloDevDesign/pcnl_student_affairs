@@ -65,6 +65,7 @@ function handleUpdate() {
             dialogRef.value.close();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
+            form.image_url = null;
         },
         onError: () => {
             isLoading.value = false;

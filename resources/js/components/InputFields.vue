@@ -17,7 +17,7 @@ const props = defineProps({
 });
 
 // expose v-model
-const model = defineModel();
+const model = defineModel({ required: true });
 
 function handleFileChange(e) {
     // Always grab the first file only

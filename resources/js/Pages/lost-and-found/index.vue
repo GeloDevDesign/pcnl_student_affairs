@@ -13,8 +13,9 @@ import Search from "../../components/Search.vue";
 import Items from "./items.vue";
 
 const pageStore = useNavigatePageStore();
+const defaultPage = ref("lost-found");
 
-const { applySearch } = useSearchAndFilter("lost-found");
+const { applySearch } = useSearchAndFilter(defaultPage);
 
 defineProps({
     pageTitle: String,
