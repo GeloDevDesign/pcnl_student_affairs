@@ -40,7 +40,7 @@ class ItemController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
-            'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+            'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
         ]);
 
 
@@ -66,7 +66,6 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item)
     {
-
         $validated = $request->validate([
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
@@ -74,13 +73,16 @@ class ItemController extends Controller
             'status'      => 'required|in:0,1,2',
         ]);
 
+        // Only handle new image if uploaded
         if ($request->hasFile('image_url')) {
+            // Delete old image if exists
             if ($item->image_url) {
                 Storage::disk('public')->delete($item->image_url);
             }
+
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
             $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
-        }
+        } 
 
         $item->update($validated);
 

@@ -8,7 +8,7 @@ class Item extends Model
 {
     const NOT_FOUND = 0;
     const RESOLVE    = 1;
-    const ARCHIVE = 3;
+    const ARCHIVE = 2;
 
     protected $fillable = [
         'user_id',

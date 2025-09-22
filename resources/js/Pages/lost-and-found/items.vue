@@ -40,19 +40,38 @@ function handleSubmit({ closeModal }) {
 }
 
 function handleUpdate() {
+    if (!selectedItem.value) return;
+
     isLoading.value = true;
 
-    form.patch(`/items/${selectedItem.value.id}`, {
+    // Use FormData for file uploads
+    const payload = new FormData();
+    payload.append("name", form.name);
+    payload.append("description", form.description);
+    payload.append("status", form.status);
+
+    if (form.image_url) {
+        payload.append("image_url", form.image_url);
+    }
+
+    // Add _method=PATCH for Laravel to recognize patch request
+    payload.append("_method", "PATCH");
+
+    router.post(`/items/${selectedItem.value.id}`, payload, {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
+            selectedItem.value = null;
             dialogRef.value.close();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => (isLoading.value = false),
+        onError: () => {
+            isLoading.value = false;
+        },
     });
 }
+
 
 async function handleDelete(entity) {
     const { isConfirmed } = await Swal.fire({
@@ -80,15 +99,18 @@ async function handleDelete(entity) {
 
 function resetPopulate() {
     form.reset();
+    form.clearErrors();
 }
 
 function populateFormEdit(entity) {
-    console.log(entity);
+    selectedItem.value = entity;
     form.reset();
     form.clearErrors();
-    selectedItem.value = entity;
     form.name = entity.name;
     form.description = entity.description;
+    form.status = entity.status;
+    form.image_url = null; // keep null to preserve old image if no new file
+    dialogRef.value.showModal();
 }
 </script>
 
@@ -199,7 +221,7 @@ function populateFormEdit(entity) {
             <div ref="dialogRef" class="modal-action">
                 <form method="dialog" class="w-full">
                     <div class="w-full">
-                        <form class="space-y-2">
+                        <form class="space-y-2" >
                             <InputFields
                                 v-model="form.name"
                                 :label="'Item Name'"
@@ -255,11 +277,7 @@ function populateFormEdit(entity) {
                             type="button"
                             class="btn btn-primary btn-sm"
                         >
-                            {{
-                                isLoading
-                                    ? "Updating Hand-Book..."
-                                    : "Update Hand-Boook"
-                            }}
+                            {{ isLoading ? "Updating..." : "Update Item" }}
                             <span
                                 v-if="isLoading"
                                 class="loading loading-spinner loading-xs"
