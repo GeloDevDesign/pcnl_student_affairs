@@ -66,6 +66,7 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item)
     {
+
         $validated = $request->validate([
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
@@ -74,11 +75,9 @@ class ItemController extends Controller
         ]);
 
         if ($request->hasFile('image_url')) {
-            // Delete old file if it exists
             if ($item->image_url) {
                 Storage::disk('public')->delete($item->image_url);
             }
-
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
             $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
         }

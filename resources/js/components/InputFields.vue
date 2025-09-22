@@ -54,19 +54,15 @@ function handleFileChange(e) {
         </fieldset>
 
         <fieldset v-if="props.type === 'select'" class="fieldset w-full">
-            <legend class="fieldset-legend font-semibold">
-                {{ props.label }}
-            </legend>
-            <select v-model="model" class="select w-full">
-                <option disabled value="">
-                    {{ props.placeholder || "Select an option" }}
-                </option>
+            <legend class="fieldset-legend">{{ props.label }}</legend>
+            <select class="select w-full" v-model="model">
+                <option disabled value="">Select {{ props.label }}</option>
                 <option
                     v-for="(item, index) in props.selectionItems"
                     :key="index"
-                    :value="item.value"
+                    :value="item.id"
                 >
-                    {{ item.text }}
+                    {{ item.name }}
                 </option>
             </select>
             <p

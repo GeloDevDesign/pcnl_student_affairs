@@ -70,6 +70,7 @@ async function handleDelete(entity) {
     router.delete(`/items/${entity.id}`, {
         preserveScroll: true,
         onSuccess: () => {
+            form.reset();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
@@ -79,7 +80,6 @@ async function handleDelete(entity) {
 
 function resetPopulate() {
     form.reset();
-    form.image_url = null;
 }
 
 function populateFormEdit(entity) {
@@ -141,21 +141,25 @@ function populateFormEdit(entity) {
             <figure>
                 <img
                     :src="
-                        item.image_url
+                        item?.image_url
                             ? `/storage/${item.image_url}`
-                            : '/fallback-image.png'
+                            : '/public/icons/lostandfound.svg'
                     "
                     class="w-full h-48 object-cover rounded-md p-6"
                     alt="Lost Item Image"
                 />
             </figure>
             <div class="card-body">
-                <h2 class="card-title mb-2">
-                    {{ item.name }}
-                    <div class="badge badge-soft badge-primary badge-sm">
+                <div class="flex items-start justify-between w-full">
+                    <h2 class="card-title mb-2 w-2/3">
+                        {{ item.name }}
+                    </h2>
+                    <div
+                        class="badge badge-soft badge-primary badge-sm font-semibold"
+                    >
                         {{ item.status_text }}
                     </div>
-                </h2>
+                </div>
                 <p class="text-sm opacity-60">
                     {{ item.description }}
                 </p>
@@ -189,7 +193,7 @@ function populateFormEdit(entity) {
     <dialog ref="dialogRef" id="my_modal_2" class="modal">
         <div class="modal-box">
             <h3 class="text-lg font-bold">
-                Update Handbook
+                Update Item
                 <span class="text-primary">{{ selectedItem?.name }}</span>
             </h3>
             <div ref="dialogRef" class="modal-action">
@@ -217,18 +221,18 @@ function populateFormEdit(entity) {
                                 label="Status"
                                 type="select"
                                 :selectionItems="[
-                                    { value: 0, text: 'Not Found' },
-                                    { value: 1, text: 'Resolve' },
-                                    { value: 2, text: 'Archive' },
+                                    { id: 0, name: 'Not Found' },
+                                    { id: 1, name: 'Resolve' },
+                                    { id: 2, name: 'Archive' },
                                 ]"
                                 :errors="form.errors.status"
                             />
 
                             <InputFields
-                                v-model="form.file_url"
-                                label="Hand-Book File"
+                                v-model="form.image_url"
+                                label="Image Item"
                                 type="file"
-                                :errors="form.errors.file_url"
+                                :errors="form.errors.image_url"
                             />
 
                             <div

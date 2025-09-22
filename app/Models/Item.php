@@ -25,15 +25,14 @@ class Item extends Model
     ];
 
 
-    protected $appends = ['formatted_uploaded_at','status_text'];
+    protected $appends = ['formatted_uploaded_at', 'status_text'];
 
     public function getFormattedUploadedAtAttribute()
     {
         return $this->uploaded_at
-            ? $this->uploaded_at->format('Y-m-d h:i A')
+            ? $this->uploaded_at->timezone('Asia/Manila')->format('Y-m-d h:i A')
             : null;
     }
-
 
 
     public function getStatusTextAttribute()
