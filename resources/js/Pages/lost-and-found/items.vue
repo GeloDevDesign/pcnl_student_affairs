@@ -73,7 +73,6 @@ function handleUpdate() {
     });
 }
 
-
 async function handleDelete(entity) {
     const { isConfirmed } = await Swal.fire({
         title: "DELETE ITEM",
@@ -178,12 +177,19 @@ function populateFormEdit(entity) {
                         {{ item.name }}
                     </h2>
                     <div
-                        class="badge badge-soft badge-primary badge-sm font-semibold"
+                        :class="[
+                            'badge lg:badge-sm md:badge-sm badge-xs font-semibold badge-soft',
+                            item.status === 0
+                                ? 'badge-error'
+                                : item.status === 1
+                                ? 'bg-green-100 border-0 text-green-600'
+                                : 'badge-warning',
+                        ]"
                     >
                         {{ item.status_text }}
                     </div>
                 </div>
-                <p class="text-sm opacity-60">
+                <p class="text-sm opacity-60 break-words">
                     {{ item.description }}
                 </p>
                 <div class="flex items-center">
@@ -192,7 +198,10 @@ function populateFormEdit(entity) {
                         item.formatted_uploaded_at
                     }}</span>
                 </div>
-                <div class="card-actions justify-end">
+                <div
+                    v-if="$page.props.auth.user.role === 'admin'"
+                    class="card-actions justify-end"
+                >
                     <button
                         class="btn btn-primary btn-xs text-white"
                         @click="populateFormEdit(item)"
@@ -222,7 +231,7 @@ function populateFormEdit(entity) {
             <div ref="dialogRef" class="modal-action">
                 <form method="dialog" class="w-full">
                     <div class="w-full">
-                        <form class="space-y-2" >
+                        <form class="space-y-2">
                             <InputFields
                                 v-model="form.name"
                                 :label="'Item Name'"
@@ -255,6 +264,7 @@ function populateFormEdit(entity) {
                                 v-model="form.image_url"
                                 label="Image Item"
                                 type="file"
+                                :form="form"
                                 :errors="form.errors.image_url"
                             />
 

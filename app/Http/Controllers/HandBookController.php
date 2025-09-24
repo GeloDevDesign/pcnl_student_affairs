@@ -45,7 +45,7 @@ class HandBookController extends Controller
         ]);
 
         // Replace file only if a new one was uploaded
-        if ($request->hasFile('file')) {
+        if ($request->hasFile('file_url')) {
             // Delete old file if it exists
             if ($handbook->file_url) {
                 Storage::disk('public')->delete($handbook->file_url);

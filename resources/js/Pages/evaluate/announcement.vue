@@ -22,7 +22,6 @@ const form = useForm({
 
 const props = defineProps({
     announcements: Object,
-  
     errors: Object,
 });
 

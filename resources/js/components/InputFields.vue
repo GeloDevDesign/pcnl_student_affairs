@@ -3,33 +3,30 @@ import { defineProps, defineModel } from "vue";
 
 const props = defineProps({
     label: String,
-    type: {
-        type: String,
-        default: "text",
-    },
+    type: { type: String, default: "text" },
     placeholder: String,
     readonly: Boolean,
     errors: String,
-    selectionItems: {
-        type: Array,
-        default: [],
-    },
+    selectionItems: { type: Array, default: [] },
+    form: Object,
 });
 
-// expose v-model
+// v-model for input value
 const model = defineModel({ required: true });
 
 function handleFileChange(e) {
-    // Always grab the first file only
     const file = e.target.files[0] || null;
-    model.value = file;
+    model.value = file; // send the File object to parent form
 }
 </script>
 
 <template>
     <div class="w-full">
         <!-- For text/other inputs -->
-        <fieldset v-if="props.type === 'text'" class="fieldset w-full">
+        <fieldset
+            v-if="props.type === 'text' || props.type === 'date'"
+            class="fieldset w-full"
+        >
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
@@ -73,20 +70,30 @@ function handleFileChange(e) {
             </p>
         </fieldset>
 
-        <!-- For file input -->
         <fieldset v-if="props.type === 'file'" class="fieldset w-full">
             <legend class="fieldset-legend">{{ props.label }}</legend>
+
             <input
                 type="file"
                 @change="handleFileChange"
                 class="file-input w-full file-input-primary"
             />
+
             <p
                 v-if="props.errors"
                 class="text-red-400 font-semibold bg-red-100 p-1"
             >
                 {{ props.errors }}
             </p>
+
+            <progress
+                class="progress progress-primary w-full"
+                v-if="props.form?.progress"
+                :value="props.form.progress.percentage"
+                max="100"
+            >
+                {{ props.form.progress.percentage }}%
+            </progress>
         </fieldset>
     </div>
 </template>

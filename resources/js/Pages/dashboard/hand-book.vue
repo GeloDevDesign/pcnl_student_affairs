@@ -39,17 +39,32 @@ function handleSubmit({ closeModal }) {
 }
 
 function handleUpdate() {
+    if (!selectedItem.value) return;
+
     isLoading.value = true;
 
-    form.patch(`/hand-books/${selectedItem.value.id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            dialogRef.value.close();
-            toastAlert(page.props.flash.success, "success");
-            isLoading.value = false;
+    router.post(
+        `/hand-books/${selectedItem.value.id}`,
+        {
+            ...form,
+            _method: "PATCH",
         },
-        onError: () => (isLoading.value = false),
-    });
+        {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reset();
+                selectedItem.value = null;
+                dialogRef.value.close();
+                toastAlert(page.props.flash.success, "success");
+                isLoading.value = false;
+                form.file_url = null;
+            },
+            onError: () => {
+                isLoading.value = false;
+            },
+        }
+    );
 }
 
 async function handleDelete(entity) {
@@ -125,6 +140,7 @@ function populateFormEdit(entity) {
                     v-model="form.file_url"
                     label="Hand-Book File"
                     type="file"
+                    :form="form"
                     :errors="form.errors.file_url"
                 />
             </form>
@@ -226,6 +242,7 @@ function populateFormEdit(entity) {
                                 v-model="form.file_url"
                                 label="Hand-Book File"
                                 type="file"
+                                :form="form"
                                 :errors="form.errors.file_url"
                             />
                             <div
