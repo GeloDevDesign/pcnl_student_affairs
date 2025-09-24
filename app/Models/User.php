@@ -12,6 +12,15 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    const TYPE_ADMIN = 'admin';
+    const TYPE_STUDENT = 'student';
+
+    public static $types = [
+        self::TYPE_ADMIN => 'admin',
+        self::TYPE_STUDENT => 'student'
+    ];
+
+
     /**
      * The attributes that are mass assignable.
      *
@@ -50,5 +59,37 @@ class User extends Authenticatable
     public function announcements()
     {
         return $this->hasMany(Announcement::class);
+    }
+
+    public function feedbacks()
+    {
+        return $this->hasMany(FeedBack::class);
+    }
+
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
+
+
+    public function handBooks()
+    {
+        return $this->hasMany(HandBook::class);
+    }
+
+    public function isAdmin()
+    {
+        return $this->role == self::TYPE_ADMIN;
+    }
+
+    public function isStudent()
+    {
+        return $this->role == self::TYPE_STUDENT;
     }
 }

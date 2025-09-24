@@ -31,7 +31,7 @@ const logout = () => {
 
 <template>
     <!-- MOBILE SIDENAV -->
-    <nav class="drawer lg:hidden z-40 ">
+    <nav class="drawer lg:hidden z-40">
         <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
         <div class="drawer-side fixed top-0 bottom-0 h-full">
             <label
@@ -59,7 +59,7 @@ const logout = () => {
                     <nav class="space-y-4 px-3">
                         <!-- Home -->
                         <NavLink
-                            route="announcements.index"
+                            route="/"
                             buttonName="Home"
                             :isCollapsed="isCollapsed"
                         >
@@ -119,7 +119,7 @@ const logout = () => {
 
                         <!-- Lost & Found -->
                         <NavLink
-                            route="/lost-found"
+                            route="/lost-and-found"
                             buttonName="Lost & Found"
                             :isCollapsed="isCollapsed"
                         >
@@ -133,7 +133,7 @@ const logout = () => {
                         </NavLink>
                     </nav>
 
-                    <nav class="space-y-4 px-3 ">
+                    <nav class="space-y-4 px-3">
                         <Link
                             href="/settings"
                             :isCollapsed="isCollapsed"
@@ -265,7 +265,7 @@ const logout = () => {
 
                 <!-- Lost & Found -->
                 <NavLink
-                    route="/lost-found"
+                    route="/lost-and-found"
                     buttonName="Lost & Found"
                     :isCollapsed="isCollapsed"
                 >

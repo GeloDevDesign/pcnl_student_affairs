@@ -20,18 +20,18 @@ const reset = () => {
     <div class="flex justify-end w-auto gap-2">
         <input
             v-model="search"
-            class="input join-item bg-white lg:input-md md:input-md input-sm"
+            class="input join-item bg-white lg:input-sm md:input-sm input-xs"
             placeholder="Search..."
         />
         <button
             @click="searchAction"
-            class="btn btn-primary lg:btn-md md:btn-md btn-sm"
+            class="btn btn-primary lg:btn-sm md:btn-sm btn-xs"
         >
             Search
         </button>
         <button
             @click="reset"
-            class="btn btn-neutral lg:btn-md md:btn-md btn-sm join-item"
+            class="btn btn-neutral lg:btn-sm md:btn-sm btn-xs join-item"
         >
             Reset
         </button>

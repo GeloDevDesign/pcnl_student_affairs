@@ -1,15 +1,15 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
-export const useNavigatePageStore = defineStore('navigatePage', () => {
-  const currentPage = ref('home')
+export const useNavigatePageStore = defineStore("navigatePage", () => {
+    const currentPage = ref("home");
 
-  function navigatePage(page) {
-    currentPage.value = page?.toLowerCase() || ''
-  }
+    function navigatePage(page) {
+        currentPage.value = page?.toLowerCase() || "";
+    }
 
-  return {
-    currentPage,
-    navigatePage,
-  }
-})
+    return {
+        currentPage,
+        navigatePage,
+    };
+});

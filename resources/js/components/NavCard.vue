@@ -49,7 +49,7 @@ const navigate = () => {
                 {{ cardTitle }}
             </h3>
             <p
-                class="text-gray-700 lg:text-sm md:text-sm text-xs opacity-80 font-medium truncate"
+                class="text-gray-700 lg:text-xs md:text-xs text-xs opacity-60 font-medium truncate"
             >
                 {{ cardDescription }}
             </p>

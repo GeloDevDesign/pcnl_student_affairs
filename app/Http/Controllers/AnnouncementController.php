@@ -5,31 +5,51 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Announcement;
+use App\Models\Event;
+use App\Models\HandBook;
 
 class AnnouncementController extends Controller
 {
     public function index(Request $request)
     {
-        $query  = Announcement::with('user')->latest();
+        $announcement  = Announcement::with('user')->latest();
 
-        $query->when($request->input('search'), function ($q, $search) {
-            $q->where(function ($subQuery) use ($search) {
-                $subQuery->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('details', 'like', '%' . $search . '%');
+
+        if ($request->page === 'announcement') {
+            $announcement->when($request->filled('search'), function ($q) use ($request) {
+                $q->whereAny(['title', 'details'], 'like', '%' . $request->search . '%');
             });
-        });
+        }
+
+
+        $event = Event::with('user')->latest();
+        if ($request->page === 'event') {
+            $event->when($request->filled('search'), function ($q) use ($request) {
+                $q->whereAny(['title', 'description'], 'like', '%' . $request->search . '%');
+            });
+        }
+
+
+        $handBooks = HandBook::with('user')->latest();
+        if ($request->page === 'hand-books') {
+            $handBooks->when($request->filled('search'), function ($q) use ($request) {
+                $q->whereAny(['title', 'description'], 'like', '%' . $request->search . '%');
+            });
+        }
+
 
         return Inertia::render('dashboard/index', [
             'pageTitle' => 'PCNL - Dashboard',
-            'announcement' => $query->paginate(10)->onEachSide(1),
+            'handBooks' => $handBooks->paginate(10)->onEachSide(1),
+            'announcements' => $announcement->paginate(10)->onEachSide(1),
+            'events' => $event->paginate(10)->onEachSide(1),
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-
+            'title' => 'required|string|max:255|min:5',
             'details' => 'required|string',
         ]);
 
@@ -37,5 +57,25 @@ class AnnouncementController extends Controller
         $request->user()->announcements()->create($validated);
 
         return redirect()->back()->with('success', 'Announcement created successfully.');
+    }
+
+    public function update(Request $request, Announcement $announcement)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255|min:5',
+            'details' => 'required|string',
+        ]);
+
+        $announcement->update($validated);
+
+        return redirect()->back()->with('success', 'Announcement updated successfully.');
+    }
+
+
+    public function destroy(Announcement $announcement)
+    {
+        $announcement->delete();
+
+        return redirect()->back()->with('success', 'Announcement updated successfully.');
     }
 }

@@ -1,7 +1,7 @@
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, watch } from "vue";
 import { Head } from "@inertiajs/vue3";
-import { Form } from '@inertiajs/vue3'
+import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
 
@@ -13,25 +13,28 @@ import Search from "../../components/Search.vue";
 import Welcome from "./welcome.vue";
 import Handbook from "./hand-book.vue";
 import Event from "./event.vue";
-import Annnouncement from "./annnouncement.vue";
+import Annnouncement from "./announcement.vue";
 
 const pageStore = useNavigatePageStore();
-const { applySearch } = useSearchAndFilter("home");
+const searchIndex = ref("announcement");
+
+watch(
+    () => pageStore.currentPage,
+    (newVal, oldVal) => {
+        searchIndex.value = newVal;
+      
+    }
+);
+const { applySearch } = useSearchAndFilter(searchIndex);
 
 defineProps({
     pageTitle: String,
-    user: Object,
-    announcement: Object,
+    announcements: Object,
+    handBooks: Object,
+    events: Object,
 });
 
-const breadCrumbPages = reactive([
-    "Home",
-    "Annnouncement",
-    "Event",
-    "Hand-Books",
-]);
-
-
+const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
 </script>
 
 <template>
@@ -46,7 +49,7 @@ const breadCrumbPages = reactive([
                 <template #entity-actions>
                     <Search
                         @query-search="applySearch"
-                        v-if="pageStore.currentPage !== 'event'"
+                        v-if="pageStore.currentPage !== 'home'"
                     />
                 </template>
             </Banner>
@@ -57,7 +60,7 @@ const breadCrumbPages = reactive([
                 <NavCard
                     :cardTitle="'ANNOUNCEMENTS'"
                     :cardDescription="'Post annoucements'"
-                    :cardValue="'annnouncement'"
+                    :cardValue="'announcement'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
@@ -101,12 +104,16 @@ const breadCrumbPages = reactive([
             </div>
 
             <Annnouncement
-                :announcement="announcement"
-                v-if="pageStore.currentPage === 'annnouncement'"
+                
+                :announcements="announcements"
+                v-if="pageStore.currentPage === 'announcement'"
             />
             <Welcome v-if="pageStore.currentPage === 'home'" />
-            <Event v-if="pageStore.currentPage === 'event'" />
-            <Handbook v-if="pageStore.currentPage === 'hand-books'" />
+            <Event :events="events" v-if="pageStore.currentPage === 'event'" />
+            <Handbook
+                :handBooks="handBooks"
+                v-if="pageStore.currentPage === 'hand-books'"
+            />
         </div>
     </Layout>
 </template>

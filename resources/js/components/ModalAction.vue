@@ -25,11 +25,15 @@ defineProps({
     },
 });
 
-const emit = defineEmits(["submit-form"]);
+const emit = defineEmits(["submit-form", "reset-form"]);
 
 const submitRequest = () => {
     // Emit submit event. The parent will decide when to close.
-    emit("submit-form", { closeModal });
+    emit("submit-form", { closeModal, openModal });
+};
+
+const resetForm = () => {
+    emit("reset-form");
 };
 </script>
 
@@ -38,6 +42,7 @@ const submitRequest = () => {
     <button
         class="btn btn-primary btn-sm text-white"
         onclick="my_modal_1.showModal()"
+        @click="resetForm"
     >
         {{ buttonName }}
     </button>
@@ -59,7 +64,8 @@ const submitRequest = () => {
                             @click="submitRequest"
                         >
                             {{ buttonAction }}
-                            <span v-if="isLoading"
+                            <span
+                                v-if="isLoading"
                                 class="loading loading-spinner loading-xs"
                             ></span>
                         </button>
