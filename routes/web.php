@@ -7,6 +7,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HandBookController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\FeedBackController;
 
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
@@ -35,16 +36,17 @@ Route::middleware(['auth', 'role:admin'])
             ->name('update');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])
             ->name('destroy');
-});
+    });
 
 Route::middleware(['auth', 'role:admin'])
     ->name('hand-books.')
+    ->prefix('hand-books')
     ->group(function () {
-        Route::post('/hand-books', [HandBookController::class, 'store'])
+        Route::post('/', [HandBookController::class, 'store'])
             ->name('store');
-        Route::patch('/hand-books/{handbook}', [HandBookController::class, 'update'])
+        Route::patch('/{handbook}', [HandBookController::class, 'update'])
             ->name('update');
-        Route::delete('/hand-books/{handbook}', [HandBookController::class, 'destroy'])
+        Route::delete('/{handbook}', [HandBookController::class, 'destroy'])
             ->name('destroy');
 
         Route::get('/hand-books/{handbook}/download', [HandBookController::class, 'download'])
@@ -57,23 +59,31 @@ Route::get('/lost-and-found', [ItemController::class, 'index'])->middleware(['au
 
 Route::middleware(['auth', 'role:admin'])
     ->name('items.')
+    ->prefix('items')
     ->group(function () {
-        Route::post('/items', [ItemController::class, 'store'])
+        Route::post('/', [ItemController::class, 'store'])
             ->name('store');
-        Route::patch('/items/{item}', [ItemController::class, 'update'])
+        Route::patch('/{item}', [ItemController::class, 'update'])
             ->name('update');
-        Route::delete('/items/{item}', [ItemController::class, 'destroy'])
+        Route::delete('/{item}', [ItemController::class, 'destroy'])
             ->name('destroy');
     });
 
 
-Route::get('/evaluate', function () {
-    return Inertia::render('evaluate/index', [
-        'pageTitle' => 'PCNL - Evaluate'
-    ]);
-})->middleware(['auth'])
-    ->name('evaluate');
-
+Route::get('/evaluate', [FeedBackController::class, 'index'])->middleware(['auth'])->name('evalute');
+Route::middleware(['auth'])
+    ->name('feedback.')
+    ->prefix('feedback')
+    ->group(function () {
+        Route::post('/', [FeedBackController::class, 'store'])
+            ->name('store');
+        Route::patch('/{feedback}', [FeedBackController::class, 'update'])
+            ->name('update')
+            ->middleware('role:admin');
+        Route::delete('/{feedback}', [FeedBackController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('role:admin');
+    });
 
 
 Route::get('/scc-officers', function () {
@@ -90,7 +100,3 @@ Route::get('/concerns', function () {
     ]);
 })->middleware(['auth'])
     ->name('evaluate');
-
-
-
-

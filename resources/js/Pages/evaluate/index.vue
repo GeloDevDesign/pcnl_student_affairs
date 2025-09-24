@@ -10,10 +10,9 @@ import Banner from "../../components/Banner.vue";
 import NavCard from "../../components/NavCard.vue";
 import Search from "../../components/Search.vue";
 
-import Handbook from "./hand-book.vue";
-import Event from "./event.vue";
-import Annnouncement from "./announcement.vue";
+import Feedbacks from "./feedbacks.vue";
 
+const DEFAULT_PAGE = ref(true);
 const pageStore = useNavigatePageStore();
 const searchIndex = ref("announcement");
 
@@ -27,19 +26,18 @@ const { applySearch } = useSearchAndFilter(searchIndex);
 
 defineProps({
     pageTitle: String,
-    announcements: Object,
-    handBooks: Object,
     events: Object,
+    feedbacks: Object,
 });
 
-const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
+const breadCrumbPages = ["Feedbacks", "Forms", "Instructor"];
 </script>
 
 <template>
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
             <Banner
-                :pageName="'LOST & FOUND'"
+                :pageName="'EVALUATE'"
                 :breadCrumbPages="breadCrumbPages"
                 :currentPage="pageStore.currentPage"
                 @breadcrumb-click="(page) => pageStore.navigatePage(page)"
@@ -56,8 +54,8 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
                 class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
             >
                 <NavCard
-                    :cardTitle="'ANNOUNCEMENTS'"
-                    :cardDescription="'Post annoucements'"
+                    :cardTitle="'EVENT FEEDBACKS'"
+                    :cardDescription="'Event Feedbacks Review'"
                     :cardValue="'announcement'"
                     @navigate-action="pageStore.navigatePage"
                 >
@@ -101,15 +99,9 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
                 </NavCard>
             </div>
 
-            <Annnouncement
-                :announcements="announcements"
-                v-if="pageStore.currentPage === 'announcement'"
-            />
-
-            <Event :events="events" v-if="pageStore.currentPage === 'event'" />
-            <Handbook
-                :handBooks="handBooks"
-                v-if="pageStore.currentPage === 'hand-books'"
+            <Feedbacks
+                :events="events"
+                v-if="pageStore.currentPage === 'announcement' || DEFAULT_PAGE"
             />
         </div>
     </Layout>

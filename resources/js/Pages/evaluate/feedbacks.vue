@@ -21,7 +21,7 @@ const form = useForm({
 });
 
 const props = defineProps({
-    announcements: Object,
+    events: Object,
     errors: Object,
 });
 
@@ -139,42 +139,15 @@ const populateFormEdit = (entity) => {
                     <th>Title</th>
                     <th>Details</th>
                     <th>Date Created</th>
-                    <th  v-if="$page.props.auth.user.role === 'admin'">Action</th>
+                    <th v-if="$page.props.auth.user.role === 'admin'">
+                        Action
+                    </th>
                 </tr>
             </thead>
-            <tbody>
-                <tr v-for="(ann, index) in announcements.data" :key="ann.id">
-                    <th>
-                        {{
-                            (announcements.current_page - 1) *
-                                announcements.per_page +
-                            (index + 1)
-                        }}
-                    </th>
-                    <td>{{ ann.title }}</td>
-                    <td>{{ ann.details }}</td>
-                    <td>{{ ann.created_at }}</td>
-                    <td class="space-x-2"  v-if="$page.props.auth.user.role === 'admin'">
-                        <button
-                            class="btn btn-primary btn-xs text-white"
-                            @click="populateFormEdit(ann)"
-                            onclick="my_modal_2.showModal()"
-                        >
-                            Edit
-                        </button>
-                        <button
-                            class="btn btn-xs btn-error"
-                            @click="handleDelete(ann)"
-                        >
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
         </table>
     </div>
 
-    <Pagination :data="announcements" />
+    <!-- <Pagination :data="announcements" /> -->
 
     <dialog ref="dialogRef" id="my_modal_2" class="modal">
         <div class="modal-box">
