@@ -13,29 +13,20 @@ class FeedBackController extends Controller
 
     public function index(Request $request)
     {
-        $events    = Event::with('user')->get();
+        // Start a query so we can chain conditions
+        $eventsQuery = Event::with(['user', 'feedbacks'])->latest();
 
-        if ($request->user()->isAdmin()) {
-            $feedbacks = Event::with(['event', 'user']);
-        } else {
-            $feedbacks = $request->user()
-                ->feedbacks()
-                ->with('event');
-        }
-
+        // Filter by event ID if a filter is provided
         if ($request->filled('filters')) {
-            $feedbacks->whereHas('event', function ($q) use ($request) {
-                $q->where('id', $request->filters);
-            });
+            $eventsQuery->where('id', $request->filters);
         }
 
-        $feedbacks->latest()->paginate(10);
-
+        // ✅ Make sure to assign the paginated result to a variable
+        $events = $eventsQuery->paginate(10)->withQueryString();
 
         return Inertia::render('evaluate/index', [
             'pageTitle' => 'PCNL - Evaluate',
-            'feedbacks' => $feedbacks,
-            'events'    => $events
+            'events'    => $events,
         ]);
     }
 
@@ -46,14 +37,24 @@ class FeedBackController extends Controller
     {
         $validated = $request->validate([
             'event_id' => 'required|exists:events,id',
-            'ratings'  => 'required|integer|min:1max:5',
-            'comment'  => 'nullable|string|max:1000',
+            'ratings'  => 'required|integer|min:1|max:5',
+            'comment'  => 'nullable|string|max:1000', // <-- singular to match front end
         ]);
 
+        // Check if the current user has already left feedback for this event
+        $alreadyFeedback = $request->user()
+            ->feedbacks()
+            ->where('event_id', $validated['event_id'])
+            ->exists();
+
+        if ($alreadyFeedback) {
+            return back()->withErrors('You have already given feedback for this event.');
+        }
+
+        // Create the feedback
         $request->user()->feedbacks()->create($validated);
 
-
-        return redirect()->back()->with('success', 'Feedback submitted successfully.');
+        return back()->with('success', 'Feedback submitted successfully.');
     }
 
 
@@ -64,8 +65,8 @@ class FeedBackController extends Controller
     {
 
         $validated = $request->validate([
-            'ratings'  => 'required|integer|min:1max:5',
-            'comment'  => 'nullable|string|max:1000',
+            'ratings'  => 'required|integer|min:1|max:5',
+            'comments'  => 'nullable|string|max:1000',
         ]);
 
         $feedBack->update($validated);

@@ -91,7 +91,7 @@ Route::get('/scc-officers', function () {
         'pageTitle' => 'PCNL - SCC Officers'
     ]);
 })->middleware(['auth'])
-    ->name('evaluate');
+    ->name('scc-officers');
 
 
 Route::get('/concerns', function () {

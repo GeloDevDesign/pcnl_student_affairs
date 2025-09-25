@@ -11,11 +11,16 @@ class FeedBack extends Model
         'user_id',
         'event_id',
         'ratings',
-        'comment',
+        'comments',
     ];
 
     public function event()
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
