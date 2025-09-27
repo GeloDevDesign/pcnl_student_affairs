@@ -16,7 +16,9 @@ class FeedBack extends Model
         'comments',
     ];
 
-    protected $appends = [];
+    protected $hidden = [
+        'user_id'
+    ];
 
     public function event()
     {

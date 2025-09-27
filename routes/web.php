@@ -76,7 +76,7 @@ Route::middleware(['auth'])
     ->prefix('feedback')
     ->group(function () {
         Route::post('/', [FeedBackController::class, 'store'])
-            ->name('store');
+            ->name('store')->middleware('role:student');
         Route::patch('/{feedback}', [FeedBackController::class, 'update'])
             ->name('update')
             ->middleware('role:admin');

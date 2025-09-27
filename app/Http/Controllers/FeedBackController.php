@@ -13,21 +13,23 @@ class FeedBackController extends Controller
 
     public function index(Request $request)
     {
+        $user = $request->user();
 
-        $eventsQuery = Event::with([
-            $request->user()->isAdmin()
-                ? 'feedbacks' // admin sees all feedbacks
-                : 'userFeedback', // student sees only their feedback
+        $eventsQuery = Event::query()->with([
+            $user->isAdmin()
+                ? 'feedbacks'
+                : 'userFeedback',
             'user',
-        ])->latest();
+        ])->withExists([
+            'feedbacks as is_feedback' => function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            }
+        ])->withCount('feedbacks')->latest();
 
-
-        // Filter by event ID if a filter is provided
+        // 3️⃣  Optional filter
         if ($request->filled('filters')) {
             $eventsQuery->where('id', $request->filters);
         }
-
-        // dd($eventsQuery->get()->toArray());
 
         $events = $eventsQuery->paginate(10)->withQueryString();
 
@@ -36,6 +38,7 @@ class FeedBackController extends Controller
             'events'    => $events,
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.

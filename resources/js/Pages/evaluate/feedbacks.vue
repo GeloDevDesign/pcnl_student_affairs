@@ -15,8 +15,9 @@ const props = defineProps({
 
 const isLoading = ref(false);
 const dialogRef = ref(null);
+const dialogRef2 = ref(null);
 const selectedItem = ref(null);
-
+const selectedFeedbacks = ref(null);
 // form to submit feedback
 const form = useForm({
     event_id: null,
@@ -31,9 +32,14 @@ function openModal(event) {
     form.event_id = event.id;
     form.ratings = 5;
     form.comments = "";
-    selectedItem.value = event;
+    selectedFeedbacks.value = event;
 
     dialogRef.value.showModal();
+}
+
+function openModalFeedbacks(event) {
+    selectedFeedbacks.value = event;
+    dialogRef2.value.showModal();
 }
 
 function handleSubmit() {
@@ -79,12 +85,68 @@ function handleSubmit() {
                     {{ event.description }}
                 </p>
 
-                <div v-if="event.is_feedback" class="w-full h-24 bg-base-100 rounded-lg mt-2">
-                  
+                <div
+                    v-if="event.is_feedback"
+                    class="w-full h-full bg-gray-50 rounded-lg mt-2 p-4 flex flex-col justify-between gap-4"
+                >
+                    <span>Your Feedback</span>
+                    <div class="flex gap-2">
+                        <span class="text-xs opacity-80"> Comment:</span>
+                        <p class="opacity-80">
+                            {{ event.user_feedback.comments }}
+                        </p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="text-xs opacity-80"> Ratings:</span>
+                        <div class="rating rating-sm">
+                            <template v-for="star in 5" :key="star">
+                                <div
+                                    :aria-current="
+                                        star + 1 === event.user_feedback.ratings
+                                    "
+                                    :aria-label="`${star} star`"
+                                    class="mask mask-star-2 bg-orange-400"
+                                    disabled
+                                ></div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    v-else-if="$page.props.auth.user.role == 'admin'"
+                    class="w-full h-full bg-gray-50 rounded-lg mt-2 p-4 flex flex-col justify-between gap-4"
+                >
+                    <div class="flex gap-2 items-center">
+                        <span class="text-xs opacity-80"> Total Feedback:</span>
+                        <p class="opacity-80 text-sm text-primary font-bold">
+                            {{ event.feedbacks_count }}
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-else
+                    class="w-full h-24 bg-gray-50 rounded-lg mt-2 flex items-center justify-items-center"
+                >
+                    <p class="text-center opacity-60">
+                        No feedback for this event.
+                    </p>
                 </div>
 
                 <div class="justify-end card-actions mt-6">
                     <button
+                        v-if="$page.props.auth.user.role == 'admin'"
+                        class="btn btn-primary btn-xs text-white"
+                        @click="openModalFeedbacks(event)"
+                    >
+                        View All Feedbacks
+                    </button>
+                    <button
+                        v-if="
+                            !event.is_feedback &&
+                            $page.props.auth.user.role != 'admin'
+                        "
                         class="btn btn-primary btn-xs text-white"
                         @click="openModal(event)"
                     >
@@ -123,7 +185,6 @@ function handleSubmit() {
                             <input
                                 type="radio"
                                 :value="star"
-                                v-model="form.ratings"
                                 :aria-label="`${star} star`"
                                 class="mask mask-star-2 bg-orange-400"
                             />
@@ -158,6 +219,60 @@ function handleSubmit() {
                     </button>
                 </div>
             </form>
+        </div>
+    </dialog>
+
+    <!-- AllFeedback Modal -->
+
+    <dialog ref="dialogRef2" class="modal">
+        <div class="modal-box">
+            <h3 class="text-lg font-bold mb-4">
+                Feedback for
+                <span class="text-primary">{{ selectedFeedbacks?.title }}</span>
+            </h3>
+
+            <div v-if="selectedFeedbacks?.feedbacks?.length" class="space-y-4">
+                <div
+                    v-for="feedback in selectedFeedbacks.feedbacks"
+                    :key="feedback.id"
+                    class="p-3 rounded-md bg-gray-100"
+                >
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-semibold text-sm">
+                            {{ feedback.user?.name || "Anonymous" }}
+                        </span>
+                        <div class="rating rating-sm">
+                            <template v-for="star in 5" :key="star">
+                                <input
+                                    type="radio"
+                                    disabled
+                                    :value="star"
+                                    :checked="star <= feedback.ratings"
+                                    :aria-label="`${star} star`"
+                                    class="mask mask-star-2 bg-orange-400"
+                                />
+                            </template>
+                        </div>
+                    </div>
+                    <p class="text-sm opacity-80 break-words">
+                        {{ feedback.comments || "No comment provided." }}
+                    </p>
+                </div>
+            </div>
+
+            <div v-else class="text-center text-gray-500">
+                No feedback has been submitted yet.
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-soft"
+                    @click="dialogRef2.close()"
+                >
+                    Close
+                </button>
+            </div>
         </div>
     </dialog>
 </template>
