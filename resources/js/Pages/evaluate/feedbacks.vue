@@ -20,7 +20,7 @@ const selectedItem = ref(null);
 // form to submit feedback
 const form = useForm({
     event_id: null,
-    comment: "",
+    comments: "",
     ratings: 5, // ⭐ default is 5 stars
 });
 
@@ -30,7 +30,7 @@ function openModal(event) {
     form.clearErrors();
     form.event_id = event.id;
     form.ratings = 5;
-    form.comment = "";
+    form.comments = "";
     selectedItem.value = event;
 
     dialogRef.value.showModal();
@@ -51,7 +51,10 @@ function handleSubmit() {
         },
         onError: () => {
             isLoading.value = false;
-            toastAlert(page.props.errors.createFeedBack[0] || "Feedback failed!", "error");
+            toastAlert(
+                page.props.errors.createFeedBack[0] || "Feedback failed!",
+                "error"
+            );
 
             dialogRef.value.close();
         },
@@ -75,6 +78,10 @@ function handleSubmit() {
                 <p class="text-sm opacity-70 break-words mt-2">
                     {{ event.description }}
                 </p>
+
+                <div class="w-full h-24 bg-base-100 rounded-lg mt-2">
+                    {{ event.user_feedback }}
+                </div>
 
                 <div class="justify-end card-actions mt-6">
                     <button
@@ -100,11 +107,11 @@ function handleSubmit() {
 
             <form class="space-y-4" @submit.prevent="handleSubmit">
                 <InputFields
-                    v-model="form.comment"
-                    :label="'Your Comment'"
+                    v-model="form.comments"
+                    :label="'Your comments'"
                     :type="'text'"
-                    :placeholder="'Comment for the event'"
-                    :errors="form.errors.comment"
+                    :placeholder="'comments for the event'"
+                    :errors="form.errors.comments"
                 />
 
                 <div class="flex items-center gap-2">

@@ -13,15 +13,22 @@ class FeedBackController extends Controller
 
     public function index(Request $request)
     {
-        // Start a query so we can chain conditions
-        $eventsQuery = Event::with(['user', 'feedbacks'])->latest();
+        $user = $request->user();
+
+        $eventsQuery = Event::with([
+            'feedbacks' => fn($q) => $q->where('user_id', '!=', $user->id),
+            'userFeedback' => fn($q) => $q->where('user_id', $user->id),
+            'user',
+        ])->latest();
+
 
         // Filter by event ID if a filter is provided
         if ($request->filled('filters')) {
             $eventsQuery->where('id', $request->filters);
         }
 
-        // ✅ Make sure to assign the paginated result to a variable
+        // dd($eventsQuery->get()->toArray());
+
         $events = $eventsQuery->paginate(10)->withQueryString();
 
         return Inertia::render('evaluate/index', [

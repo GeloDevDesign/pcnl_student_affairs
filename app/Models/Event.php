@@ -24,4 +24,9 @@ class Event extends Model
     {
         return $this->hasMany(FeedBack::class);
     }
+
+    public function userFeedback()
+    {
+        return $this->hasOne(FeedBack::class);
+    }
 }

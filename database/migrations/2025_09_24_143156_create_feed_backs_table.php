@@ -18,6 +18,8 @@ return new class extends Migration
             $table->integer('ratings');
             $table->text('comments')->nullable();
             $table->timestamps();
+
+            $table->index(['event_id', 'user_id']);
         });
     }
 

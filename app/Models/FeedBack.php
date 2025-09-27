@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+
+
 class FeedBack extends Model
 {
 
@@ -13,6 +15,8 @@ class FeedBack extends Model
         'ratings',
         'comments',
     ];
+
+    protected $appends = [];
 
     public function event()
     {
