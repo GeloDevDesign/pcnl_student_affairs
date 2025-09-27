@@ -76,7 +76,7 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                 <NavCard
                     :cardTitle="'INSTRUCTORS'"
                     :cardDescription="'Evaluation Review'"
-                    :cardValue="'instructor'"
+                    :cardValue="'instructors'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
@@ -95,7 +95,7 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
             />
             <Instructor
                 :instructors="instructors"
-                v-if="pageStore.currentPage === 'instructor'"
+                v-if="pageStore.currentPage === 'instructors'"
             />
         </div>
     </Layout>

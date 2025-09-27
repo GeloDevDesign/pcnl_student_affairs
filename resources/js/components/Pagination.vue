@@ -23,6 +23,7 @@ defineProps({
                 v-for="link in data.links"
                 :key="link.label"
                 :href="link.url || '/'"
+                preserve-state
                 preserve-scroll
                 class="join-item btn font-normal"
                 :class="{
