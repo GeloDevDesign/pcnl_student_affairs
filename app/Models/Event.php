@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Event extends Model
 {
@@ -14,6 +15,8 @@ class Event extends Model
         'description',
         'date'
     ];
+
+    protected $appends = ['is_feedback'];
 
     public function user()
     {
@@ -28,5 +31,13 @@ class Event extends Model
     public function userFeedback()
     {
         return $this->hasOne(FeedBack::class);
+    }
+
+
+    protected function isFeedback(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->feedbacks()->where('user_id', auth()->id())->exists();
+        });
     }
 }

@@ -13,11 +13,11 @@ class FeedBackController extends Controller
 
     public function index(Request $request)
     {
-        $user = $request->user();
 
         $eventsQuery = Event::with([
-            'feedbacks' => fn($q) => $q->where('user_id', '!=', $user->id),
-            'userFeedback' => fn($q) => $q->where('user_id', $user->id),
+            $request->user()->isAdmin()
+                ? 'feedbacks' // admin sees all feedbacks
+                : 'userFeedback', // student sees only their feedback
             'user',
         ])->latest();
 
@@ -45,16 +45,14 @@ class FeedBackController extends Controller
         $validated = $request->validate([
             'event_id' => 'required|exists:events,id',
             'ratings'  => 'required|integer|min:1|max:5',
-            'comment'  => 'nullable|string|max:1000', // <-- singular to match front end
+            'comments' => 'nullable|string|max:1000',
         ]);
 
-        // Check if the current user has already left feedback for this event
-        $alreadyFeedback = $request->user()
-            ->feedbacks()
-            ->where('event_id', $validated['event_id'])
-            ->exists();
+        // Load the Event model so the accessor can work
+        $event = Event::findOrFail($validated['event_id']);
 
-        if ($alreadyFeedback) {
+        // Use the accessor to check if the user already left feedback
+        if ($event->is_feedback) {
             return back()->withErrors('You have already given feedback for this event.');
         }
 

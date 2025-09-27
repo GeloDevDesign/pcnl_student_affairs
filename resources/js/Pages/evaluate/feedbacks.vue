@@ -79,8 +79,8 @@ function handleSubmit() {
                     {{ event.description }}
                 </p>
 
-                <div class="w-full h-24 bg-base-100 rounded-lg mt-2">
-                    {{ event.user_feedback }}
+                <div v-if="event.is_feedback" class="w-full h-24 bg-base-100 rounded-lg mt-2">
+                  
                 </div>
 
                 <div class="justify-end card-actions mt-6">

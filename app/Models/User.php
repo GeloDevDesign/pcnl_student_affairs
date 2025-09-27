@@ -83,6 +83,8 @@ class User extends Authenticatable
         return $this->hasMany(HandBook::class);
     }
 
+
+
     public function isAdmin()
     {
         return $this->role == self::TYPE_ADMIN;
