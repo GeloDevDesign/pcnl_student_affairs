@@ -16,22 +16,22 @@ const selectedItem = ref(null);
 const dialogRef = ref(null);
 
 const form = useForm({
-    title: "",
-    description: "",
-    date: null,
+    name: "",
+    department: "",
 });
 
 const props = defineProps({
-    events: Object,
+    instructors: Object,
     errors: Object,
 });
 
 const handleSubmit = ({ closeModal }) => {
     isLoading.value = true;
 
-    form.post("/events", {
+    form.post("/instructor", {
         preserveScroll: true,
         onSuccess: () => {
+            form.reset();
             closeModal();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
@@ -44,10 +44,9 @@ const handleSubmit = ({ closeModal }) => {
 
 const handleUpadte = () => {
     isLoading.value = true;
-    form.patch(`/events/${selectedItem.value.id}`, {
+    form.patch(`/instructor/${selectedItem.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
-            form.reset();
             dialogRef.value.close();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
@@ -61,8 +60,8 @@ const handleUpadte = () => {
 const handleDelete = async (entity) => {
     // Show confirm dialog
     const { isConfirmed } = await Swal.fire({
-        title: "DELETE EVENT",
-        text: `Are you sure you want to delete "${entity.title}"?`,
+        title: "DELETE INSTRUCTOR",
+        text: `Are you sure you want to delete "${entity.name}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, delete it!",
@@ -74,7 +73,7 @@ const handleDelete = async (entity) => {
 
     isLoading.value = true;
 
-    router.delete(`/events/${entity.id}`, {
+    router.delete(`/instructor/${entity.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             toastAlert(page.props.flash.success, "success");
@@ -94,9 +93,8 @@ const populateFormEdit = (entity) => {
     form.reset();
     form.clearErrors();
     selectedItem.value = entity;
-    form.title = entity.title;
-    form.description = entity.description;
-    form.date = entity.date;
+    form.name = entity.name;
+    form.department = entity.department;
 };
 </script>
 
@@ -105,35 +103,29 @@ const populateFormEdit = (entity) => {
         <ModalAction
             v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"
-            :modalTitle="'Event Form'"
-            :buttonName="'Create New Event'"
-            :buttonAction="isLoading ? 'Creating Event...' : 'Create Event'"
+            :modalTitle="'Instructor Form'"
+            :buttonName="'Create New Instructor'"
+            :buttonAction="
+                isLoading ? 'Adding New Instructor...' : 'Add Instructor'
+            "
             @reset-form="resetPopulate"
             @submit-form="handleSubmit"
         >
             <Form class="space-y-2">
                 <InputFields
-                    v-model="form.title"
-                    :label="'Title'"
+                    v-model="form.name"
+                    :label="'Name'"
                     :type="'text'"
-                    :placeholder="'Title of eventouncement'"
-                    :errors="form.errors.title"
+                    :placeholder="'Fullname of instructor'"
+                    :errors="form.errors.name"
                 />
 
                 <InputFields
-                    v-model="form.description"
-                    :label="'Description'"
+                    v-model="form.department"
+                    :label="'Department'"
                     :type="'text'"
-                    :placeholder="'Description for event'"
-                    :errors="form.errors.description"
-                />
-
-                <InputFields
-                    v-model="form.date"
-                    :label="'Event Date'"
-                    :type="'date'"
-                    :placeholder="'Title of eventouncement'"
-                    :errors="form.errors.date"
+                    :placeholder="'Department'"
+                    :errors="form.errors.department"
                 />
             </Form>
         </ModalAction>
@@ -144,39 +136,39 @@ const populateFormEdit = (entity) => {
             <thead>
                 <tr>
                     <th></th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Event Date</th>
+                    <th>Name</th>
+                    <th>Department</th>
+
                     <th v-if="$page.props.auth.user.role === 'admin'">
                         Action
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(event, index) in events.data" :key="event.id">
+                <tr v-for="(ins, index) in instructors.data" :key="ins.id">
                     <th>
                         {{
-                            (events.current_page - 1) * events.per_page +
+                            (instructors.current_page - 1) *
+                                instructors.per_page +
                             (index + 1)
                         }}
                     </th>
-                    <td>{{ event.title }}</td>
-                    <td>{{ event.description }}</td>
-                    <td>{{ event.date }}</td>
+                    <td>{{ ins.name }}</td>
+                    <td>{{ ins.department }}</td>
                     <td
                         class="space-x-2"
                         v-if="$page.props.auth.user.role === 'admin'"
                     >
                         <button
                             class="btn btn-primary btn-xs text-white"
-                            @click="populateFormEdit(event)"
+                            @click="populateFormEdit(ins)"
                             onclick="my_modal_2.showModal()"
                         >
                             Edit
                         </button>
                         <button
                             class="btn btn-xs btn-error"
-                            @click="handleDelete(event)"
+                            @click="handleDelete(ins)"
                         >
                             Delete
                         </button>
@@ -186,44 +178,36 @@ const populateFormEdit = (entity) => {
         </table>
     </div>
 
-    <Pagination :data="events" />
+    <Pagination :data="instructors" />
 
     <dialog ref="dialogRef" id="my_modal_2" class="modal">
         <div class="modal-box">
             <h3 class="text-lg font-bold">
-                Update eventouncement
-                <span class="text-primary">{{ selectedItem?.title }}</span>
+                Update Instructor
+                <span class="text-primary">{{ selectedItem?.name }}</span>
             </h3>
             <div ref="dialogRef" class="modal-action">
                 <form method="dialog" class="w-full">
                     <div class="w-full">
                         <Form
-                            :action="`/events/${selectedItem}`"
+                            :action="`/instructor/${selectedItem}`"
                             method="post"
                             class="space-y-2"
                         >
                             <InputFields
-                                v-model="form.title"
+                                v-model="form.name"
                                 :label="'Title'"
                                 :type="'text'"
-                                :placeholder="'Title of Event'"
-                                :errors="form.errors.title"
+                                :placeholder="'Instructor Fullname'"
+                                :errors="form.errors.name"
                             />
 
                             <InputFields
-                                v-model="form.description"
-                                :label="'Description'"
+                                v-model="form.department"
+                                :label="'Details'"
                                 :type="'text'"
-                                :placeholder="'Description for event'"
-                                :errors="form.errors.description"
-                            />
-
-                            <InputFields
-                                v-model="form.date"
-                                :label="'Title'"
-                                :type="'date'"
-                                :placeholder="'Title of eventouncement'"
-                                :errors="form.errors.date"
+                                :placeholder="'Department'"
+                                :errors="form.errors.department"
                             />
                         </Form>
                     </div>
@@ -235,9 +219,7 @@ const populateFormEdit = (entity) => {
                             type="button"
                             class="btn btn-primary btn-sm"
                         >
-                            {{
-                                isLoading ? "Updating Event..." : "Update Event"
-                            }}
+                            Update Instructor
                             <span
                                 v-if="isLoading"
                                 class="loading loading-spinner loading-xs"

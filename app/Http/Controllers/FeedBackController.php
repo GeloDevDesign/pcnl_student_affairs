@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FeedBack;
 use App\Models\Event;
+use App\Models\Instructor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -15,29 +16,37 @@ class FeedBackController extends Controller
     {
         $user = $request->user();
 
+
+        $instructors = Instructor::with(['user'])->latest();
+
         $eventsQuery = Event::query()->with([
             $user->isAdmin()
                 ? 'feedbacks'
                 : 'userFeedback',
             'user',
-        ])->withExists([
-            'feedbacks as is_feedback' => function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            }
-        ])->withCount('feedbacks')->latest();
+        ])
+            ->withExists([
+                'feedbacks as is_feedback' => function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                }
+            ])
+            ->withCount('feedbacks')
+            ->withAvg('feedbacks', 'ratings')
+            ->latest();
 
-        // 3️⃣  Optional filter
-        if ($request->filled('filters')) {
+
+        if ($request->page == 'feedbacks' && $request->filled('filters')) {
             $eventsQuery->where('id', $request->filters);
         }
 
-        $events = $eventsQuery->paginate(10)->withQueryString();
 
         return Inertia::render('evaluate/index', [
             'pageTitle' => 'PCNL - Evaluate',
-            'events'    => $events,
+            'events'    => $eventsQuery->paginate(10)->onEachSide(1),
+            'instructors' => $instructors->paginate(10)->onEachSide(1)
         ]);
     }
+
 
 
     /**

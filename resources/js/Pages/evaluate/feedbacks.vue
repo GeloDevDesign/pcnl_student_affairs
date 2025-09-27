@@ -226,10 +226,34 @@ function handleSubmit() {
 
     <dialog ref="dialogRef2" class="modal">
         <div class="modal-box">
-            <h3 class="text-lg font-bold mb-4">
-                Feedback for
-                <span class="text-primary">{{ selectedFeedbacks?.title }}</span>
-            </h3>
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-lg font-bold mb-4">
+                        Feedback for
+                        <span class="text-primary">{{
+                            selectedFeedbacks?.title
+                        }}</span>
+                    </span>
+                </div>
+
+                <div class="flex gap-1">
+                    <span class="text-base font-bold ">
+                        {{
+                            Math.round(
+                                selectedFeedbacks?.feedbacks_avg_ratings * 10
+                            ) / 10
+                        }}
+                    </span>
+                    <div class="rating rating-sm">
+                        <div
+                            checked
+                            class="mask mask-star-2 bg-orange-400"
+                            aria-label="1 star"
+                            aria-current="true"
+                        ></div>
+                    </div>
+                </div>
+            </div>
 
             <div v-if="selectedFeedbacks?.feedbacks?.length" class="space-y-4">
                 <div
