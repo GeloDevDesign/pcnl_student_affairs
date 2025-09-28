@@ -13,6 +13,14 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::insert();
+        Role::insert(
+            ['name' => 'President'],
+            ['name' => 'Vice President Internal'],
+            ['name' => 'Vice President External'],
+            ['name' => 'Secretary'],
+            ['name' => 'Treasurer'],
+            ['name' => 'Auditor'],
+            ['name' => 'P.I.O'],
+        );
     }
 }

@@ -30,7 +30,6 @@ class Candidate extends Model
         return $this->belongsTo(Role::class);
     }
 
-
     public function party_list()
     {
         return $this->belongsTo(PartyList::class);
