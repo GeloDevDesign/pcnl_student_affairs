@@ -8,7 +8,7 @@ class Election extends Model
 {
 
     const SCHEDULED = 0;
-    const OPEN    = 1;
+    const ONGOING    = 1;
     const CLOSED = 2;
 
     protected  $fillable = [

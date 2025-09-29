@@ -1,122 +1,126 @@
 <script setup>
+import { ref, reactive, watch, onMounted } from "vue";
 import { Head } from "@inertiajs/vue3";
+import { Form } from "@inertiajs/vue3";
+import { useNavigatePageStore } from "../../stores/NavigatePageStore";
+import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
+
 import Layout from "../../shared/Layout.vue";
 import Banner from "../../components/Banner.vue";
 import NavCard from "../../components/NavCard.vue";
+import Search from "../../components/Search.vue";
+
+import Feedbacks from "./officers.vue";
+
+import VotingForm from "./voting-form.vue";
+import Results from "./results.vue";
+import Officers from "./officers.vue";
+
+const pageStore = useNavigatePageStore();
+const searchIndex = ref("feedbacks");
+
+watch(
+    () => pageStore.currentPage,
+    (newVal, oldVal) => {
+        searchIndex.value = newVal;
+    }
+);
+const { applySearch } = useSearchAndFilter(searchIndex);
 
 defineProps({
     pageTitle: String,
-    user: Object,
+    events: Object,
+    instructors: Object,
+    feedbacks: Object,
 });
+
+onMounted(() => {
+    pageStore.navigatePage("ssc-officers");
+});
+
+const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
 </script>
 
 <template>
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
-            <Banner :pageName="'SSC OFFICERS'" >
-              
+            <Banner
+                :pageName="'SSC OFFICERS'"
+                :breadCrumbPages="breadCrumbPages"
+                :currentPage="pageStore.currentPage"
+                @breadcrumb-click="(page) => pageStore.navigatePage(page)"
+            >
+                <template #entity-actions>
+                    <Search
+                        @query-search="applySearch"
+                        v-if="pageStore.currentPage !== 'home'"
+                    />
+                </template>
             </Banner>
 
-            <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8">
-                <NavCard
-                    :cardTitle="'ANNOUNCEMENTS'"
-                    :cardDescription="'Post annoucements'"
-                >
-                    <template #icon> 
-                        <img
-                            src="/public/icons/announce.svg"
-                            alt=""
-                            class="w-16 h-16"
-                        />
-                    </template>
-                </NavCard>
-
-                <NavCard
-                    :cardTitle="'ANNOUNCEMENTS'"
-                    :cardDescription="'Post annoucements'"
-                >
-                    <template #icon>
-                        <img
-                            src="/public/icons/events.svg"
-                            alt=""
-                            class="w-16 h-16"
-                        />
-                    </template>
-                </NavCard>
-
-                <NavCard
-                    :cardTitle="'ANNOUNCEMENTS'"
-                    :cardDescription="'Post annoucements'"
-                >
-                    <template #icon>
-                        <img
-                            src="/public/icons/book.svg"
-                            alt=""
-                            class="w-16 h-16"
-                        />
-                    </template>
-                </NavCard>
-            </div>
-            <!-- Welcome Section -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-4">
-                        Welcome to Dashboard
-
-                        <span class="text-primary">
-                            {{ $page.props.auth.user.role }}</span
-                        >
-                    </h2>
-                </h2>
-                <p class="text-gray-600">
-                    This is your home page content area.
-                </p>
-            </div>
-
-            <!-- Cards Grid -->
             <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6"
+                class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
             >
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Card 1
-                    </h3>
-                    <p class="text-gray-600">Some content here</p>
-                </div>
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Card 2
-                    </h3>
-                    <p class="text-gray-600">Some content here</p>
-                </div>
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                        Card 3
-                    </h3>
-                    <p class="text-gray-600">Some content here</p>
-                </div>
+                <NavCard
+                    :cardTitle="'SSC OFFICERS'"
+                    :cardDescription="'List of officers'"
+                    :cardValue="'ssc-officers'"
+                    @navigate-action="pageStore.navigatePage"
+                >
+                    <template #icon>
+                        <img
+                            src="/public/icons/candidate.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
+                    </template>
+                </NavCard>
+
+                <NavCard
+                    :cardTitle="'VOTING FORMS'"
+                    :cardDescription="'Forms for voting'"
+                    :cardValue="'voting-forms'"
+                    @navigate-action="pageStore.navigatePage"
+                >
+                    <template #icon>
+                        <img
+                            src="/public/icons/form.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
+                    </template>
+                </NavCard>
+
+                <NavCard
+                    :cardTitle="'RESULTS'"
+                    :cardDescription="'Results of voting'"
+                    :cardValue="'results'"
+                    @navigate-action="pageStore.navigatePage"
+                >
+                    <template #icon>
+                        <img
+                            src="/public/icons/results.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
+                    </template>
+                </NavCard>
             </div>
 
-            <!-- Content Section -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                    Main Content
-                </h3>
-                <div class="prose max-w-none">
-                    <p class="text-gray-600 mb-4">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        Sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua. Ut enim ad minim veniam, quis nostrud
-                        exercitation ullamco laboris.
-                    </p>
-                    <p class="text-gray-600">
-                        Duis aute irure dolor in reprehenderit in voluptate
-                        velit esse cillum dolore eu fugiat nulla pariatur.
-                        Excepteur sint occaecat cupidatat non proident, sunt in
-                        culpa qui officia deserunt mollit anim id est laborum.
-                    </p>
-                </div>
-            </div>
+            <VotingForm
+                :events="events"
+                v-if="pageStore.currentPage === 'voting-forms'"
+            />
+
+            <Results
+                :events="events"
+                v-if="pageStore.currentPage === 'results'"
+            />
+
+            <Officers
+                :events="events"
+                v-if="pageStore.currentPage === 'ssc-officers'"
+            />
         </div>
     </Layout>
 </template>
