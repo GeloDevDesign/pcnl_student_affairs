@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Event extends Model
 {
@@ -15,6 +16,8 @@ class Event extends Model
         'date'
     ];
 
+
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -23,5 +26,10 @@ class Event extends Model
     public function feedbacks()
     {
         return $this->hasMany(FeedBack::class);
+    }
+
+    public function userFeedback()
+    {
+        return $this->hasOne(FeedBack::class);
     }
 }

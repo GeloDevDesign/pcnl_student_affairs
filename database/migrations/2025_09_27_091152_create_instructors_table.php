@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('feed_backs', function (Blueprint $table) {
+        Schema::create('instructors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
-            $table->integer('ratings');
-            $table->text('comments')->nullable();
+            $table->string('name');
+            $table->string('department');
             $table->timestamps();
-
-            $table->index(['event_id', 'user_id']);
         });
     }
 
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('feed_backs');
+        Schema::dropIfExists('instructors');
     }
 };

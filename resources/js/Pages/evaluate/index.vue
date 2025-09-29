@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, onMounted } from "vue";
 import { Head } from "@inertiajs/vue3";
 import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
@@ -11,10 +11,10 @@ import NavCard from "../../components/NavCard.vue";
 import Search from "../../components/Search.vue";
 
 import Feedbacks from "./feedbacks.vue";
+import Instructor from "./instructor.vue";
 
-const DEFAULT_PAGE = ref(true);
 const pageStore = useNavigatePageStore();
-const searchIndex = ref("announcement");
+const searchIndex = ref("feedbacks");
 
 watch(
     () => pageStore.currentPage,
@@ -27,10 +27,15 @@ const { applySearch } = useSearchAndFilter(searchIndex);
 defineProps({
     pageTitle: String,
     events: Object,
+    instructors: Object,
     feedbacks: Object,
 });
 
-const breadCrumbPages = ["Feedbacks", "Forms", "Instructor"];
+onMounted(() => {
+    pageStore.navigatePage("feedbacks");
+});
+
+const breadCrumbPages = ["Feedbacks", "Instructors"];
 </script>
 
 <template>
@@ -56,7 +61,7 @@ const breadCrumbPages = ["Feedbacks", "Forms", "Instructor"];
                 <NavCard
                     :cardTitle="'EVENT FEEDBACKS'"
                     :cardDescription="'Event Feedbacks Review'"
-                    :cardValue="'announcement'"
+                    :cardValue="'feedbacks'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
@@ -69,29 +74,14 @@ const breadCrumbPages = ["Feedbacks", "Forms", "Instructor"];
                 </NavCard>
 
                 <NavCard
-                    :cardTitle="'Events'"
-                    :cardDescription="'Add / Create Events'"
-                    :cardValue="'event'"
+                    :cardTitle="'INSTRUCTORS'"
+                    :cardDescription="'Evaluation Review'"
+                    :cardValue="'instructors'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
                         <img
-                            src="/public/icons/events.svg"
-                            alt=""
-                            class="w-16 h-16"
-                        />
-                    </template>
-                </NavCard>
-
-                <NavCard
-                    :cardTitle="'HAND-BOOKS'"
-                    :cardDescription="'View to see hand-books'"
-                    :cardValue="'hand-books'"
-                    @navigate-action="pageStore.navigatePage"
-                >
-                    <template #icon>
-                        <img
-                            src="/public/icons/book.svg"
+                            src="/public/icons/instructor.svg"
                             alt=""
                             class="w-16 h-16"
                         />
@@ -101,7 +91,11 @@ const breadCrumbPages = ["Feedbacks", "Forms", "Instructor"];
 
             <Feedbacks
                 :events="events"
-                v-if="pageStore.currentPage === 'announcement' || DEFAULT_PAGE"
+                v-if="pageStore.currentPage === 'feedbacks'"
+            />
+            <Instructor
+                :instructors="instructors"
+                v-if="pageStore.currentPage === 'instructors'"
             />
         </div>
     </Layout>

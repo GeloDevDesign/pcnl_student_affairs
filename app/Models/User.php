@@ -66,10 +66,14 @@ class User extends Authenticatable
         return $this->hasMany(FeedBack::class);
     }
 
-
     public function events()
     {
         return $this->hasMany(Event::class);
+    }
+
+    public function instructors()
+    {
+        return $this->hasMany(Instructor::class);
     }
 
     public function items()
@@ -83,10 +87,16 @@ class User extends Authenticatable
         return $this->hasMany(HandBook::class);
     }
 
+    public function candidates()
+    {
+        return $this->hasMany(Candidate::class);
+    }
+
     public function isAdmin()
     {
         return $this->role == self::TYPE_ADMIN;
     }
+
 
     public function isStudent()
     {

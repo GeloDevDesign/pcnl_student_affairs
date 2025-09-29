@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FeedBack;
 use App\Models\Event;
+use App\Models\Instructor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -13,31 +14,40 @@ class FeedBackController extends Controller
 
     public function index(Request $request)
     {
-        $events    = Event::with('user')->get();
+        $user = $request->user();
 
-        if ($request->user()->isAdmin()) {
-            $feedbacks = Event::with(['event', 'user']);
-        } else {
-            $feedbacks = $request->user()
-                ->feedbacks()
-                ->with('event');
+
+        $instructors = Instructor::with(['user'])->latest();
+
+        $eventsQuery = Event::query()->with([
+            $user->isAdmin()
+                ? 'feedbacks'
+                : 'userFeedback',
+            'user',
+        ])
+            ->withExists([
+                'feedbacks as is_feedback' => function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                }
+            ])
+            ->withCount('feedbacks')
+            ->withAvg('feedbacks', 'ratings')
+            ->latest();
+
+
+        if ($request->page == 'feedbacks' && $request->filled('filters')) {
+            $eventsQuery->where('id', $request->filters);
         }
-
-        if ($request->filled('filters')) {
-            $feedbacks->whereHas('event', function ($q) use ($request) {
-                $q->where('id', $request->filters);
-            });
-        }
-
-        $feedbacks->latest()->paginate(10);
 
 
         return Inertia::render('evaluate/index', [
             'pageTitle' => 'PCNL - Evaluate',
-            'feedbacks' => $feedbacks,
-            'events'    => $events
+            'events'    => $eventsQuery->paginate(10)->onEachSide(1),
+            'instructors' => $instructors->paginate(10)->onEachSide(1)
         ]);
     }
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -46,14 +56,22 @@ class FeedBackController extends Controller
     {
         $validated = $request->validate([
             'event_id' => 'required|exists:events,id',
-            'ratings'  => 'required|integer|min:1max:5',
-            'comment'  => 'nullable|string|max:1000',
+            'ratings'  => 'required|integer|min:1|max:5',
+            'comments' => 'nullable|string|max:1000',
         ]);
 
+        // Load the Event model so the accessor can work
+        $event = Event::findOrFail($validated['event_id']);
+
+        // Use the accessor to check if the user already left feedback
+        if ($event->is_feedback) {
+            return back()->withErrors('You have already given feedback for this event.');
+        }
+
+        // Create the feedback
         $request->user()->feedbacks()->create($validated);
 
-
-        return redirect()->back()->with('success', 'Feedback submitted successfully.');
+        return back()->with('success', 'Feedback submitted successfully.');
     }
 
 
@@ -64,8 +82,8 @@ class FeedBackController extends Controller
     {
 
         $validated = $request->validate([
-            'ratings'  => 'required|integer|min:1max:5',
-            'comment'  => 'nullable|string|max:1000',
+            'ratings'  => 'required|integer|min:1|max:5',
+            'comments'  => 'nullable|string|max:1000',
         ]);
 
         $feedBack->update($validated);

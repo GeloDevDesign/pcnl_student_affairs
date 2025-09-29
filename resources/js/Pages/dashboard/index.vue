@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch,onMounted } from "vue";
 import { Head } from "@inertiajs/vue3";
 import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
@@ -22,7 +22,6 @@ watch(
     () => pageStore.currentPage,
     (newVal, oldVal) => {
         searchIndex.value = newVal;
-      
     }
 );
 const { applySearch } = useSearchAndFilter(searchIndex);
@@ -33,7 +32,9 @@ defineProps({
     handBooks: Object,
     events: Object,
 });
-
+onMounted(() => {
+    pageStore.navigatePage("home");
+});
 const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
 </script>
 
@@ -104,7 +105,6 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
             </div>
 
             <Annnouncement
-                
                 :announcements="announcements"
                 v-if="pageStore.currentPage === 'announcement'"
             />

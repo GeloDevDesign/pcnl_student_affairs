@@ -8,6 +8,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\HandBookController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\FeedBackController;
+use App\Http\Controllers\InstructorController;
 
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
@@ -70,13 +71,13 @@ Route::middleware(['auth', 'role:admin'])
     });
 
 
-Route::get('/evaluate', [FeedBackController::class, 'index'])->middleware(['auth'])->name('evalute');
+Route::get('/evaluate', [FeedBackController::class, 'index'])->middleware(['auth'])->name('evaluate');
 Route::middleware(['auth'])
     ->name('feedback.')
     ->prefix('feedback')
     ->group(function () {
         Route::post('/', [FeedBackController::class, 'store'])
-            ->name('store');
+            ->name('store')->middleware('role:student');
         Route::patch('/{feedback}', [FeedBackController::class, 'update'])
             ->name('update')
             ->middleware('role:admin');
@@ -85,13 +86,24 @@ Route::middleware(['auth'])
             ->middleware('role:admin');
     });
 
+Route::middleware(['auth', 'role:admin'])
+    ->name('instructor.')
+    ->prefix('instructor')
+    ->group(function () {
+        Route::post('/', [InstructorController::class, 'store'])
+            ->name('store');
+        Route::patch('/{instructor}', [InstructorController::class, 'update'])
+            ->name('update');
+        Route::delete('/{instructor}', [InstructorController::class, 'destroy'])
+            ->name('destroy');
+    });
 
 Route::get('/scc-officers', function () {
     return Inertia::render('ssc-officers/index', [
         'pageTitle' => 'PCNL - SCC Officers'
     ]);
 })->middleware(['auth'])
-    ->name('evaluate');
+    ->name('scc-officers');
 
 
 Route::get('/concerns', function () {
@@ -99,4 +111,4 @@ Route::get('/concerns', function () {
         'pageTitle' => 'PCNL - Concerns'
     ]);
 })->middleware(['auth'])
-    ->name('evaluate');
+    ->name('esvaluate');

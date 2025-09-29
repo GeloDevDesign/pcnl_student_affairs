@@ -35,6 +35,11 @@ class Item extends Model
     }
 
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function getStatusTextAttribute()
     {
         return match ($this->status) {
@@ -59,10 +64,5 @@ class Item extends Model
                 $item->uploaded_at = now();
             }
         });
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 }
