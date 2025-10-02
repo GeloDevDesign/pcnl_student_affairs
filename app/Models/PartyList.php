@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PartyList extends Model
 {
     protected  $fillable = [
+        'user_id',
         'name',
         'slogan'
     ];
@@ -14,5 +15,11 @@ class PartyList extends Model
     public function candidates()
     {
         return $this->hasMany(Candidate::class);
+    }
+
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

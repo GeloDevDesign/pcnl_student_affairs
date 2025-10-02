@@ -7,52 +7,35 @@ use Illuminate\Http\Request;
 
 class PartyListController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|min:3',
+            'slogan' => 'nullable|string|min:5',
+        ]);
+
+        $partyList = $request->user()->party_lists()->create($validated);
+
+        return redirect()->back()->with('success', 'Party List created successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(PartyList $partyList)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PartyList $partyList)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, PartyList $partyList)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|min:3',
+            'slogan' => 'nullable|string|min:5',
+        ]);
+
+        $partyList->update($validated);
+
+        return redirect()->back()->with('success', 'Party List updated successfully!');
     }
 
     /**
@@ -60,6 +43,8 @@ class PartyListController extends Controller
      */
     public function destroy(PartyList $partyList)
     {
-        //
+        $partyList->delete();
+
+        return redirect()->back()->with('success', 'Party List deleted successfully!');
     }
 }

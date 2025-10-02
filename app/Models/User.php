@@ -71,6 +71,12 @@ class User extends Authenticatable
         return $this->hasMany(Event::class);
     }
 
+
+    public function party_lists()
+    {
+        return $this->hasMany(PartyList::class);
+    }
+
     public function instructors()
     {
         return $this->hasMany(Instructor::class);
