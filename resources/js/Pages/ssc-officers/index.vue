@@ -29,9 +29,8 @@ const { applySearch } = useSearchAndFilter(searchIndex);
 
 defineProps({
     pageTitle: String,
-    events: Object,
-    instructors: Object,
-    feedbacks: Object,
+    partyList: Object,
+  
 });
 
 onMounted(() => {
@@ -118,7 +117,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
             />
 
             <Officers
-                :events="events"
+                :partyList="partyList"
                 v-if="pageStore.currentPage === 'ssc-officers'"
             />
         </div>

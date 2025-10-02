@@ -10,6 +10,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\FeedBackController;
 use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\PartyListController;
+use App\Http\Controllers\OfficersController;
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
@@ -98,22 +99,18 @@ Route::middleware(['auth', 'role:admin'])
             ->name('destroy');
     });
 
-Route::get('/scc-officers', function () {
-    return Inertia::render('ssc-officers/index', [
-        'pageTitle' => 'PCNL - SCC Officers'
-    ]);
-})->middleware(['auth'])
+Route::get('/scc-officers', [OfficersController::class, 'index'])->middleware(['auth'])
     ->name('scc-officers');
 
 Route::middleware(['auth', 'role:admin'])
-    ->name('party-list.')
-    ->prefix('party-list')
+    ->name('parties.')
+    ->prefix('parties')
     ->group(function () {
         Route::post('/', [PartyListController::class, 'store'])
             ->name('store');
-        Route::patch('/{party-list}', [PartyListController::class, 'update'])
+        Route::patch('/{parties}', [PartyListController::class, 'update'])
             ->name('update');
-        Route::delete('/{party-list}', [PartyListController::class, 'destroy'])
+        Route::delete('/{parties}', [PartyListController::class, 'destroy'])
             ->name('destroy');
     });
 

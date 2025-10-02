@@ -26,14 +26,14 @@ class PartyListController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PartyList $partyList)
+    public function update(Request $request, PartyList $parties)
     {
         $validated = $request->validate([
             'name' => 'required|string|min:3',
             'slogan' => 'nullable|string|min:5',
         ]);
 
-        $partyList->update($validated);
+        $parties->update($validated);
 
         return redirect()->back()->with('success', 'Party List updated successfully!');
     }
@@ -41,9 +41,9 @@ class PartyListController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PartyList $partyList)
+    public function destroy(PartyList $parties)
     {
-        $partyList->delete();
+        $parties->delete();
 
         return redirect()->back()->with('success', 'Party List deleted successfully!');
     }
