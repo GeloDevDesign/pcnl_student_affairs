@@ -90,8 +90,9 @@ const editElectionForm = useForm({
 
 // Candidate form
 const candidateForm = useForm({
-    election_id: null,
-    role_id: null,
+    full_name: "",
+    election_id: election.value.id || null,
+    role_id: selectedRole?.value?.id || null,
     party_id: null,
 });
 
@@ -396,7 +397,7 @@ function openAssignCandidateModal(role) {
     selectedRole.value = role;
     candidateForm.reset();
     candidateForm.clearErrors();
-    // candidateForm.position = position;
+    candidateForm.role_id = selectedRole?.value.id;
     assignCandidateDialog.value.showModal();
 }
 
@@ -446,7 +447,8 @@ function handleAssignCandidate() {
                 "success"
             );
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
             toastAlert(
                 page.props.errors.assignCandidate?.[0] ||
@@ -552,7 +554,7 @@ function handleAssignCandidate() {
 
                     <div class="flex justify-between items-center gap-2 mt-6">
                         <button class="btn btn-primary btn-sm">
-                            Add New Election
+                            Set New Election
                         </button>
                         <div class="space-x-2">
                             <button
@@ -1041,19 +1043,19 @@ function handleAssignCandidate() {
                 class="space-y-4 mt-4"
             >
                 <InputFields
-                    v-model="candidateForm.candidate_id"
+                    v-model="candidateForm.full_name"
                     label="Candidate Full Name"
                     type="text"
                     placeholder="Enter Candidate Full Name"
-                    :errors="candidateForm.errors.candidate_id"
+                    :errors="candidateForm.errors.full_name"
                 />
                 <InputFields
-                    v-model="candidateForm.candidate_id"
+                    v-model="candidateForm.party_id"
                     label="Select Party List"
                     type="select"
                     placeholder="Select Party List"
                     :selection-items="partyList"
-                    :errors="candidateForm.errors.candidate_id"
+                    :errors="candidateForm.errors.party_id"
                 />
 
                 <div class="modal-action">

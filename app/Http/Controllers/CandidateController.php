@@ -14,10 +14,10 @@ class CandidateController extends Controller
             'full_name' => 'required|max:255',
             'role_id' => 'required|exists:roles,id',
             'election_id' => 'required|exists:elections,id',
-            'party_id' => 'required|exists:part_lists,id',
+            'party_id' => 'required|exists:party_lists,id',
         ]);
 
-        $candidate = Candidate::create($validated);
+        $request->user()->candidates()->create($validated);
 
         return redirect()->back()->with('success', 'Candidate assigned successfully!');
     }
@@ -47,5 +47,7 @@ class CandidateController extends Controller
     public function destroy(Candidate $candidate)
     {
         $candidate->delete();
+
+        return redirect()->back()->with('success', 'Candidate deleted successfully!');
     }
 }
