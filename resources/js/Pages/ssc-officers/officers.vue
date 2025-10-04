@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { ref } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
@@ -29,9 +28,11 @@ const editElectionDialog = ref(null);
 
 const addRoleDialog = ref(null);
 const editRoleDialog = ref(null);
+const editCandidateDialog = ref(null);
 
 const selectedParty = ref(null);
 const selectedRole = ref(null);
+const selectedCandidate = ref(null);
 
 const election = ref({
     id: 1,
@@ -96,11 +97,31 @@ const candidateForm = useForm({
     party_id: null,
 });
 
+const editCandidateForm = useForm({
+    id: null,
+    full_name: "",
+    election_id: election.value.id || null,
+    role_id: null,
+    party_id: null,
+});
+
 // CANDIDATE ACTIONS
 function openAddCandidateModal() {
     partyForm.reset();
     partyForm.clearErrors();
     addPartyDialog.value.showModal();
+}
+
+function openEditCandidateModal(candidate) {
+    selectedCandidate.value = candidate;
+    editCandidateForm.reset();
+    editCandidateForm.clearErrors();
+    editCandidateForm.id = candidate.id;
+    editCandidateForm.full_name = candidate.full_name;
+    editCandidateForm.election_id =  election.value.id || null;
+    editCandidateForm.role_id = candidate.role_id;
+    editCandidateForm.party_id = candidate.party_id;
+    editCandidateDialog.value.showModal();
 }
 
 // PARTIES ACTIONS
@@ -392,6 +413,31 @@ function handleEditElection() {
     });
 }
 
+function handleEditCandidate() {
+    isLoading.value = true;
+    editCandidateForm.patch(`/candidates/${editCandidateForm.id}`, {
+        preserveScroll: true,
+        errorBag: "editCandidate",
+        onSuccess: () => {
+            isLoading.value = false;
+            editCandidateDialog.value.close();
+            toastAlert(
+                page.props.flash.success || "Candidate updated successfully!",
+                "success"
+            );
+        },
+        onError: (error) => {
+            console.log(error)
+            isLoading.value = false;
+            toastAlert(
+                page.props.errors.editCandidate?.[0] ||
+                    "Failed to update candidate!",
+                "error"
+            );
+        },
+    });
+}
+
 // Candidate Assignment Functions
 function openAssignCandidateModal(role) {
     selectedRole.value = role;
@@ -441,6 +487,7 @@ function handleAssignCandidate() {
         errorBag: "assignCandidate",
         onSuccess: () => {
             isLoading.value = false;
+            candidateForm.reset();
             assignCandidateDialog.value.close();
             toastAlert(
                 page.props.flash.success || "Candidate assigned successfully!",
@@ -772,15 +819,18 @@ function handleAssignCandidate() {
                             </button>
                         </div>
                     </div>
-                    <div v-if="role.candidate || true" class="space-y-2">
+                    <div v-if="role.candidates.length !== 0" class="space-y-2">
                         <div
-                            class="flex items-center gap-3 py-6 rounded-lg hover:bg-gray-50 transition-colors"
+                            v-for="candidate in role.candidates"
+                            :key="candidate.id"
+                            class="flex items-center gap-3 py-4 rounded-lg hover:bg-gray-50 transition-colors"
                         >
+                            <!-- Avatar -->
                             <div
-                                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"
                             >
                                 <svg
-                                    class="w-4 h-4"
+                                    class="w-4 h-4 text-gray-500"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -793,6 +843,8 @@ function handleAssignCandidate() {
                                     />
                                 </svg>
                             </div>
+
+                            <!-- Candidate Info -->
                             <div
                                 class="flex items-center justify-between w-full"
                             >
@@ -800,16 +852,18 @@ function handleAssignCandidate() {
                                     <p
                                         class="text-sm font-medium text-gray-900"
                                     >
-                                        {{ role.name }}
+                                        {{ candidate.full_name }}
                                     </p>
                                     <p class="text-xs text-gray-500">
-                                        {{ role }}
+                                        {{ candidate.party_list.name }}
                                     </p>
                                 </div>
+
+                                <!-- Actions -->
                                 <div class="flex gap-1">
                                     <EntityAction
-                                        @edit="handleDeleteCandidate(role)"
-                                        @delete="handleDeleteCandidate(role)"
+                                        @edit="openEditCandidateModal(candidate)"
+                                        @delete="handleDeleteCandidate(candidate)"
                                     />
                                 </div>
                             </div>
@@ -1160,6 +1214,50 @@ function handleAssignCandidate() {
                         :disabled="isLoading"
                     >
                         {{ isLoading ? "Updating..." : "Update Role" }}
+                        <span
+                            v-if="isLoading"
+                            class="loading loading-spinner loading-xs"
+                        ></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Edit Candidate Modal -->
+    <dialog ref="editCandidateDialog" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Edit Candidate</h3>
+            <form @submit.prevent="handleEditCandidate" class="space-y-4 mt-4">
+                <InputFields
+                    v-model="editCandidateForm.full_name"
+                    label="Candidate Full Name"
+                    type="text"
+                    placeholder="Enter Candidate Full Name"
+                    :errors="editCandidateForm.errors.full_name"
+                />
+                <InputFields
+                    v-model="editCandidateForm.party_id"
+                    label="Select Party List"
+                    type="select"
+                    placeholder="Select Party List"
+                    :selection-items="partyList"
+                    :errors="editCandidateForm.errors.party_id"
+                />
+                <div class="modal-action">
+                    <button
+                        type="button"
+                        class="btn btn-soft btn-sm"
+                        @click="editCandidateDialog.close()"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-sm"
+                        :disabled="isLoading"
+                    >
+                        {{ isLoading ? "Updating..." : "Update Candidate" }}
                         <span
                             v-if="isLoading"
                             class="loading loading-spinner loading-xs"

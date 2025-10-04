@@ -12,7 +12,17 @@ class OfficersController extends Controller
     public function index(Request $request)
     {
         $partyList = PartyList::with(['user'])->get();
-        $roles = Role::with('candidates')->select(['id', 'name', 'description'])->get();
+        $roles = Role::select(['id', 'name', 'description'])
+            ->with([
+                'candidates' => function ($query) {
+                    $query->select(['id', 'full_name', 'role_id', 'party_id']);
+                },
+                'candidates.party_list:id,name' // 👈 eager load the party list name
+            ])
+            ->get();
+
+
+
 
 
 

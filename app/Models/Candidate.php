@@ -33,6 +33,6 @@ class Candidate extends Model
 
     public function party_list()
     {
-        return $this->belongsTo(PartyList::class);
+        return $this->belongsTo(PartyList::class, 'party_id');
     }
 }
