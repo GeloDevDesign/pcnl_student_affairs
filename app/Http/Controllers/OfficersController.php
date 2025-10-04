@@ -12,8 +12,8 @@ class OfficersController extends Controller
     public function index(Request $request)
     {
         $partyList = PartyList::with(['user'])->get();
-        $roles = Role::with('candidates')->select(['name', 'description'])->get();
-        
+        $roles = Role::with('candidates')->select(['id', 'name', 'description'])->get();
+
 
 
         return Inertia::render('ssc-officers/index', [

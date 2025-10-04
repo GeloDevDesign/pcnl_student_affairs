@@ -198,13 +198,15 @@ function openAddRoleModal() {
 }
 
 function openEditRoleModal(role) {
+    console.log(role)
     selectedRole.value = role;
     editRoleForm.reset();
     editRoleForm.clearErrors();
     editRoleForm.id = role.id;
     editRoleForm.name = role.name;
-    editRoleForm.description = role.slogan;
+    editRoleForm.description = role.description;
     editRoleDialog.value.showModal();
+  
 }
 
 async function handleDeleteRole(party) {
@@ -250,7 +252,7 @@ function handleAddRole() {
                 page.props.flash.success || "Role added successfully!",
                 "success"
             );
-            partyForm.reset();
+            roleForm.reset();
         },
         onError: () => {
             isLoading.value = false;
@@ -264,21 +266,21 @@ function handleAddRole() {
 
 function handleEditRole() {
     isLoading.value = true;
-    editPartyForm.patch(`/parties/${editPartyForm.id}`, {
+    editRoleForm.patch(`/role/${editRoleForm.id}`, {
         preserveScroll: true,
-        errorBag: "editParty",
+        errorBag: "editRole",
         onSuccess: () => {
             isLoading.value = false;
-            editPartyDialog.value.close();
+            editRoleDialog.value.close();
             toastAlert(
-                page.props.flash.success || "Party updated successfully!",
+                page.props.flash.success || "Role updated successfully!",
                 "success"
             );
         },
         onError: () => {
             isLoading.value = false;
             toastAlert(
-                page.props.errors.editParty?.[0] || "Failed to update party!",
+                page.props.errors.editParty?.[0] || "Failed to update role!",
                 "error"
             );
         },
@@ -752,15 +754,28 @@ function handleAssignCandidate() {
                         </p>
                         <div>
                             <button
-                                class="btn btn-primary text-white btn-xs"
-                                @click="openAssignCandidateModal(role.name)"
+                                class="btn btn-primary text-white btn-xs bg-blue-100 border-0 mr-2"
+                                @click="openEditRoleModal(role)"
                             >
-                                Assign Candidate
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    class="size-5 text-primary"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                    />
+                                </svg>
                             </button>
 
                             <button
                                 class="btn btn-primary text-white btn-xs"
-                                @click="openEditRoleModal(role.name)"
+                                @click="assignCandidateDialog()"
                             >
                                 Assign Candidate
                             </button>
@@ -1169,51 +1184,36 @@ function handleAssignCandidate() {
     <!-- Edit Role Modal -->
     <dialog ref="editRoleDialog" class="modal">
         <div class="modal-box">
-            <h3 class="font-bold text-lg">Edit Election</h3>
-            <form @submit.prevent="handleEditElection" class="space-y-4">
+            <h3 class="font-bold text-lg">Edit Role</h3>
+            <form @submit.prevent="handleEditRole" class="space-y-4 mt-4">
                 <InputFields
-                    v-model="editElectionForm.title"
-                    label="Title"
+                    v-model="editRoleForm.name"
+                    label="Name"
                     type="text"
-                    placeholder="Election title"
-                    :errors="editElectionForm.errors.title"
+                    placeholder="New Role name"
+                    :errors="editRoleForm.errors.name"
                 />
-                <div class="grid grid-cols-2 gap-4">
-                    <InputFields
-                        v-model="editElectionForm.start_date"
-                        label="Start Date"
-                        type="date"
-                        :errors="editElectionForm.errors.start_date"
-                    />
-                    <InputFields
-                        v-model="editElectionForm.end_date"
-                        label="End Date"
-                        type="date"
-                        :errors="editElectionForm.errors.end_date"
-                    />
-                </div>
                 <InputFields
-                    v-model="editElectionForm.description"
+                    v-model="editRoleForm.description"
                     label="Description"
-                    type="textarea"
-                    placeholder="Election description"
-                    :errors="editElectionForm.errors.description"
-                    rows="3"
+                    type="text"
+                    placeholder="Role description"
+                    :errors="editRoleForm.errors.description"
                 />
                 <div class="modal-action">
                     <button
                         type="button"
-                        class="btn"
-                        @click="editElectionDialog.close()"
+                        class="btn btn-sm btn-soft"
+                        @click="editRoleDialog.close()"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="btn btn-primary"
+                        class="btn btn-primary btn-sm"
                         :disabled="isLoading"
                     >
-                        {{ isLoading ? "Updating..." : "Update Election" }}
+                        {{ isLoading ? "Updating..." : "Update Role" }}
                         <span
                             v-if="isLoading"
                             class="loading loading-spinner loading-xs"
