@@ -12,25 +12,26 @@ const page = usePage();
 
 const props = defineProps({
     partyList: Object,
+    roles: Object,
     errors: Object,
 });
 
 const isLoading = ref(false);
 const dialogRef = ref(null);
-const dialogRef2 = ref(null);
+
 const addPartyDialog = ref(null);
 const editPartyDialog = ref(null);
-const deletePartyDialog = ref(null);
+
 const assignCandidateDialog = ref(null);
 const addElectionDialog = ref(null);
 const editElectionDialog = ref(null);
-const deleteElectionDialog = ref(null);
 
-const selectedItem = ref(null);
-const selectedFeedbacks = ref(null);
+const addRoleDialog = ref(null);
+const editRoleDialog = ref(null);
+
 const selectedParty = ref(null);
 const selectedPosition = ref(null);
-const selectedElection = ref(null);
+const selectedRole = ref(null);
 
 const election = ref({
     id: 1,
@@ -41,25 +42,6 @@ const election = ref({
     status: "scheduled",
 });
 
-const positions = ref([
-    {
-        position: "President",
-        candidate: { id: 1, name: "John Smith", party: "Blue Party" },
-    },
-    {
-        position: "Vice President",
-        candidate: { id: 2, name: "Jane Doe", party: "Red Party" },
-    },
-    {
-        position: "Secretary",
-        candidate: { id: 3, name: "Michael Lee", party: "Blue Party" },
-    },
-    {
-        position: "Treasurer",
-        candidate: { id: 4, name: "Sarah Johnson", party: "Yellow Party" },
-    },
-]);
-
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
         month: "short",
@@ -68,14 +50,6 @@ const formatDate = (dateString) => {
     });
 };
 
-// Feedback form
-const form = useForm({
-    event_id: null,
-    comments: "",
-    ratings: 5,
-});
-
-// Party forms
 const partyForm = useForm({
     name: "",
     slogan: "",
@@ -85,6 +59,17 @@ const editPartyForm = useForm({
     id: null,
     name: "",
     slogan: "",
+});
+
+const roleForm = useForm({
+    name: "",
+    description: "",
+});
+
+const editRoleForm = useForm({
+    id: null,
+    name: "",
+    description: "",
 });
 
 // Election forms
@@ -110,30 +95,7 @@ const candidateForm = useForm({
     party_id: null,
 });
 
-function handleSubmit() {
-    isLoading.value = true;
-    form.post("/feedback", {
-        preserveScroll: true,
-        errorBag: "createFeedBack",
-        onSuccess: () => {
-            isLoading.value = false;
-            dialogRef.value.close();
-            toastAlert(
-                page.props.flash.success || "Feedback submitted!",
-                "success"
-            );
-        },
-        onError: () => {
-            isLoading.value = false;
-            toastAlert(
-                page.props.errors.createFeedBack?.[0] || "Feedback failed!",
-                "error"
-            );
-            dialogRef.value.close();
-        },
-    });
-}
-
+// PARTIES ACTIONS
 function openAddPartyModal() {
     partyForm.reset();
     partyForm.clearErrors();
@@ -206,6 +168,101 @@ function handleAddParty() {
 }
 
 function handleEditParty() {
+    isLoading.value = true;
+    editPartyForm.patch(`/parties/${editPartyForm.id}`, {
+        preserveScroll: true,
+        errorBag: "editParty",
+        onSuccess: () => {
+            isLoading.value = false;
+            editPartyDialog.value.close();
+            toastAlert(
+                page.props.flash.success || "Party updated successfully!",
+                "success"
+            );
+        },
+        onError: () => {
+            isLoading.value = false;
+            toastAlert(
+                page.props.errors.editParty?.[0] || "Failed to update party!",
+                "error"
+            );
+        },
+    });
+}
+
+// ROLE ACTIONS
+function openAddRoleModal() {
+    roleForm.reset();
+    roleForm.clearErrors();
+    addRoleDialog.value.showModal();
+}
+
+function openEditRoleModal(role) {
+    selectedRole.value = role;
+    editRoleForm.reset();
+    editRoleForm.clearErrors();
+    editRoleForm.id = role.id;
+    editRoleForm.name = role.name;
+    editRoleForm.description = role.slogan;
+    editRoleDialog.value.showModal();
+}
+
+async function handleDeleteRole(party) {
+    const { isConfirmed } = await Swal.fire({
+        title: "DELETE ROLE",
+        text: `Are you sure you want to delete "${party.name}"?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it!",
+        confirmButtonColor: "#e3342f",
+        cancelButtonColor: "#6b7280",
+    });
+    if (!isConfirmed) return;
+
+    isLoading.value = true;
+    router.delete(`/role/${party.id}`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            isLoading.value = false;
+            toastAlert(
+                page.props.flash.success || "Party deleted successfully!",
+                "success"
+            );
+        },
+        onError: () => {
+            isLoading.value = false;
+            toastAlert(
+                page.props.errors.deleteParty?.[0] || "Failed to delete party!",
+                "error"
+            );
+        },
+    });
+}
+
+function handleAddRole() {
+    isLoading.value = true;
+    roleForm.post("/role", {
+        preserveScroll: true,
+        onSuccess: () => {
+            isLoading.value = false;
+            addRoleDialog.value.close();
+            toastAlert(
+                page.props.flash.success || "Role added successfully!",
+                "success"
+            );
+            partyForm.reset();
+        },
+        onError: () => {
+            isLoading.value = false;
+            toastAlert(
+                page.props.errors.createParty?.[0] || "Failed to add role!",
+                "error"
+            );
+        },
+    });
+}
+
+function handleEditRole() {
     isLoading.value = true;
     editPartyForm.patch(`/parties/${editPartyForm.id}`, {
         preserveScroll: true,
@@ -486,45 +543,50 @@ function handleAssignCandidate() {
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-2 mt-6">
-                        <button
-                            @click="handleDeleteElection()"
-                            class="btn btn-circle btn-error"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="size-4 stroke-white"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                                />
-                            </svg>
+                    <div class="flex justify-between items-center gap-2 mt-6">
+                        <button class="btn btn-primary btn-sm">
+                            Add New Election
                         </button>
-                        <button
-                            @click="openEditElectionModal()"
-                            class="btn btn-circle btn-primary"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="size-4 stroke-white"
+                        <div class="space-x-2">
+                            <button
+                                @click="handleDeleteElection()"
+                                class="btn btn-circle btn-error"
                             >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                                />
-                            </svg>
-                        </button>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    class="size-4 stroke-white"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                    />
+                                </svg>
+                            </button>
+                            <button
+                                @click="openEditElectionModal()"
+                                class="btn btn-circle btn-primary"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    class="size-4 stroke-white"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -657,11 +719,23 @@ function handleAssignCandidate() {
             class="lg:col-span-2 bg-white p-6 shadow-sm rounded-lg border border-gray-100 h-full"
         >
             <!-- Header -->
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-1">
-                    Candidates
-                </h3>
-                <p class="text-sm text-gray-500">Running for SSC Election</p>
+            <div class="mb-6 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                        Candidates
+                    </h3>
+                    <p class="text-sm text-gray-500">
+                        Running for SSC Election
+                    </p>
+                </div>
+                <div>
+                    <button
+                        @click="openAddRoleModal()"
+                        class="btn btn-sm btn-primary"
+                    >
+                        Add New Role
+                    </button>
+                </div>
             </div>
 
             <!-- Divider -->
@@ -669,21 +743,30 @@ function handleAssignCandidate() {
 
             <!-- Candidates List -->
             <div class="space-y-6">
-                <div v-for="pos in positions" :key="pos.position">
+                <div v-for="role in roles" :key="role.id">
                     <div class="flex items-center justify-between mb-3">
                         <p
                             class="text-xs text-gray-500 uppercase tracking-wide font-semibold"
                         >
-                            {{ pos.position }}
+                            {{ role.name }}
                         </p>
-                        <button
-                            class="btn btn-primary text-white btn-xs"
-                            @click="openAssignCandidateModal(pos.position)"
-                        >
-                            Assign Candidate
-                        </button>
+                        <div>
+                            <button
+                                class="btn btn-primary text-white btn-xs"
+                                @click="openAssignCandidateModal(role.name)"
+                            >
+                                Assign Candidate
+                            </button>
+
+                            <button
+                                class="btn btn-primary text-white btn-xs"
+                                @click="openEditRoleModal(role.name)"
+                            >
+                                Assign Candidate
+                            </button>
+                        </div>
                     </div>
-                    <div v-if="pos.candidate" class="space-y-2">
+                    <div v-if="true" class="space-y-2">
                         <div
                             class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
                         >
@@ -711,16 +794,16 @@ function handleAssignCandidate() {
                                     <p
                                         class="text-sm font-medium text-gray-900"
                                     >
-                                        {{ pos.candidate.name }}
+                                        {{ role.name }}
                                     </p>
                                     <p class="text-xs text-gray-500">
-                                        {{ pos.candidate.party }}
+                                        {{ role }}
                                     </p>
                                 </div>
                                 <div class="flex gap-1">
                                     <button
                                         @click="
-                                            handleDeleteCandidate(pos.candidate)
+                                            handleDeleteCandidate(role.name)
                                         "
                                         class="btn btn-circle btn-xs btn-error"
                                     >
@@ -1038,141 +1121,106 @@ function handleAssignCandidate() {
         </div>
     </dialog>
 
-    <!-- Feedback Modal -->
-    <dialog ref="dialogRef" class="modal">
+    <!-- Add Role Modal -->
+    <dialog ref="addRoleDialog" class="modal">
         <div class="modal-box">
-            <h3 class="text-lg font-bold mb-4">
-                Feedback for
-                <span class="text-primary">{{ selectedItem?.title }}</span>
-            </h3>
-
-            <form class="space-y-4" @submit.prevent="handleSubmit">
+            <h3 class="font-bold text-lg">New Role Role</h3>
+            <form @submit.prevent="handleAddRole" class="space-y-4 mt-4">
                 <InputFields
-                    v-model="form.comments"
-                    label="Your comments"
+                    v-model="roleForm.name"
+                    label="Name"
                     type="text"
-                    placeholder="Comments for the event"
-                    :errors="form.errors.comments"
+                    placeholder="Election title"
+                    :errors="roleForm.errors.name"
                 />
 
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold opacity-80"
-                        >Your Rating</span
-                    >
-                    <div class="rating rating-sm">
-                        <template v-for="star in 5" :key="star">
-                            <input
-                                type="radio"
-                                v-model="form.ratings"
-                                :value="star"
-                                :aria-label="`${star} star`"
-                                class="mask mask-star-2 bg-orange-400"
-                            />
-                        </template>
-                    </div>
-                    <p
-                        v-if="form.errors.ratings"
-                        class="text-error text-xs mt-1"
-                    >
-                        {{ form.errors.ratings }}
-                    </p>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-4">
+                <InputFields
+                    v-model="roleForm.description"
+                    label="Description"
+                    type="text"
+                    placeholder="Role description"
+                    :errors="roleForm.errors.description"
+                    rows="3"
+                />
+                <div class="modal-action">
                     <button
                         type="button"
-                        class="btn btn-sm btn-soft"
-                        @click="dialogRef.close()"
+                        class="btn btn-soft btn-sm"
+                        @click="addRoleDialog.close()"
                     >
-                        Close
+                        Cancel
                     </button>
                     <button
                         type="submit"
-                        class="btn btn-primary btn-sm text-white"
+                        class="btn btn-primary btn-sm"
                         :disabled="isLoading"
                     >
-                        Submit Feedback
-                        <span class="loading loading-spinner loading-xs"></span>
+                        {{ isLoading ? "Creating..." : "Create Role" }}
+                        <span
+                            v-if="isLoading"
+                            class="loading loading-spinner loading-xs"
+                        ></span>
                     </button>
                 </div>
             </form>
         </div>
     </dialog>
 
-    <!-- AllFeedback Modal -->
-    <dialog ref="dialogRef2" class="modal">
+    <!-- Edit Role Modal -->
+    <dialog ref="editRoleDialog" class="modal">
         <div class="modal-box">
-            <div class="flex items-center justify-between">
-                <div>
-                    <span class="text-lg font-bold mb-4">
-                        Feedback for
-                        <span class="text-primary">{{
-                            selectedFeedbacks?.title
-                        }}</span>
-                    </span>
+            <h3 class="font-bold text-lg">Edit Election</h3>
+            <form @submit.prevent="handleEditElection" class="space-y-4">
+                <InputFields
+                    v-model="editElectionForm.title"
+                    label="Title"
+                    type="text"
+                    placeholder="Election title"
+                    :errors="editElectionForm.errors.title"
+                />
+                <div class="grid grid-cols-2 gap-4">
+                    <InputFields
+                        v-model="editElectionForm.start_date"
+                        label="Start Date"
+                        type="date"
+                        :errors="editElectionForm.errors.start_date"
+                    />
+                    <InputFields
+                        v-model="editElectionForm.end_date"
+                        label="End Date"
+                        type="date"
+                        :errors="editElectionForm.errors.end_date"
+                    />
                 </div>
-
-                <div class="flex gap-1">
-                    <span class="text-base font-bold">
-                        {{
-                            Math.round(
-                                selectedFeedbacks?.feedbacks_avg_ratings * 10
-                            ) / 10
-                        }}
-                    </span>
-                    <div class="rating rating-sm">
-                        <div
-                            checked
-                            class="mask mask-star-2 bg-orange-400"
-                            aria-label="1 star"
-                            aria-current="true"
-                        ></div>
-                    </div>
+                <InputFields
+                    v-model="editElectionForm.description"
+                    label="Description"
+                    type="textarea"
+                    placeholder="Election description"
+                    :errors="editElectionForm.errors.description"
+                    rows="3"
+                />
+                <div class="modal-action">
+                    <button
+                        type="button"
+                        class="btn"
+                        @click="editElectionDialog.close()"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        :disabled="isLoading"
+                    >
+                        {{ isLoading ? "Updating..." : "Update Election" }}
+                        <span
+                            v-if="isLoading"
+                            class="loading loading-spinner loading-xs"
+                        ></span>
+                    </button>
                 </div>
-            </div>
-
-            <div v-if="selectedFeedbacks?.feedbacks?.length" class="space-y-4">
-                <div
-                    v-for="feedback in selectedFeedbacks.feedbacks"
-                    :key="feedback.id"
-                    class="p-3 rounded-md bg-gray-100"
-                >
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="font-semibold text-sm">
-                            {{ feedback.user?.name || "Anonymous" }}
-                        </span>
-                        <div class="rating rating-sm">
-                            <template v-for="star in 5" :key="star">
-                                <input
-                                    type="radio"
-                                    disabled
-                                    :value="star"
-                                    :checked="star <= feedback.ratings"
-                                    :aria-label="`${star} star`"
-                                    class="mask mask-star-2 bg-orange-400"
-                                />
-                            </template>
-                        </div>
-                    </div>
-                    <p class="text-sm opacity-80 break-words">
-                        {{ feedback.comments || "No comment provided." }}
-                    </p>
-                </div>
-            </div>
-
-            <div v-else class="text-center text-gray-500">
-                No feedback has been submitted yet.
-            </div>
-
-            <div class="flex justify-end gap-2 pt-4">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-soft"
-                    @click="dialogRef2.close()"
-                >
-                    Close
-                </button>
-            </div>
+            </form>
         </div>
     </dialog>
 </template>

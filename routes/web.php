@@ -10,6 +10,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\FeedBackController;
 use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\PartyListController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\OfficersController;
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
@@ -114,6 +115,19 @@ Route::middleware(['auth', 'role:admin'])
             ->name('destroy');
     });
 
+
+
+Route::middleware(['auth', 'role:admin'])
+    ->name('role.')
+    ->prefix('role')
+    ->group(function () {
+        Route::post('/', [RoleController::class, 'store'])
+            ->name('store');
+        Route::patch('/{role}', [RoleController::class, 'update'])
+            ->name('update');
+        Route::delete('/{role}', [RoleController::class, 'destroy'])
+            ->name('destroy');
+    });
 
 Route::get('/concerns', function () {
     return Inertia::render('concerns/index', [
