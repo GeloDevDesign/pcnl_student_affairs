@@ -49,12 +49,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
                 :currentPage="pageStore.currentPage"
                 @breadcrumb-click="(page) => pageStore.navigatePage(page)"
             >
-                <template #entity-actions>
-                    <Search
-                        @query-search="applySearch"
-                        v-if="pageStore.currentPage !== 'home'"
-                    />
-                </template>
+            
             </Banner>
 
             <div

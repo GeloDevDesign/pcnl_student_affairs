@@ -15,7 +15,7 @@ const openDeleteModal = () => {
 <template>
 
         <button
-            class="btn btn-primary text-red-700 btn-xs bg-red-100 border-0 mr-2"
+            class="btn btn-primary text-red-700 btn-xs bg-red-100 border-0 mr-2 rounded-full"
             @click="openDeleteModal()"
         >
             <svg
@@ -24,7 +24,7 @@ const openDeleteModal = () => {
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="size-5"
+                class="size-4"
             >
                 <path
                     stroke-linecap="round"
@@ -34,7 +34,7 @@ const openDeleteModal = () => {
             </svg>
         </button>
         <button
-            class="btn btn-primary text-white btn-xs bg-blue-100 border-0 mr-2"
+            class="btn btn-primary text-white btn-xs bg-blue-100 border-0 mr-2 rounded-full"
             @click="openEditModal()"
         >
             <svg
@@ -43,7 +43,7 @@ const openDeleteModal = () => {
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="size-5 text-primary"
+                class="size-4 text-primary"
             >
                 <path
                     stroke-linecap="round"

@@ -7,52 +7,38 @@ use Illuminate\Http\Request;
 
 class CandidateController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'full_name' => 'required|max:255',
+            'role_id' => 'required|exists:roles,id',
+            'election_id' => 'required|exists:elections,id',
+            'party_id' => 'required|exists:part_lists,id',
+        ]);
+
+        $candidate = Candidate::create($validated);
+
+        return redirect()->back()->with('success', 'Candidate assigned successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Candidate $candidate)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Candidate $candidate)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Candidate $candidate)
     {
-        //
+        $validated = $request->validate([
+            'full_name' => 'required|max:255',
+            'role_id' => 'required|exists:roles,id',
+            'election_id' => 'required|exists:elections,id',
+            'party_id' => 'required|exists:part_lists,id',
+        ]);
+
+
+        $candidate->update($validated);
+
+        return redirect()->back()->with('success', 'Candidate updated successfully!');
     }
 
     /**
@@ -60,6 +46,6 @@ class CandidateController extends Controller
      */
     public function destroy(Candidate $candidate)
     {
-        //
+        $candidate->delete();
     }
 }

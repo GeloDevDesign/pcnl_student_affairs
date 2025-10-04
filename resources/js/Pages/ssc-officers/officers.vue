@@ -31,7 +31,6 @@ const addRoleDialog = ref(null);
 const editRoleDialog = ref(null);
 
 const selectedParty = ref(null);
-const selectedPosition = ref(null);
 const selectedRole = ref(null);
 
 const election = ref({
@@ -91,10 +90,17 @@ const editElectionForm = useForm({
 
 // Candidate form
 const candidateForm = useForm({
-    position: "",
-    candidate_id: null,
+    election_id: null,
+    role_id: null,
     party_id: null,
 });
+
+// CANDIDATE ACTIONS
+function openAddCandidateModal() {
+    partyForm.reset();
+    partyForm.clearErrors();
+    addPartyDialog.value.showModal();
+}
 
 // PARTIES ACTIONS
 function openAddPartyModal() {
@@ -386,11 +392,11 @@ function handleEditElection() {
 }
 
 // Candidate Assignment Functions
-function openAssignCandidateModal(position) {
-    selectedPosition.value = position;
+function openAssignCandidateModal(role) {
+    selectedRole.value = role;
     candidateForm.reset();
     candidateForm.clearErrors();
-    candidateForm.position = position;
+    // candidateForm.position = position;
     assignCandidateDialog.value.showModal();
 }
 
@@ -758,15 +764,15 @@ function handleAssignCandidate() {
                             />
                             <button
                                 class="btn btn-primary text-white btn-xs"
-                                @click="assignCandidateDialog()"
+                                @click="openAssignCandidateModal(role)"
                             >
                                 Assign Candidate
                             </button>
                         </div>
                     </div>
-                    <div v-if="true" class="space-y-2">
+                    <div v-if="role.candidate || true" class="space-y-2">
                         <div
-                            class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            class="flex items-center gap-3 py-6 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                             <div
                                 class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
@@ -1023,54 +1029,44 @@ function handleAssignCandidate() {
     <dialog ref="assignCandidateDialog" class="modal">
         <div class="modal-box">
             <h3 class="font-bold text-lg">
-                Assign Candidate for {{ selectedPosition }}
+                Assign Candidate
+                <span class="underline text-primary">{{
+                    selectedRole?.name
+                }}</span>
+                for SSC Voting
             </h3>
-            <form @submit.prevent="handleAssignCandidate" class="space-y-4">
+
+            <form
+                @submit.prevent="handleAssignCandidate"
+                class="space-y-4 mt-4"
+            >
                 <InputFields
                     v-model="candidateForm.candidate_id"
-                    label="Candidate ID"
-                    type="number"
-                    placeholder="Enter candidate ID"
+                    label="Candidate Full Name"
+                    type="text"
+                    placeholder="Enter Candidate Full Name"
                     :errors="candidateForm.errors.candidate_id"
                 />
-                <div>
-                    <label class="label">
-                        <span class="label-text">Party</span>
-                    </label>
-                    <select
-                        v-model="candidateForm.party_id"
-                        class="select select-bordered w-full"
-                        :class="{
-                            'select-error': candidateForm.errors.party_id,
-                        }"
-                    >
-                        <option value="">Select a party</option>
-                        <option
-                            v-for="party in parties"
-                            :key="party.id"
-                            :value="party.id"
-                        >
-                            {{ party.name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="candidateForm.errors.party_id"
-                        class="text-error text-xs mt-1"
-                    >
-                        {{ candidateForm.errors.party_id }}
-                    </p>
-                </div>
+                <InputFields
+                    v-model="candidateForm.candidate_id"
+                    label="Select Party List"
+                    type="select"
+                    placeholder="Select Party List"
+                    :selection-items="partyList"
+                    :errors="candidateForm.errors.candidate_id"
+                />
+
                 <div class="modal-action">
                     <button
                         type="button"
-                        class="btn"
+                        class="btn btn-soft btn-sm"
                         @click="assignCandidateDialog.close()"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="btn btn-primary"
+                        class="btn btn-sm btn-primary"
                         :disabled="isLoading"
                     >
                         {{ isLoading ? "Assigning..." : "Assign Candidate" }}
@@ -1087,7 +1083,7 @@ function handleAssignCandidate() {
     <!-- Add Role Modal -->
     <dialog ref="addRoleDialog" class="modal">
         <div class="modal-box">
-            <h3 class="font-bold text-lg">New Role Role</h3>
+            <h3 class="font-bold text-lg">New Role Form</h3>
             <form @submit.prevent="handleAddRole" class="space-y-4 mt-4">
                 <InputFields
                     v-model="roleForm.name"

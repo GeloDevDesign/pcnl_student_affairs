@@ -12,6 +12,7 @@ use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\PartyListController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\OfficersController;
+use App\Http\Controllers\ElectionController;
 
 Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
@@ -126,6 +127,18 @@ Route::middleware(['auth', 'role:admin'])
         Route::patch('/{role}', [RoleController::class, 'update'])
             ->name('update');
         Route::delete('/{role}', [RoleController::class, 'destroy'])
+            ->name('destroy');
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->name('election.')
+    ->prefix('election')
+    ->group(function () {
+        Route::post('/', [ElectionController::class, 'store'])
+            ->name('store');
+        Route::patch('/{election}', [ElectionController::class, 'update'])
+            ->name('update');
+        Route::delete('/{election}', [ElectionController::class, 'destroy'])
             ->name('destroy');
     });
 
