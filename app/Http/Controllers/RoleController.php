@@ -8,51 +8,35 @@ use Illuminate\Http\Request;
 class RoleController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|min:3',
+            'description'  => 'nullable|string|max:255|min:3',
+        ]);
+
+        $role = Role::create($validated);
+
+        return redirect()->back()->with('success', 'Role created successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Role $role)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Role $role)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Role $role)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|min:3',
+            'description'  => 'nullable|string|max:255|min:3',
+        ]);
+
+        $role->update($validated);
+        return redirect()->back()->with('success', 'Role updated successfully!');
     }
 
     /**
@@ -60,6 +44,7 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        //
+        $role->delete();
+        return redirect()->back()->with('success', 'Role deleted successfully!');
     }
 }

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('party_lists', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name');
             $table->text('slogan');
             $table->timestamps();
