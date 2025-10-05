@@ -17,7 +17,7 @@ class ElectionSeeder extends Seeder
             'name' => 'SSC VOTING',
             'start' => now(),
             'end' => now()->addDays(7),
-            'status' => 0,
+            'status' => 1,
         ]);
     }
 }

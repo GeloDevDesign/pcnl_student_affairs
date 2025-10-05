@@ -1,233 +1,147 @@
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { router, useForm } from "@inertiajs/vue3";
-import { Form, usePage } from "@inertiajs/vue3";
-import { useToastAlert } from "../../composables/useToastAlert.js";
-import ModalAction from "../../components/ModalAction.vue";
-import InputFields from "../../components/InputFields.vue";
-import Pagination from "../../components/Pagination.vue";
-import Swal from "sweetalert2";
+import { ref, onMounted } from "vue";
+import { Chart, registerables } from "chart.js";
 
-const { toastAlert } = useToastAlert();
-
-const page = usePage();
-const isLoading = ref(false);
-const selectedItem = ref(null);
-const dialogRef = ref(null);
-
-const form = useForm({
-    name: "",
-    department: "",
-});
+Chart.register(...registerables);
 
 const props = defineProps({
-    instructors: Object,
-    errors: Object,
+    election: Object,
+    results: Array,
+    totalVoters: Number,
+    canViewResults: Boolean,
 });
 
-const handleSubmit = ({ closeModal }) => {
-    isLoading.value = true;
+const chartRef = ref(null);
 
-    form.post("/instructor", {
-        preserveScroll: true,
-        onSuccess: () => {
-            form.reset();
-            closeModal();
-            toastAlert(page.props.flash.success, "success");
-            isLoading.value = false;
-        },
-        onError: () => {
-            isLoading.value = false;
-        },
+// Format date helper
+function formatDate(dateString) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
     });
-};
+}
 
-const handleUpadte = () => {
-    isLoading.value = true;
-    form.patch(`/instructor/${selectedItem.value.id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            dialogRef.value.close();
-            toastAlert(page.props.flash.success, "success");
-            isLoading.value = false;
-        },
-        onError: () => {
-            isLoading.value = false;
-        },
-    });
-};
+// Initialize single chart for all candidates
+onMounted(() => {
+    if (!props.results || !props.canViewResults || !chartRef.value) return;
 
-const handleDelete = async (entity) => {
-    // Show confirm dialog
-    const { isConfirmed } = await Swal.fire({
-        title: "DELETE INSTRUCTOR",
-        text: `Are you sure you want to delete "${entity.name}"?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        confirmButtonColor: "#e3342f",
-        cancelButtonColor: "#6b7280",
+    const ctx = chartRef.value.getContext('2d');
+    
+    // Flatten all candidates from all roles
+    const allCandidates = [];
+    const labels = [];
+    const data = [];
+    const colors = [];
+    const borderColors = [];
+    
+    props.results.forEach((role) => {
+        role.candidates.forEach((candidate, index) => {
+            labels.push(`${candidate.full_name}\n(${role.role_name})`);
+            data.push(candidate.votes);
+            
+            // Green for winners (first in each role), blue for others
+            const isWinner = index === 0;
+            colors.push(isWinner ? 'rgba(34, 197, 94, 0.8)' : 'rgba(59, 130, 246, 0.8)');
+            borderColors.push(isWinner ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)');
+            
+            allCandidates.push({ ...candidate, role: role.role_name, isWinner });
+        });
     });
 
-    if (!isConfirmed) return;
-
-    isLoading.value = true;
-
-    router.delete(`/instructor/${entity.id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            toastAlert(page.props.flash.success, "success");
-            isLoading.value = false;
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Votes',
+                data: data,
+                backgroundColor: colors,
+                borderColor: borderColors,
+                borderWidth: 2,
+                borderRadius: 6,
+            }]
         },
-        onError: () => {
-            isLoading.value = false;
-        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const candidate = allCandidates[context.dataIndex];
+                            return [
+                                `Votes: ${context.parsed.y}`,
+                                `Party: ${candidate.party_list}`,
+                                candidate.isWinner ? '🏆 Winner' : ''
+                            ].filter(Boolean);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                    },
+                    title: {
+                        display: true,
+                        text: 'Votes'
+                    }
+                },
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
     });
-};
-
-const resetPopulate = () => {
-    form.reset();
-};
-
-const populateFormEdit = (entity) => {
-    form.reset();
-    form.clearErrors();
-    selectedItem.value = entity;
-    form.name = entity.name;
-    form.department = entity.department;
-};
+});
 </script>
 
 <template>
-    <div class="w-full flex justify-end mb-4">
-        <ModalAction
-            v-if="$page.props.auth.user.role === 'admin'"
-            :isLoading="isLoading"
-            :modalTitle="'Instructor Form'"
-            :buttonName="'Create New Instructor'"
-            :buttonAction="
-                isLoading ? 'Adding New Instructor...' : 'Add Instructor'
-            "
-            @reset-form="resetPopulate"
-            @submit-form="handleSubmit"
-        >
-            <Form class="space-y-2">
-                <InputFields
-                    v-model="form.name"
-                    :label="'Name'"
-                    :type="'text'"
-                    :placeholder="'Fullname of instructor'"
-                    :errors="form.errors.name"
-                />
+    <div class="mt-6">
+        <!-- No Results Available -->
+        <div v-if="!canViewResults || !election" class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">Results Not Available</h2>
+            <p class="text-gray-600 text-sm">Results will be shown after voting ends.</p>
+        </div>
 
-                <InputFields
-                    v-model="form.department"
-                    :label="'Department'"
-                    :type="'text'"
-                    :placeholder="'Department'"
-                    :errors="form.errors.department"
-                />
-            </Form>
-        </ModalAction>
-    </div>
-    <div class="overflow-x-auto bg-white">
-        <table class="table">
-            <!-- head -->
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Department</th>
+        <!-- Results Available -->
+        <div v-else class="bg-white p-6 shadow-sm rounded-lg border border-gray-100">
+            <!-- Header -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ election?.name }}</h3>
+                <p class="text-sm text-gray-500">
+                    {{ formatDate(election?.start_date) }} - {{ formatDate(election?.end_date) }}
+                </p>
+                <p class="text-sm text-gray-600 mt-2">Total Voters: {{ totalVoters }}</p>
+            </div>
 
-                    <th v-if="$page.props.auth.user.role === 'admin'">
-                        Action
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(ins, index) in instructors.data" :key="ins.id">
-                    <th>
-                        {{
-                            (instructors.current_page - 1) *
-                                instructors.per_page +
-                            (index + 1)
-                        }}
-                    </th>
-                    <td>{{ ins.name }}</td>
-                    <td>{{ ins.department }}</td>
-                    <td
-                        class="space-x-2"
-                        v-if="$page.props.auth.user.role === 'admin'"
-                    >
-                        <button
-                            class="btn btn-primary btn-xs text-white"
-                            @click="populateFormEdit(ins)"
-                            onclick="my_modal_2.showModal()"
-                        >
-                            Edit
-                        </button>
-                        <button
-                            class="btn btn-xs btn-error"
-                            @click="handleDelete(ins)"
-                        >
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+            <!-- Single Chart -->
+            <div class="h-96 mb-4">
+                <canvas ref="chartRef"></canvas>
+            </div>
 
-    <Pagination :data="instructors" />
-
-    <dialog ref="dialogRef" id="my_modal_2" class="modal">
-        <div class="modal-box">
-            <h3 class="text-lg font-bold">
-                Update Instructor
-                <span class="text-primary">{{ selectedItem?.name }}</span>
-            </h3>
-            <div ref="dialogRef" class="modal-action">
-                <form method="dialog" class="w-full">
-                    <div class="w-full">
-                        <Form
-                            :action="`/instructor/${selectedItem}`"
-                            method="post"
-                            class="space-y-2"
-                        >
-                            <InputFields
-                                v-model="form.name"
-                                :label="'Title'"
-                                :type="'text'"
-                                :placeholder="'Instructor Fullname'"
-                                :errors="form.errors.name"
-                            />
-
-                            <InputFields
-                                v-model="form.department"
-                                :label="'Details'"
-                                :type="'text'"
-                                :placeholder="'Department'"
-                                :errors="form.errors.department"
-                            />
-                        </Form>
-                    </div>
-                    <div class="w-full flex justify-end gap-2 mt-2">
-                        <button class="btn btn-sm btn-soft">Close</button>
-                        <button
-                            :disabled="isLoading"
-                            @click="handleUpadte"
-                            type="button"
-                            class="btn btn-primary btn-sm"
-                        >
-                            Update Instructor
-                            <span
-                                v-if="isLoading"
-                                class="loading loading-spinner loading-xs"
-                            ></span>
-                        </button>
-                    </div>
-                </form>
+            <!-- Legend -->
+            <div class="flex items-center justify-center gap-6 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-green-500 rounded"></div>
+                    <span class="text-gray-700">Winners</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                    <span class="text-gray-700">Other Candidates</span>
+                </div>
             </div>
         </div>
-    </dialog>
+    </div>
 </template>

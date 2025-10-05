@@ -16,26 +16,31 @@ return new class extends Migration
 
             // Voter (student or whoever is allowed to vote)
             $table->foreignId('user_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
-
-            // Candidate being voted for
-            $table->foreignId('candidate_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
+                ->constrained()
+                ->cascadeOnDelete();
 
             // Election where the vote belongs
             $table->foreignId('election_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
+                ->constrained()
+                ->cascadeOnDelete();
+
+            // Role being voted for
+            $table->foreignId('role_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            // Candidate being voted for
+            $table->foreignId('candidate_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
             // Optional: to track the exact time of voting
             $table->timestamp('voted_at')->useCurrent();
 
             $table->timestamps();
 
-            // Ensure a user can vote only ONCE per election
-            $table->unique(['user_id', 'election_id']);
+            // Ensure a user can vote only ONCE per role per election
+            // $table->unique(['user_id', 'election_id', 'role_id']);
         });
     }
 

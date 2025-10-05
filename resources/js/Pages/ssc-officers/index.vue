@@ -31,6 +31,7 @@ defineProps({
     pageTitle: String,
     partyList: Object,
     roles: Object,
+    resultsData: Object, // Add results data prop
 });
 
 onMounted(() => {
@@ -49,7 +50,6 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
                 :currentPage="pageStore.currentPage"
                 @breadcrumb-click="(page) => pageStore.navigatePage(page)"
             >
-            
             </Banner>
 
             <div
@@ -102,13 +102,17 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
             </div>
 
             <VotingForm
-                :events="events"
+                :roles="roles"
                 v-if="pageStore.currentPage === 'voting-forms'"
             />
 
             <Results
-                :events="events"
                 v-if="pageStore.currentPage === 'results'"
+                :election="resultsData?.election"
+                :results="resultsData?.results"
+                :totalVoters="resultsData?.totalVoters"
+                :partyStats="resultsData?.partyStats"
+                :canViewResults="resultsData?.canViewResults"
             />
 
             <Officers
