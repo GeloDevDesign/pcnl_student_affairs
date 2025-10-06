@@ -56,6 +56,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
                 class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
             >
                 <NavCard
+                    v-if="$page.props.auth.user.role === 'admin'"
                     :cardTitle="'SSC OFFICERS'"
                     :cardDescription="'List of officers'"
                     :cardValue="'ssc-officers'"

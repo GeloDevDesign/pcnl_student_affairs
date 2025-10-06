@@ -139,8 +139,9 @@ class VoteController extends Controller
 
     public function checkVoteStatus(Request $request)
     {
+
         $electionId = $request->input('election_id');
-        $userId = auth()->id();
+        $userId = $request->user()->id;
 
         $hasVoted = Vote::where('user_id', $userId)
             ->where('election_id', $electionId)
@@ -148,6 +149,4 @@ class VoteController extends Controller
 
         return response()->json(['has_voted' => $hasVoted]);
     }
-
-   
 }

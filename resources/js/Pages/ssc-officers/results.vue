@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
@@ -11,7 +11,7 @@ const props = defineProps({
     canViewResults: Boolean,
 });
 
-const chartRef = ref(null);
+const chartRefs = ref([]);
 
 // Format date helper
 function formatDate(dateString) {
@@ -23,86 +23,111 @@ function formatDate(dateString) {
     });
 }
 
-// Initialize single chart for all candidates
-onMounted(() => {
-    if (!props.results || !props.canViewResults || !chartRef.value) return;
+// Initialize charts for each role
+onMounted(async () => {
+    if (!props.results || !props.canViewResults) return;
 
-    const ctx = chartRef.value.getContext('2d');
-    
-    // Flatten all candidates from all roles
-    const allCandidates = [];
-    const labels = [];
-    const data = [];
-    const colors = [];
-    const borderColors = [];
-    
-    props.results.forEach((role) => {
-        role.candidates.forEach((candidate, index) => {
-            labels.push(`${candidate.full_name}\n(${role.role_name})`);
-            data.push(candidate.votes);
-            
-            // Green for winners (first in each role), blue for others
-            const isWinner = index === 0;
-            colors.push(isWinner ? 'rgba(34, 197, 94, 0.8)' : 'rgba(59, 130, 246, 0.8)');
-            borderColors.push(isWinner ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)');
-            
-            allCandidates.push({ ...candidate, role: role.role_name, isWinner });
-        });
-    });
+    await nextTick();
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Votes',
-                data: data,
-                backgroundColor: colors,
-                borderColor: borderColors,
-                borderWidth: 2,
-                borderRadius: 6,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false,
+    props.results.forEach((role, roleIndex) => {
+        const canvas = chartRefs.value[roleIndex];
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        const labels = role.candidates.map(c => c.full_name);
+        const data = role.candidates.map(c => c.votes);
+        
+        // Color the winner (first candidate) green, others blue
+        const colors = role.candidates.map((_, index) => 
+            index === 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(59, 130, 246, 0.7)'
+        );
+        const borderColors = role.candidates.map((_, index) => 
+            index === 0 ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)'
+        );
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Votes',
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: borderColors,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barThickness: 'flex',
+                    maxBarThickness: 40,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 10,
+                        cornerRadius: 6,
+                        titleFont: {
+                            size: 13,
+                            weight: 'normal'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            label: (context) => {
+                                const candidate = role.candidates[context.dataIndex];
+                                return [
+                                    `Votes: ${context.parsed.y}`,
+                                    `Party: ${candidate.party_list}`,
+                                    context.dataIndex === 0 ? '🏆 Winner' : ''
+                                ].filter(Boolean);
+                            }
+                        }
+                    }
                 },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => {
-                            const candidate = allCandidates[context.dataIndex];
-                            return [
-                                `Votes: ${context.parsed.y}`,
-                                `Party: ${candidate.party_list}`,
-                                candidate.isWinner ? '🏆 Winner' : ''
-                            ].filter(Boolean);
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        border: {
+                            display: false
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        border: {
+                            display: false
                         }
                     }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                    },
-                    title: {
-                        display: true,
-                        text: 'Votes'
-                    }
-                },
-                x: {
-                    ticks: {
-                        autoSkip: false,
-                        maxRotation: 45,
-                        minRotation: 45
-                    }
-                }
             }
-        }
+        });
     });
 });
 </script>
@@ -116,9 +141,9 @@ onMounted(() => {
         </div>
 
         <!-- Results Available -->
-        <div v-else class="bg-white p-6 shadow-sm rounded-lg border border-gray-100">
+        <div v-else class="space-y-5">
             <!-- Header -->
-            <div class="mb-6">
+            <div class="bg-white p-5 shadow-sm rounded-lg border border-gray-200">
                 <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ election?.name }}</h3>
                 <p class="text-sm text-gray-500">
                     {{ formatDate(election?.start_date) }} - {{ formatDate(election?.end_date) }}
@@ -126,20 +151,32 @@ onMounted(() => {
                 <p class="text-sm text-gray-600 mt-2">Total Voters: {{ totalVoters }}</p>
             </div>
 
-            <!-- Single Chart -->
-            <div class="h-96 mb-4">
-                <canvas ref="chartRef"></canvas>
-            </div>
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div 
+                    v-for="(role, index) in results" 
+                    :key="role.role_id"
+                    class="bg-white p-5 shadow-sm rounded-lg border border-gray-200"
+                >
+                    <div class="mb-4">
+                        <h4 class="text-base font-semibold text-gray-800">{{ role.role_name }}</h4>
+                    </div>
+                    
+                    <div class="h-64 mb-3">
+                        <canvas :ref="el => chartRefs[index] = el"></canvas>
+                    </div>
 
-            <!-- Legend -->
-            <div class="flex items-center justify-center gap-6 text-sm">
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-green-500 rounded"></div>
-                    <span class="text-gray-700">Winners</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-blue-500 rounded"></div>
-                    <span class="text-gray-700">Other Candidates</span>
+                    <!-- Role-specific Legend -->
+                    <div class="flex items-center justify-center gap-4 text-xs pt-2 border-t border-gray-100">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-3 h-3 bg-green-500 rounded"></div>
+                            <span class="text-gray-600">Winner</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                            <span class="text-gray-600">Others</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

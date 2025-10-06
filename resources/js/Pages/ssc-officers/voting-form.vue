@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import { useToastAlert } from "../../composables/useToastAlert.js";
 import Swal from "sweetalert2";
@@ -17,10 +17,47 @@ const props = defineProps({
 const votes = ref({});
 const isLoading = ref(false);
 const hasVoted = ref(props.hasAlreadyVoted || false);
+const isCheckingVote = ref(true);
 
 // Form for submission
 const voteForm = useForm({
     votes: [],
+});
+
+// Check if user has already voted
+async function checkVoteStatus() {
+    try {
+        const electionId = 1; // your payload value
+
+        const response = await fetch(
+            `/votes/status?election_id=${electionId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                credentials: "same-origin",
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to check vote status");
+        }
+
+        const data = await response.json();
+        hasVoted.value = data.has_voted || false;
+    } catch (error) {
+        console.error("Error checking vote status:", error);
+        hasVoted.value = props.hasAlreadyVoted || false;
+    } finally {
+        isCheckingVote.value = false;
+    }
+}
+
+// Check vote status on mount
+onMounted(async () => {
+    await checkVoteStatus();
 });
 
 // Check if all roles have been voted
@@ -36,8 +73,8 @@ function selectCandidate(roleId, candidateId) {
 // Get selected candidate for a role
 function getSelectedCandidate(roleId) {
     const candidateId = votes.value[roleId];
-    const role = props.roles.find(r => r.id === roleId);
-    return role?.candidates.find(c => c.id === candidateId);
+    const role = props.roles.find((r) => r.id === roleId);
+    return role?.candidates.find((c) => c.id === candidateId);
 }
 
 async function handleSubmitVotes() {
@@ -60,14 +97,16 @@ async function handleSubmitVotes() {
     if (!isConfirmed) return;
 
     // Format votes for backend
-    const votesPayload = Object.entries(votes.value).map(([roleId, candidateId]) => ({
-        election_id: 1, // Use dynamic election ID
-        role_id: parseInt(roleId),
-        candidate_id: parseInt(candidateId), // Ensure candidate_id is an integer
-    }));
+    const votesPayload = Object.entries(votes.value).map(
+        ([roleId, candidateId]) => ({
+            election_id: props.election?.id || 1,
+            role_id: parseInt(roleId),
+            candidate_id: parseInt(candidateId),
+        })
+    );
 
     // Log payload for debugging
-    console.log('Submitting votes:', votesPayload);
+    console.log("Submitting votes:", votesPayload);
 
     isLoading.value = true;
     voteForm.votes = votesPayload;
@@ -76,12 +115,20 @@ async function handleSubmitVotes() {
         preserveScroll: true,
         onSuccess: () => {
             hasVoted.value = true;
-            toastAlert(page.props.flash.success || "Vote submitted successfully!", "success");
+            toastAlert(
+                page.props.flash.success || "Vote submitted successfully!",
+                "success"
+            );
             isLoading.value = false;
         },
         onError: (errors) => {
-            console.error('Vote submission errors:', errors); // Log errors
-            toastAlert(errors.votes || page.props.flash.error || "Failed to submit vote!", "error");
+            console.error("Vote submission errors:", errors);
+            toastAlert(
+                errors.votes ||
+                    page.props.flash.error ||
+                    "Failed to submit vote!",
+                "error"
+            );
             isLoading.value = false;
         },
     });
@@ -90,7 +137,7 @@ async function handleSubmitVotes() {
 // Generate HTML for confirmation dialog
 function generateVoteConfirmationHTML() {
     let html = '<div class="text-left space-y-2">';
-    props.roles.forEach(role => {
+    props.roles.forEach((role) => {
         const candidate = getSelectedCandidate(role.id);
         if (candidate) {
             html += `
@@ -102,7 +149,7 @@ function generateVoteConfirmationHTML() {
             `;
         }
     });
-    html += '</div>';
+    html += "</div>";
     return html;
 }
 
@@ -117,35 +164,72 @@ function formatDate(dateString) {
 </script>
 
 <template>
+    <!-- Loading State -->
+    <div v-if="isCheckingVote" class="mt-6">
+        <div class="bg-white border border-gray-200 rounded-lg p-8 text-center">
+            <div class="flex flex-col items-center justify-center">
+                <span
+                    class="loading loading-spinner loading-lg text-blue-600"
+                ></span>
+                <p class="text-gray-600 mt-4">Checking your vote status...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Success Message After Voting -->
-    <div v-if="hasVoted" class="mt-6">
-        <div class="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-            <svg class="w-16 h-16 text-green-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div v-else-if="hasVoted" class="mt-6">
+        <div
+            class="bg-green-50 border border-green-200 rounded-lg p-8 text-center"
+        >
+            <svg
+                class="w-16 h-16 text-green-600 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
             </svg>
-            <h2 class="text-2xl font-bold text-green-900 mb-2">Vote Submitted Successfully!</h2>
-            <p class="text-green-700">Thank you for participating in the {{ election?.title }}.</p>
+            <h2 class="text-2xl font-bold text-green-900 mb-2">
+                Vote Submitted Successfully!
+            </h2>
+            <p class="text-green-700">
+                Thank you for participating please wait for results.
+            </p>
         </div>
     </div>
 
     <!-- Voting Form -->
     <div v-else class="mt-6">
         <!-- Election Info Card -->
-        <div class="bg-white p-6 shadow-sm rounded-lg border border-gray-100 mb-6">
+        <div
+            class="bg-white p-6 shadow-sm rounded-lg border border-gray-100 mb-6"
+        >
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">{{ election?.title }}</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {{ election?.title }}
+                    </h3>
                     <p class="text-sm text-gray-500">
-                        {{ formatDate(election?.start_date) }} - {{ formatDate(election?.end_date) }}
+                        {{ formatDate(election?.start_date) }} -
+                        {{ formatDate(election?.end_date) }}
                     </p>
                 </div>
-                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold uppercase">
+                <span
+                    class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold uppercase"
+                >
                     {{ election?.status }}
                 </span>
             </div>
 
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm font-semibold text-blue-900 mb-2">Voting Instructions:</p>
+                <p class="text-sm font-semibold text-blue-900 mb-2">
+                    Voting Instructions:
+                </p>
                 <ul class="text-sm text-blue-800 space-y-1">
                     <li>• Select one candidate for each position</li>
                     <li>• You can only vote once</li>
@@ -157,12 +241,20 @@ function formatDate(dateString) {
             <div class="mt-4">
                 <div class="flex justify-between text-sm mb-2">
                     <span class="font-semibold text-gray-700">Progress</span>
-                    <span class="text-gray-600">{{ Object.keys(votes).length }} / {{ roles.length }}</span>
+                    <span class="text-gray-600"
+                        >{{ Object.keys(votes).length }} /
+                        {{ roles.length }}</span
+                    >
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                        class="bg-blue-600 h-2 rounded-full transition-all" 
-                        :style="{ width: ((Object.keys(votes).length / roles.length) * 100) + '%' }"
+                    <div
+                        class="bg-blue-600 h-2 rounded-full transition-all"
+                        :style="{
+                            width:
+                                (Object.keys(votes).length / roles.length) *
+                                    100 +
+                                '%',
+                        }"
                     ></div>
                 </div>
             </div>
@@ -170,15 +262,32 @@ function formatDate(dateString) {
 
         <!-- Voting Cards -->
         <div class="space-y-6">
-            <div v-for="role in roles" :key="role.id" class="bg-white p-6 shadow-sm rounded-lg border border-gray-100">
+            <div
+                v-for="role in roles"
+                :key="role.id"
+                class="bg-white p-6 shadow-sm rounded-lg border border-gray-100"
+            >
                 <!-- Role Header -->
                 <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900">{{ role.name }}</h3>
-                        <p class="text-sm text-gray-500">{{ role.description }}</p>
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            {{ role.name }}
+                        </h3>
+                        <p class="text-sm text-gray-500">
+                            {{ role.description }}
+                        </p>
                     </div>
-                    <svg v-if="votes[role.id]" class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    <svg
+                        v-if="votes[role.id]"
+                        class="w-6 h-6 text-green-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                        />
                     </svg>
                 </div>
 
@@ -192,35 +301,61 @@ function formatDate(dateString) {
                         @click="selectCandidate(role.id, candidate.id)"
                         :class="[
                             'p-4 rounded-lg border-2 cursor-pointer transition-all',
-                            votes[role.id] === candidate.id 
-                                ? 'border-blue-600 bg-blue-50' 
-                                : 'border-gray-200 hover:border-blue-300'
+                            votes[role.id] === candidate.id
+                                ? 'border-blue-600 bg-blue-50'
+                                : 'border-gray-200 hover:border-blue-300',
                         ]"
                     >
                         <div class="flex items-center gap-3">
                             <!-- Radio -->
-                            <div :class="[
-                                'w-5 h-5 rounded-full border-2 flex items-center justify-center',
-                                votes[role.id] === candidate.id ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
-                            ]">
-                                <div v-if="votes[role.id] === candidate.id" class="w-2.5 h-2.5 bg-white rounded-full"></div>
+                            <div
+                                :class="[
+                                    'w-5 h-5 rounded-full border-2 flex items-center justify-center',
+                                    votes[role.id] === candidate.id
+                                        ? 'border-blue-600 bg-blue-600'
+                                        : 'border-gray-300',
+                                ]"
+                            >
+                                <div
+                                    v-if="votes[role.id] === candidate.id"
+                                    class="w-2.5 h-2.5 bg-white rounded-full"
+                                ></div>
                             </div>
 
                             <!-- Avatar -->
-                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <div
+                                class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+                            >
+                                <svg
+                                    class="w-5 h-5 text-gray-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
                                 </svg>
                             </div>
 
                             <!-- Info -->
                             <div class="flex-1">
-                                <p class="font-semibold text-gray-900">{{ candidate.full_name }}</p>
-                                <p class="text-sm text-gray-600">{{ candidate.party_list.name }}</p>
+                                <p class="font-semibold text-gray-900">
+                                    {{ candidate.full_name }}
+                                </p>
+                                <p class="text-sm text-gray-600">
+                                    {{ candidate.party_list.name }}
+                                </p>
                             </div>
 
                             <!-- Selected Badge -->
-                            <span v-if="votes[role.id] === candidate.id" class="px-2 py-1 bg-blue-600 text-white text-xs font-semibold rounded">
+                            <span
+                                v-if="votes[role.id] === candidate.id"
+                                class="px-2 py-1 bg-blue-600 text-white text-xs font-semibold rounded"
+                            >
                                 SELECTED
                             </span>
                         </div>
@@ -230,7 +365,9 @@ function formatDate(dateString) {
         </div>
 
         <!-- Submit Button -->
-        <div class="mt-6 bg-white p-6 shadow-sm rounded-lg border border-gray-100">
+        <div
+            class="mt-6 bg-white p-6 shadow-sm rounded-lg border border-gray-100"
+        >
             <button
                 @click="handleSubmitVotes"
                 :disabled="!isAllVoted || isLoading"
@@ -238,14 +375,19 @@ function formatDate(dateString) {
                     'w-full py-3 rounded-lg font-semibold transition-all',
                     isAllVoted && !isLoading
                         ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed',
                 ]"
             >
-                <span v-if="isLoading" class="flex items-center justify-center gap-2">
+                <span
+                    v-if="isLoading"
+                    class="flex items-center justify-center gap-2"
+                >
                     <span class="loading loading-spinner loading-sm"></span>
                     Submitting Vote...
                 </span>
-                <span v-else-if="!isAllVoted">Complete All Positions to Submit</span>
+                <span v-else-if="!isAllVoted"
+                    >Complete All Positions to Submit</span
+                >
                 <span v-else>Submit My Vote</span>
             </button>
         </div>
