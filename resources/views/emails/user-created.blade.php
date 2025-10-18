@@ -243,12 +243,7 @@
       </p>
     </div>
     <div class="footer">
-      <p>&copy; {{ date('Y') }} Your Company. All rights reserved.</p>
-      <div>
-        <a href="#" class="footer-link">Privacy Policy</a>
-        <a href="#" class="footer-link">Terms of Service</a>
-        <a href="#" class="footer-link">Support</a>
-      </div>
+      <p>&copy; {{ date('Y') }} PCNL Student Affairs. All rights reserved.</p>
     </div>
   </div>
 </body>
