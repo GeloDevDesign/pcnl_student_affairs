@@ -18,7 +18,7 @@ class ElectionController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
         ]);
 
-        $election = Election::create($validated);
+        $election = $request->user()->elections()->create($validated);
         return redirect()->back()->with('success', 'Election created successfully!');
     }
 
@@ -42,6 +42,7 @@ class ElectionController extends Controller
      */
     public function destroy(Election $election)
     {
-        //
+        $election->delete();
+        return redirect()->back()->with('success', 'Election Deleted successfully!');
     }
 }

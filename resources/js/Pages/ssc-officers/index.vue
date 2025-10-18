@@ -10,10 +10,6 @@ const { props } = usePage();
 import Layout from "../../shared/Layout.vue";
 import Banner from "../../components/Banner.vue";
 import NavCard from "../../components/NavCard.vue";
-import Search from "../../components/Search.vue";
-
-import Feedbacks from "./officers.vue";
-
 import VotingForm from "./voting-form.vue";
 import Results from "./results.vue";
 import Officers from "./officers.vue";
@@ -33,6 +29,7 @@ defineProps({
     pageTitle: String,
     partyList: Object,
     roles: Object,
+    elections: Object,
     resultsData: Object, // Add results data prop
 });
 
@@ -78,6 +75,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
                 </NavCard>
 
                 <NavCard
+                    v-if="$page.props.auth.user.role === 'student'"
                     :cardTitle="'VOTING FORMS'"
                     :cardDescription="'Forms for voting'"
                     :cardValue="'voting-forms'"
@@ -109,6 +107,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
             </div>
 
             <VotingForm
+                :election="resultsData?.election"
                 :roles="roles"
                 v-if="pageStore.currentPage === 'voting-forms'"
             />
@@ -123,8 +122,10 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
             />
 
             <Officers
+                :elections="elections"
                 :roles="roles"
                 :partyList="partyList"
+                :selectedElection="resultsData?.election"
                 v-if="pageStore.currentPage === 'ssc-officers'"
             />
         </div>

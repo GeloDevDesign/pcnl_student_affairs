@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthController extends Controller
 {
@@ -59,26 +61,42 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
+    public function forgot_password_page(Request $request)
+    {
+        return Inertia::render('Auth/ForgotPassword');
+    }
+
     public function forgot_password(Request $request)
     {
-        $validated =   $request->validate(['email' => 'required|email']);
+        $validated = $request->validate(['email' => 'required|email']);
 
-        $status = Password::sendResetLink(
-            $validated['email']
-        );
+        $status = Password::sendResetLink($validated);
 
-        return $status === Password::ResetLinkSent
-            ? back()->with(['status' => __($status)])
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', __($status))
             : back()->withErrors(['email' => __($status)]);
     }
 
     public function reset_password(Request $request)
     {
-        $validated =   $request->validate([
-            'token'    => 'required',
-            'email'    => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
+
+        $validated = $request->validate([
+            'token' => ['required', 'string'],
+            'email' => ['required', 'email', Rule::exists('users', 'email')],
+            'password' => [
+                'required',
+                'confirmed',
+                PasswordRule::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ]);
+
+
+
+
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
@@ -88,15 +106,14 @@ class AuthController extends Controller
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();
-
-                // event(new PasswordReset($user));
             }
         );
 
-        return $status === Password::PasswordReset
-            ? redirect()->route('login')->with('status', __($status))
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('success', __($status))
             : back()->withErrors(['email' => [__($status)]]);
     }
+
 
 
     public function logout(Request $request)

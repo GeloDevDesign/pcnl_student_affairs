@@ -16,25 +16,60 @@ use App\Http\Controllers\ElectionController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 
 Route::middleware(['web'])->group(function () {
     // Public routes (accessible without authentication)
-    Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
+    Route::get('/login', [AuthController::class, 'index'])->middleware('guest');
     Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    Route::get('/forgot-password', [AuthController::class, 'forgot_password_page'])
+        ->name('password.request');
 
+    Route::post('/forgot-password', [AuthController::class, 'forgot_password'])
+        ->middleware('guest')
+        ->name('password.email');
+
+    Route::get('/reset-password/{token}', function (Request $request, $token) {
+        return Inertia::render('Auth/ResetPassword', [
+            'token' => $token,
+            'email' => $request->query('email')
+        ]);
+    })->middleware('guest')->name('password.reset');
+
+    Route::post('/reset-password', [AuthController::class, 'reset_password'])
+        ->middleware('guest')
+        ->name('password.update');
 
 
     // Authenticated routes
     Route::middleware(['auth'])->group(function () {
         Route::resource('/users', UserController::class)->middleware('role:admin');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+
+        Route::resource('/elections', ElectionController::class)->middleware('role:admin');
 
         // General user routes
         Route::get('/', [AnnouncementController::class, 'index'])->name('home');
         Route::get('/lost-and-found', [ItemController::class, 'index'])->name('lost-found');
         Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluate');
         Route::get('/scc-officers', [OfficersController::class, 'index'])->name('scc-officers');
+
+        Route::get('/settings', function () {
+            return Inertia::render('Auth/Settings', [
+                'pageTitle' => 'PCNL - Settings',
+                'user' => Auth::user()
+            ]);
+        })->name('settings');
+
+        Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+
+
+
         Route::get('/concerns', function () {
             return Inertia::render('concerns/index', [
                 'pageTitle' => 'PCNL - Concerns'

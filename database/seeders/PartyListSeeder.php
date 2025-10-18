@@ -2,21 +2,25 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\PartyList;
 
 class PartyListSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         PartyList::create([
             'user_id' => 1,
+            'election_id' => 2,
             'name' => 'PARTIDO ISKOLAR',
-            'slogan' => 'Official student party list for the SSC elections',
+            'slogan' => 'Iskolar Para sa Bayan!',
+        ]);
+
+        PartyList::create([
+            'user_id' => 1,
+            'election_id' => 2,
+            'name' => 'ISKO UNITY',
+            'slogan' => 'Unity for Progress!',
         ]);
     }
 }

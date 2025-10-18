@@ -7,19 +7,22 @@ use App\Models\Role;
 
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Role::insert([
-            ['name' => 'President'],
-            ['name' => 'Vice President Internal'],
-            ['name' => 'Vice President External'],
-            ['name' => 'Secretary'],
-            ['name' => 'Treasurer'],
-            ['name' => 'Auditor'],
-            ['name' => 'P.I.O'],
-        ]);
+        $roles = [
+            'President',
+            'Vice President',
+            'Secretary',
+            'Treasurer',
+            'Auditor',
+            'P.I.O',
+        ];
+
+        foreach ($roles as $role) {
+            Role::create([
+                'election_id' => 2, // assuming seeding for election 1
+                'name' => $role,
+            ]);
+        }
     }
 }

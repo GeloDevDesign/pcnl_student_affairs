@@ -13,6 +13,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'election_id' => 'required|exists:elections,id',
             'name' => 'required|string|max:255|min:3',
             'description'  => 'nullable|string|max:255|min:3',
         ]);

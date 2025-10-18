@@ -12,8 +12,10 @@ const page = usePage();
 
 const props = defineProps({
     partyList: Object,
+    elections: Object,
     roles: Object,
     errors: Object,
+    selectedElection: Object,
 });
 
 const isLoading = ref(false);
@@ -34,14 +36,8 @@ const selectedParty = ref(null);
 const selectedRole = ref(null);
 const selectedCandidate = ref(null);
 
-const election = ref({
-    id: 1,
-    title: "SSC VOTING",
-    start_date: "2025-10-01",
-    end_date: "2025-10-05",
-    description: "",
-    status: "scheduled",
-});
+const election = ref(props.selectedElection);
+const CURRENT_ELECTION = ref(null);
 
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -51,7 +47,38 @@ const formatDate = (dateString) => {
     });
 };
 
+const SCHEDULED = 0;
+const ONGOING = 1;
+const CLOSED = 2;
+
+function statusLabel(status) {
+    switch (status) {
+        case SCHEDULED:
+            return "Scheduled";
+        case ONGOING:
+            return "Ongoing";
+        case CLOSED:
+            return "Closed";
+        default:
+            return "Unknown";
+    }
+}
+
+function statusColor(status) {
+    switch (status) {
+        case SCHEDULED:
+            return "bg-yellow-100 text-yellow-700";
+        case ONGOING:
+            return "bg-green-100 text-green-700";
+        case CLOSED:
+            return "bg-red-100 text-red-700";
+        default:
+            return "bg-gray-100 text-gray-700";
+    }
+}
+
 const partyForm = useForm({
+    election_id: election.value.id || null,
     name: "",
     slogan: "",
 });
@@ -63,6 +90,7 @@ const editPartyForm = useForm({
 });
 
 const roleForm = useForm({
+    election_id: election.value.id || null,
     name: "",
     description: "",
 });
@@ -75,7 +103,7 @@ const editRoleForm = useForm({
 
 // Election forms
 const electionForm = useForm({
-    title: "",
+    name: "",
     start_date: "",
     end_date: "",
     description: "",
@@ -83,7 +111,8 @@ const electionForm = useForm({
 
 const editElectionForm = useForm({
     id: null,
-    title: "",
+    name: "",
+    status: null,
     start_date: "",
     end_date: "",
     description: "",
@@ -91,6 +120,7 @@ const editElectionForm = useForm({
 
 // Candidate form
 const candidateForm = useForm({
+    election_id: election.value.id || null,
     full_name: "",
     election_id: election.value.id || null,
     role_id: selectedRole?.value?.id || null,
@@ -118,7 +148,7 @@ function openEditCandidateModal(candidate) {
     editCandidateForm.clearErrors();
     editCandidateForm.id = candidate.id;
     editCandidateForm.full_name = candidate.full_name;
-    editCandidateForm.election_id =  election.value.id || null;
+    editCandidateForm.election_id = election.value.id || null;
     editCandidateForm.role_id = candidate.role_id;
     editCandidateForm.party_id = candidate.party_id;
     editCandidateDialog.value.showModal();
@@ -186,7 +216,8 @@ function handleAddParty() {
             );
             partyForm.reset();
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
             toastAlert(
                 page.props.errors.createParty?.[0] || "Failed to add party!",
@@ -325,17 +356,17 @@ function openEditElectionModal() {
     editElectionForm.reset();
     editElectionForm.clearErrors();
     editElectionForm.id = election.value.id;
-    editElectionForm.title = election.value.title;
+    editElectionForm.name = election.value.name;
     editElectionForm.start_date = election.value.start_date;
     editElectionForm.end_date = election.value.end_date;
-    editElectionForm.description = election.value.description;
+    editElectionForm.status = election.value.status;
     editElectionDialog.value.showModal();
 }
 
 async function handleDeleteElection() {
     const { isConfirmed } = await Swal.fire({
         title: "DELETE ELECTION",
-        text: `Are you sure you want to delete "${election.value.title}"?`,
+        text: `Are you sure you want to delete ‘${election.value.title}’? This action will permanently remove all related candidates and roles."`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, delete it!",
@@ -378,7 +409,8 @@ function handleAddElection() {
                 "success"
             );
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error)
             isLoading.value = false;
             toastAlert(
                 page.props.errors.createElection?.[0] ||
@@ -391,7 +423,7 @@ function handleAddElection() {
 
 function handleEditElection() {
     isLoading.value = true;
-    editElectionForm.put(`/elections/${editElectionForm.id}`, {
+    editElectionForm.patch(`/elections/${editElectionForm.id}`, {
         preserveScroll: true,
         errorBag: "editElection",
         onSuccess: () => {
@@ -402,7 +434,8 @@ function handleEditElection() {
                 "success"
             );
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
             toastAlert(
                 page.props.errors.editElection?.[0] ||
@@ -427,7 +460,7 @@ function handleEditCandidate() {
             );
         },
         onError: (error) => {
-            console.log(error)
+            console.log(error);
             isLoading.value = false;
             toastAlert(
                 page.props.errors.editCandidate?.[0] ||
@@ -505,28 +538,71 @@ function handleAssignCandidate() {
         },
     });
 }
+
+function setElection() {
+    router.get(
+        "/scc-officers",
+        { election_id: CURRENT_ELECTION.value },
+        { preserveScroll: true }
+    );
+}
 </script>
 
 <template>
+    <div class="flex items-center gap-2">
+        <InputFields
+            v-model="CURRENT_ELECTION"
+            label="Select Election"
+            type="select"
+            placeholder="Election title"
+            :selectionItems="props.elections"
+            :errors="editElectionForm.errors.title"
+        />
+        <button @click="setElection" class="btn mt-7 bg-green-600 text-white">
+            Set Election
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="size-5"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"
+                />
+            </svg>
+        </button>
+        <button class="btn btn-primary mt-7" @click="openAddElectionModal">
+            Create New Election
+        </button>
+    </div>
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-6 mt-6">
         <!-- Left Column: Election Details & Party List -->
+
         <div class="lg:col-span-1 space-y-6">
             <!-- Election Details Card -->
             <div
                 class="bg-white p-6 shadow-sm rounded-lg border border-gray-100"
             >
                 <!-- Header -->
+
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 mb-1">
-                            {{ election.title }}
+                            {{ election.name }}
                         </h3>
                         <p class="text-sm text-gray-500">Election Event</p>
                     </div>
                     <div
-                        class="badge bg-blue-100 border-0 font-medium badge-sm text-primary px-3 py-1"
+                        :class="[
+                            'badge border-0 font-medium badge-sm px-3 py-1',
+                            statusColor(election.status),
+                        ]"
                     >
-                        {{ election.status }}
+                        {{ statusLabel(election.status) }}
                     </div>
                 </div>
 
@@ -600,9 +676,7 @@ function handleAssignCandidate() {
                     </div>
 
                     <div class="flex justify-between items-center gap-2 mt-6">
-                        <button class="btn btn-primary btn-sm">
-                            Set New Election
-                        </button>
+                        <div></div>
                         <div class="space-x-2">
                             <button
                                 @click="handleDeleteElection()"
@@ -862,8 +936,12 @@ function handleAssignCandidate() {
                                 <!-- Actions -->
                                 <div class="flex gap-1">
                                     <EntityAction
-                                        @edit="openEditCandidateModal(candidate)"
-                                        @delete="handleDeleteCandidate(candidate)"
+                                        @edit="
+                                            openEditCandidateModal(candidate)
+                                        "
+                                        @delete="
+                                            handleDeleteCandidate(candidate)
+                                        "
                                     />
                                 </div>
                             </div>
@@ -971,11 +1049,11 @@ function handleAssignCandidate() {
             <h3 class="font-bold text-lg">Create New Election</h3>
             <form @submit.prevent="handleAddElection" class="space-y-4">
                 <InputFields
-                    v-model="electionForm.title"
+                    v-model="electionForm.name"
                     label="Title"
                     type="text"
                     placeholder="Election title"
-                    :errors="electionForm.errors.title"
+                    :errors="electionForm.errors.name"
                 />
                 <div class="grid grid-cols-2 gap-4">
                     <InputFields
@@ -1029,11 +1107,11 @@ function handleAssignCandidate() {
             <h3 class="font-bold text-lg">Edit Election</h3>
             <form @submit.prevent="handleEditElection" class="space-y-4">
                 <InputFields
-                    v-model="editElectionForm.title"
+                    v-model="editElectionForm.name"
                     label="Title"
                     type="text"
                     placeholder="Election title"
-                    :errors="editElectionForm.errors.title"
+                    :errors="editElectionForm.errors.name"
                 />
                 <div class="grid grid-cols-2 gap-4">
                     <InputFields
@@ -1049,14 +1127,26 @@ function handleAssignCandidate() {
                         :errors="editElectionForm.errors.end_date"
                     />
                 </div>
-                <InputFields
-                    v-model="editElectionForm.description"
-                    label="Description"
-                    type="textarea"
-                    placeholder="Election description"
-                    :errors="editElectionForm.errors.description"
-                    rows="3"
-                />
+
+                <fieldset
+                   
+                    class="fieldset w-full"
+                >
+                    <legend class="fieldset-legend">Status</legend>
+                    <select class="select w-full" v-model="editElectionForm.status">
+                        <option disabled value="">Select Status</option>
+                        <option value="0">SCHEDULED</option>
+                        <option value="1">ONGOING</option>
+                        <option value="2">CLOSED</option>
+                    </select>
+                    <p
+                        v-if="editElectionForm.errors.status"
+                        class="text-red-400 font-semibold bg-red-100 p-1"
+                    >
+                        {{ editElectionForm.errors.status }}
+                    </p>
+                </fieldset>
+
                 <div class="modal-action">
                     <button
                         type="button"

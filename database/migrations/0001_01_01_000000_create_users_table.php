@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('department')->nullable();
             $table->string('id_number')->unique()->nullable();
+            $table->string('profile_photo_path')->nullable();
             $table->string('email')->unique();
             $table->enum('role', ['admin', 'student']);
             $table->timestamp('email_verified_at')->nullable();

@@ -8,6 +8,7 @@ export function useSearchAndFilter(pageRef) {
         "hand-books": "home",
         feedbacks: "evaluate",
         "lost-found": "lost-found",
+        "users": "users.index",
     };
 
     function applySearch(value) {

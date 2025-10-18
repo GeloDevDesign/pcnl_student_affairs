@@ -11,6 +11,7 @@ class CandidateController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'election_id' => 'required|exists:elections,id',
             'full_name' => 'required|max:255',
             'role_id' => 'required|exists:roles,id',
             'election_id' => 'required|exists:elections,id',

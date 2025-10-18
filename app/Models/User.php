@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -35,6 +36,7 @@ class User extends Authenticatable
         'role',
         'email',
         'password',
+        'profile_photo_path'
     ];
 
     /**
@@ -103,6 +105,11 @@ class User extends Authenticatable
         return $this->hasMany(Candidate::class);
     }
 
+    public function elections()
+    {
+        return $this->hasMany(Election::class);
+    }
+
     public function isAdmin()
     {
         return $this->role == self::TYPE_ADMIN;
@@ -112,5 +119,16 @@ class User extends Authenticatable
     public function isStudent()
     {
         return $this->role == self::TYPE_STUDENT;
+    }
+
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function getEmailForPasswordReset()
+    {
+        return $this->email;
     }
 }

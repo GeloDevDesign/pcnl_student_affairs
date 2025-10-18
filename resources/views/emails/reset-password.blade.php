@@ -211,27 +211,21 @@
     <div class="content">
       <div class="greeting">Hi {{ $name }},</div>
       <div class="message">
-        Congratulations! Your account has been successfully created. We're excited to have you join our community.
-        Below are your secure login credentials:
+        We received a request to reset your password. Click the button below to create a new password for your account.
       </div>
       <div class="credentials-card">
-        <div class="credentials-title">Your Login Credentials</div>
-        <div class="credential-item">
-          <span class="credential-label">ID Number:</span>
-          <span class="credential-value">{{ $id_number }}</span>
+        <div class="credentials-title">Reset Your Password</div>
+        <div class="button-wrapper">
+          <a href="{{ $url }}" class="reset-button">Reset Password</a>
         </div>
-        <div class="credential-item">
-          <span class="credential-label">Email:</span>
-          <span class="credential-value">{{ $email }}</span>
-        </div>
-        <div class="credential-item">
-          <span class="credential-label">Password:</span>
-          <span class="credential-value">{{ $password }}</span>
+        <div class="link-note">
+          This password reset link will expire in 60 minutes.
         </div>
       </div>
       <div class="warning-box">
         <div class="warning-text">
-          <strong>Security Notice:</strong> Please log in and change your password immediately after your first login.
+          <strong>Security Notice:</strong> If you did not request a password reset, please ignore this email or contact
+          support if you have concerns.
         </div>
       </div>
       <p style="margin-top: 30px; color: #666;">
