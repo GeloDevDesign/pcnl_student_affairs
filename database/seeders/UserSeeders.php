@@ -13,33 +13,35 @@ class UserSeeders extends Seeder
      */
     public function run(): void
     {
-        User::insert([
-            [
-                'first_name' => 'admin',
-                'last_name' => 'admin',
-                'id_number' => '2025-0002',
-                'email' => 'admin@gmail.com',
-                'password' => Hash::make('Password123'),
-                'role' => 'admin',
-            ],
-            [
-                'first_name' => 'student1',
-                'last_name' => 'student1',
-                'id_number' => '2025-0001',
-                'email' => 'student1@gmail.com',
-                'password' => Hash::make('Password123'),
-                'role' => 'student',
-            ],
+        $departments = ['BSA', 'BSBA', 'BSCRIM', 'BSIT', 'BSCE', 'BEE'];
 
-
+        $users = [
+            // ✅ Admin account
             [
-                'first_name' => 'student2',
-                'last_name' => 'student2',
-                'id_number' => '2025-0001',
-                'email' => 'student2@gmail.com',
-                'password' => Hash::make('Password123'),
-                'role' => 'student',
-            ]
-        ]);
+                'first_name' => 'Admin',
+                'last_name'  => 'User',
+                'id_number'  => 'ADMIN-0001',
+                'email'      => 'admin@gmail.com',
+                'password'   => Hash::make('Password123'),
+                'role'       => 'admin',
+                'department' => null,
+            ],
+        ];
+
+        // ✅ Generate 14 student accounts with random departments
+        for ($i = 1; $i <= 14; $i++) {
+            $users[] = [
+                'first_name' => 'Student' . $i,
+                'last_name'  => 'User' . $i,
+                'id_number'  => '2025-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'email'      => 'student' . $i . '@gmail.com',
+                'password'   => Hash::make('Password123'),
+                'role'       => 'student',
+                'department' => $departments[array_rand($departments)],
+            ];
+        }
+
+        // ✅ Insert all users at once
+        User::insert($users);
     }
 }

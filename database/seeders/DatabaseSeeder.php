@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\PartyList;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -14,10 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-
         $this->call([
             UserSeeders::class,
-            RoleSeeder::class
+            RoleSeeder::class,
+            ElectionSeeder::class,
+            PartyListSeeder::class
         ]);
     }
 }

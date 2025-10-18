@@ -4,6 +4,8 @@ import { Head } from "@inertiajs/vue3";
 import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
+import { usePage } from "@inertiajs/vue3";
+const { props } = usePage();
 
 import Layout from "../../shared/Layout.vue";
 import Banner from "../../components/Banner.vue";
@@ -31,10 +33,15 @@ defineProps({
     pageTitle: String,
     partyList: Object,
     roles: Object,
+    resultsData: Object, // Add results data prop
 });
 
 onMounted(() => {
-    pageStore.navigatePage("ssc-officers");
+    if (props.auth.user.role === "admin") {
+        pageStore.navigatePage("ssc-officers");
+    } else {
+        pageStore.navigatePage("voting-forms");
+    }
 });
 
 const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
@@ -49,18 +56,13 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
                 :currentPage="pageStore.currentPage"
                 @breadcrumb-click="(page) => pageStore.navigatePage(page)"
             >
-                <template #entity-actions>
-                    <Search
-                        @query-search="applySearch"
-                        v-if="pageStore.currentPage !== 'home'"
-                    />
-                </template>
             </Banner>
 
             <div
                 class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
             >
                 <NavCard
+                    v-if="$page.props.auth.user.role === 'admin'"
                     :cardTitle="'SSC OFFICERS'"
                     :cardDescription="'List of officers'"
                     :cardValue="'ssc-officers'"
@@ -107,13 +109,17 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
             </div>
 
             <VotingForm
-                :events="events"
+                :roles="roles"
                 v-if="pageStore.currentPage === 'voting-forms'"
             />
 
             <Results
-                :events="events"
                 v-if="pageStore.currentPage === 'results'"
+                :election="resultsData?.election"
+                :results="resultsData?.results"
+                :totalVoters="resultsData?.totalVoters"
+                :partyStats="resultsData?.partyStats"
+                :canViewResults="resultsData?.canViewResults"
             />
 
             <Officers

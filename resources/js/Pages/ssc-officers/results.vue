@@ -1,233 +1,184 @@
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { router, useForm } from "@inertiajs/vue3";
-import { Form, usePage } from "@inertiajs/vue3";
-import { useToastAlert } from "../../composables/useToastAlert.js";
-import ModalAction from "../../components/ModalAction.vue";
-import InputFields from "../../components/InputFields.vue";
-import Pagination from "../../components/Pagination.vue";
-import Swal from "sweetalert2";
+import { ref, onMounted, nextTick } from "vue";
+import { Chart, registerables } from "chart.js";
 
-const { toastAlert } = useToastAlert();
-
-const page = usePage();
-const isLoading = ref(false);
-const selectedItem = ref(null);
-const dialogRef = ref(null);
-
-const form = useForm({
-    name: "",
-    department: "",
-});
+Chart.register(...registerables);
 
 const props = defineProps({
-    instructors: Object,
-    errors: Object,
+    election: Object,
+    results: Array,
+    totalVoters: Number,
+    canViewResults: Boolean,
 });
 
-const handleSubmit = ({ closeModal }) => {
-    isLoading.value = true;
+const chartRefs = ref([]);
 
-    form.post("/instructor", {
-        preserveScroll: true,
-        onSuccess: () => {
-            form.reset();
-            closeModal();
-            toastAlert(page.props.flash.success, "success");
-            isLoading.value = false;
-        },
-        onError: () => {
-            isLoading.value = false;
-        },
+// Format date helper
+function formatDate(dateString) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
     });
-};
+}
 
-const handleUpadte = () => {
-    isLoading.value = true;
-    form.patch(`/instructor/${selectedItem.value.id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            dialogRef.value.close();
-            toastAlert(page.props.flash.success, "success");
-            isLoading.value = false;
-        },
-        onError: () => {
-            isLoading.value = false;
-        },
+// Initialize charts for each role
+onMounted(async () => {
+    if (!props.results || !props.canViewResults) return;
+
+    await nextTick();
+
+    props.results.forEach((role, roleIndex) => {
+        const canvas = chartRefs.value[roleIndex];
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        const labels = role.candidates.map(c => c.full_name);
+        const data = role.candidates.map(c => c.votes);
+        
+        // Color the winner (first candidate) green, others blue
+        const colors = role.candidates.map((_, index) => 
+            index === 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(59, 130, 246, 0.7)'
+        );
+        const borderColors = role.candidates.map((_, index) => 
+            index === 0 ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)'
+        );
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Votes',
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: borderColors,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barThickness: 'flex',
+                    maxBarThickness: 40,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 10,
+                        cornerRadius: 6,
+                        titleFont: {
+                            size: 13,
+                            weight: 'normal'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            label: (context) => {
+                                const candidate = role.candidates[context.dataIndex];
+                                return [
+                                    `Votes: ${context.parsed.y}`,
+                                    `Party: ${candidate.party_list}`,
+                                    context.dataIndex === 0 ? '🏆 Winner' : ''
+                                ].filter(Boolean);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        border: {
+                            display: false
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        border: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
     });
-};
-
-const handleDelete = async (entity) => {
-    // Show confirm dialog
-    const { isConfirmed } = await Swal.fire({
-        title: "DELETE INSTRUCTOR",
-        text: `Are you sure you want to delete "${entity.name}"?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        confirmButtonColor: "#e3342f",
-        cancelButtonColor: "#6b7280",
-    });
-
-    if (!isConfirmed) return;
-
-    isLoading.value = true;
-
-    router.delete(`/instructor/${entity.id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            toastAlert(page.props.flash.success, "success");
-            isLoading.value = false;
-        },
-        onError: () => {
-            isLoading.value = false;
-        },
-    });
-};
-
-const resetPopulate = () => {
-    form.reset();
-};
-
-const populateFormEdit = (entity) => {
-    form.reset();
-    form.clearErrors();
-    selectedItem.value = entity;
-    form.name = entity.name;
-    form.department = entity.department;
-};
+});
 </script>
 
 <template>
-    <div class="w-full flex justify-end mb-4">
-        <ModalAction
-            v-if="$page.props.auth.user.role === 'admin'"
-            :isLoading="isLoading"
-            :modalTitle="'Instructor Form'"
-            :buttonName="'Create New Instructor'"
-            :buttonAction="
-                isLoading ? 'Adding New Instructor...' : 'Add Instructor'
-            "
-            @reset-form="resetPopulate"
-            @submit-form="handleSubmit"
-        >
-            <Form class="space-y-2">
-                <InputFields
-                    v-model="form.name"
-                    :label="'Name'"
-                    :type="'text'"
-                    :placeholder="'Fullname of instructor'"
-                    :errors="form.errors.name"
-                />
+    <div class="mt-6">
+        <!-- No Results Available -->
+        <div v-if="!canViewResults || !election" class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">Results Not Available</h2>
+            <p class="text-gray-600 text-sm">Results will be shown after voting ends.</p>
+        </div>
 
-                <InputFields
-                    v-model="form.department"
-                    :label="'Department'"
-                    :type="'text'"
-                    :placeholder="'Department'"
-                    :errors="form.errors.department"
-                />
-            </Form>
-        </ModalAction>
-    </div>
-    <div class="overflow-x-auto bg-white">
-        <table class="table">
-            <!-- head -->
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Department</th>
+        <!-- Results Available -->
+        <div v-else class="space-y-5">
+            <!-- Header -->
+            <div class="bg-white p-5 shadow-sm rounded-lg border border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ election?.name }}</h3>
+                <p class="text-sm text-gray-500">
+                    {{ formatDate(election?.start_date) }} - {{ formatDate(election?.end_date) }}
+                </p>
+                <p class="text-sm text-gray-600 mt-2">Total Voters: {{ totalVoters }}</p>
+            </div>
 
-                    <th v-if="$page.props.auth.user.role === 'admin'">
-                        Action
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(ins, index) in instructors.data" :key="ins.id">
-                    <th>
-                        {{
-                            (instructors.current_page - 1) *
-                                instructors.per_page +
-                            (index + 1)
-                        }}
-                    </th>
-                    <td>{{ ins.name }}</td>
-                    <td>{{ ins.department }}</td>
-                    <td
-                        class="space-x-2"
-                        v-if="$page.props.auth.user.role === 'admin'"
-                    >
-                        <button
-                            class="btn btn-primary btn-xs text-white"
-                            @click="populateFormEdit(ins)"
-                            onclick="my_modal_2.showModal()"
-                        >
-                            Edit
-                        </button>
-                        <button
-                            class="btn btn-xs btn-error"
-                            @click="handleDelete(ins)"
-                        >
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <Pagination :data="instructors" />
-
-    <dialog ref="dialogRef" id="my_modal_2" class="modal">
-        <div class="modal-box">
-            <h3 class="text-lg font-bold">
-                Update Instructor
-                <span class="text-primary">{{ selectedItem?.name }}</span>
-            </h3>
-            <div ref="dialogRef" class="modal-action">
-                <form method="dialog" class="w-full">
-                    <div class="w-full">
-                        <Form
-                            :action="`/instructor/${selectedItem}`"
-                            method="post"
-                            class="space-y-2"
-                        >
-                            <InputFields
-                                v-model="form.name"
-                                :label="'Title'"
-                                :type="'text'"
-                                :placeholder="'Instructor Fullname'"
-                                :errors="form.errors.name"
-                            />
-
-                            <InputFields
-                                v-model="form.department"
-                                :label="'Details'"
-                                :type="'text'"
-                                :placeholder="'Department'"
-                                :errors="form.errors.department"
-                            />
-                        </Form>
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div 
+                    v-for="(role, index) in results" 
+                    :key="role.role_id"
+                    class="bg-white p-5 shadow-sm rounded-lg border border-gray-200"
+                >
+                    <div class="mb-4">
+                        <h4 class="text-base font-semibold text-gray-800">{{ role.role_name }}</h4>
                     </div>
-                    <div class="w-full flex justify-end gap-2 mt-2">
-                        <button class="btn btn-sm btn-soft">Close</button>
-                        <button
-                            :disabled="isLoading"
-                            @click="handleUpadte"
-                            type="button"
-                            class="btn btn-primary btn-sm"
-                        >
-                            Update Instructor
-                            <span
-                                v-if="isLoading"
-                                class="loading loading-spinner loading-xs"
-                            ></span>
-                        </button>
+                    
+                    <div class="h-64 mb-3">
+                        <canvas :ref="el => chartRefs[index] = el"></canvas>
                     </div>
-                </form>
+
+                    <!-- Role-specific Legend -->
+                    <div class="flex items-center justify-center gap-4 text-xs pt-2 border-t border-gray-100">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-3 h-3 bg-green-500 rounded"></div>
+                            <span class="text-gray-600">Winner</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                            <span class="text-gray-600">Others</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </dialog>
+    </div>
 </template>

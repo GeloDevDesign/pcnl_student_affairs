@@ -1,10 +1,10 @@
-```vue
 <script setup>
 import { ref } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import InputFields from "../../components/InputFields.vue";
+import EntityAction from "../../components/EntityAction.vue";
 import { useToastAlert } from "../../composables/useToastAlert.js";
 
 const { toastAlert } = useToastAlert();
@@ -28,10 +28,11 @@ const editElectionDialog = ref(null);
 
 const addRoleDialog = ref(null);
 const editRoleDialog = ref(null);
+const editCandidateDialog = ref(null);
 
 const selectedParty = ref(null);
-const selectedPosition = ref(null);
 const selectedRole = ref(null);
+const selectedCandidate = ref(null);
 
 const election = ref({
     id: 1,
@@ -90,10 +91,38 @@ const editElectionForm = useForm({
 
 // Candidate form
 const candidateForm = useForm({
-    position: "",
-    candidate_id: null,
+    full_name: "",
+    election_id: election.value.id || null,
+    role_id: selectedRole?.value?.id || null,
     party_id: null,
 });
+
+const editCandidateForm = useForm({
+    id: null,
+    full_name: "",
+    election_id: election.value.id || null,
+    role_id: null,
+    party_id: null,
+});
+
+// CANDIDATE ACTIONS
+function openAddCandidateModal() {
+    partyForm.reset();
+    partyForm.clearErrors();
+    addPartyDialog.value.showModal();
+}
+
+function openEditCandidateModal(candidate) {
+    selectedCandidate.value = candidate;
+    editCandidateForm.reset();
+    editCandidateForm.clearErrors();
+    editCandidateForm.id = candidate.id;
+    editCandidateForm.full_name = candidate.full_name;
+    editCandidateForm.election_id =  election.value.id || null;
+    editCandidateForm.role_id = candidate.role_id;
+    editCandidateForm.party_id = candidate.party_id;
+    editCandidateDialog.value.showModal();
+}
 
 // PARTIES ACTIONS
 function openAddPartyModal() {
@@ -198,7 +227,6 @@ function openAddRoleModal() {
 }
 
 function openEditRoleModal(role) {
-    console.log(role)
     selectedRole.value = role;
     editRoleForm.reset();
     editRoleForm.clearErrors();
@@ -206,13 +234,12 @@ function openEditRoleModal(role) {
     editRoleForm.name = role.name;
     editRoleForm.description = role.description;
     editRoleDialog.value.showModal();
-  
 }
 
-async function handleDeleteRole(party) {
+async function handleDeleteRole(role) {
     const { isConfirmed } = await Swal.fire({
         title: "DELETE ROLE",
-        text: `Are you sure you want to delete "${party.name}"?`,
+        text: `Are you sure you want to delete "${role.name}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, delete it!",
@@ -222,19 +249,19 @@ async function handleDeleteRole(party) {
     if (!isConfirmed) return;
 
     isLoading.value = true;
-    router.delete(`/role/${party.id}`, {
+    router.delete(`/role/${role.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             isLoading.value = false;
             toastAlert(
-                page.props.flash.success || "Party deleted successfully!",
+                page.props.flash.success || "Role deleted successfully!",
                 "success"
             );
         },
         onError: () => {
             isLoading.value = false;
             toastAlert(
-                page.props.errors.deleteParty?.[0] || "Failed to delete party!",
+                page.props.errors.deleteParty?.[0] || "Failed to delete role!",
                 "error"
             );
         },
@@ -386,12 +413,37 @@ function handleEditElection() {
     });
 }
 
+function handleEditCandidate() {
+    isLoading.value = true;
+    editCandidateForm.patch(`/candidates/${editCandidateForm.id}`, {
+        preserveScroll: true,
+        errorBag: "editCandidate",
+        onSuccess: () => {
+            isLoading.value = false;
+            editCandidateDialog.value.close();
+            toastAlert(
+                page.props.flash.success || "Candidate updated successfully!",
+                "success"
+            );
+        },
+        onError: (error) => {
+            console.log(error)
+            isLoading.value = false;
+            toastAlert(
+                page.props.errors.editCandidate?.[0] ||
+                    "Failed to update candidate!",
+                "error"
+            );
+        },
+    });
+}
+
 // Candidate Assignment Functions
-function openAssignCandidateModal(position) {
-    selectedPosition.value = position;
+function openAssignCandidateModal(role) {
+    selectedRole.value = role;
     candidateForm.reset();
     candidateForm.clearErrors();
-    candidateForm.position = position;
+    candidateForm.role_id = selectedRole?.value.id;
     assignCandidateDialog.value.showModal();
 }
 
@@ -435,13 +487,15 @@ function handleAssignCandidate() {
         errorBag: "assignCandidate",
         onSuccess: () => {
             isLoading.value = false;
+            candidateForm.reset();
             assignCandidateDialog.value.close();
             toastAlert(
                 page.props.flash.success || "Candidate assigned successfully!",
                 "success"
             );
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
             toastAlert(
                 page.props.errors.assignCandidate?.[0] ||
@@ -547,7 +601,7 @@ function handleAssignCandidate() {
 
                     <div class="flex justify-between items-center gap-2 mt-6">
                         <button class="btn btn-primary btn-sm">
-                            Add New Election
+                            Set New Election
                         </button>
                         <div class="space-x-2">
                             <button
@@ -665,7 +719,7 @@ function handleAssignCandidate() {
                                     {{ party.name }}
                                 </p>
                                 <p class="text-xs text-gray-500">
-                                    {{ party.num_candidates }} Candidates
+                                    {{ party.slogan }}
                                 </p>
                             </div>
                         </div>
@@ -753,43 +807,30 @@ function handleAssignCandidate() {
                             {{ role.name }}
                         </p>
                         <div>
-                            <button
-                                class="btn btn-primary text-white btn-xs bg-blue-100 border-0 mr-2"
-                                @click="openEditRoleModal(role)"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                    stroke="currentColor"
-                                    class="size-5 text-primary"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                                    />
-                                </svg>
-                            </button>
-
+                            <EntityAction
+                                @edit="openEditRoleModal(role)"
+                                @delete="handleDeleteRole(role)"
+                            />
                             <button
                                 class="btn btn-primary text-white btn-xs"
-                                @click="assignCandidateDialog()"
+                                @click="openAssignCandidateModal(role)"
                             >
                                 Assign Candidate
                             </button>
                         </div>
                     </div>
-                    <div v-if="true" class="space-y-2">
+                    <div v-if="role.candidates.length !== 0" class="space-y-2">
                         <div
-                            class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            v-for="candidate in role.candidates"
+                            :key="candidate.id"
+                            class="flex items-center gap-3 py-4 rounded-lg hover:bg-gray-50 transition-colors"
                         >
+                            <!-- Avatar -->
                             <div
-                                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0"
                             >
                                 <svg
-                                    class="w-4 h-4"
+                                    class="w-4 h-4 text-gray-500"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -802,6 +843,8 @@ function handleAssignCandidate() {
                                     />
                                 </svg>
                             </div>
+
+                            <!-- Candidate Info -->
                             <div
                                 class="flex items-center justify-between w-full"
                             >
@@ -809,52 +852,19 @@ function handleAssignCandidate() {
                                     <p
                                         class="text-sm font-medium text-gray-900"
                                     >
-                                        {{ role.name }}
+                                        {{ candidate.full_name }}
                                     </p>
                                     <p class="text-xs text-gray-500">
-                                        {{ role }}
+                                        {{ candidate.party_list.name }}
                                     </p>
                                 </div>
+
+                                <!-- Actions -->
                                 <div class="flex gap-1">
-                                    <button
-                                        @click="
-                                            handleDeleteCandidate(role.name)
-                                        "
-                                        class="btn btn-circle btn-xs btn-error"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="1.5"
-                                            stroke="currentColor"
-                                            class="size-4 stroke-white"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                                            />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        class="btn btn-circle btn-xs btn-primary"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="1.5"
-                                            stroke="currentColor"
-                                            class="size-4 stroke-white"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                                            />
-                                        </svg>
-                                    </button>
+                                    <EntityAction
+                                        @edit="openEditCandidateModal(candidate)"
+                                        @delete="handleDeleteCandidate(candidate)"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -1075,54 +1085,44 @@ function handleAssignCandidate() {
     <dialog ref="assignCandidateDialog" class="modal">
         <div class="modal-box">
             <h3 class="font-bold text-lg">
-                Assign Candidate for {{ selectedPosition }}
+                Assign Candidate
+                <span class="underline text-primary">{{
+                    selectedRole?.name
+                }}</span>
+                for SSC Voting
             </h3>
-            <form @submit.prevent="handleAssignCandidate" class="space-y-4">
+
+            <form
+                @submit.prevent="handleAssignCandidate"
+                class="space-y-4 mt-4"
+            >
                 <InputFields
-                    v-model="candidateForm.candidate_id"
-                    label="Candidate ID"
-                    type="number"
-                    placeholder="Enter candidate ID"
-                    :errors="candidateForm.errors.candidate_id"
+                    v-model="candidateForm.full_name"
+                    label="Candidate Full Name"
+                    type="text"
+                    placeholder="Enter Candidate Full Name"
+                    :errors="candidateForm.errors.full_name"
                 />
-                <div>
-                    <label class="label">
-                        <span class="label-text">Party</span>
-                    </label>
-                    <select
-                        v-model="candidateForm.party_id"
-                        class="select select-bordered w-full"
-                        :class="{
-                            'select-error': candidateForm.errors.party_id,
-                        }"
-                    >
-                        <option value="">Select a party</option>
-                        <option
-                            v-for="party in parties"
-                            :key="party.id"
-                            :value="party.id"
-                        >
-                            {{ party.name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="candidateForm.errors.party_id"
-                        class="text-error text-xs mt-1"
-                    >
-                        {{ candidateForm.errors.party_id }}
-                    </p>
-                </div>
+                <InputFields
+                    v-model="candidateForm.party_id"
+                    label="Select Party List"
+                    type="select"
+                    placeholder="Select Party List"
+                    :selection-items="partyList"
+                    :errors="candidateForm.errors.party_id"
+                />
+
                 <div class="modal-action">
                     <button
                         type="button"
-                        class="btn"
+                        class="btn btn-soft btn-sm"
                         @click="assignCandidateDialog.close()"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        class="btn btn-primary"
+                        class="btn btn-sm btn-primary"
                         :disabled="isLoading"
                     >
                         {{ isLoading ? "Assigning..." : "Assign Candidate" }}
@@ -1139,7 +1139,7 @@ function handleAssignCandidate() {
     <!-- Add Role Modal -->
     <dialog ref="addRoleDialog" class="modal">
         <div class="modal-box">
-            <h3 class="font-bold text-lg">New Role Role</h3>
+            <h3 class="font-bold text-lg">New Role Form</h3>
             <form @submit.prevent="handleAddRole" class="space-y-4 mt-4">
                 <InputFields
                     v-model="roleForm.name"
@@ -1214,6 +1214,50 @@ function handleAssignCandidate() {
                         :disabled="isLoading"
                     >
                         {{ isLoading ? "Updating..." : "Update Role" }}
+                        <span
+                            v-if="isLoading"
+                            class="loading loading-spinner loading-xs"
+                        ></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Edit Candidate Modal -->
+    <dialog ref="editCandidateDialog" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Edit Candidate</h3>
+            <form @submit.prevent="handleEditCandidate" class="space-y-4 mt-4">
+                <InputFields
+                    v-model="editCandidateForm.full_name"
+                    label="Candidate Full Name"
+                    type="text"
+                    placeholder="Enter Candidate Full Name"
+                    :errors="editCandidateForm.errors.full_name"
+                />
+                <InputFields
+                    v-model="editCandidateForm.party_id"
+                    label="Select Party List"
+                    type="select"
+                    placeholder="Select Party List"
+                    :selection-items="partyList"
+                    :errors="editCandidateForm.errors.party_id"
+                />
+                <div class="modal-action">
+                    <button
+                        type="button"
+                        class="btn btn-soft btn-sm"
+                        @click="editCandidateDialog.close()"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-sm"
+                        :disabled="isLoading"
+                    >
+                        {{ isLoading ? "Updating..." : "Update Candidate" }}
                         <span
                             v-if="isLoading"
                             class="loading loading-spinner loading-xs"
