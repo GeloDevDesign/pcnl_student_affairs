@@ -73,7 +73,7 @@ const handleUpdate = () => {
 const handleDelete = async (student) => {
     const { isConfirmed } = await Swal.fire({
         title: "DELETE STUDENT",
-        text: `Are you sure you want to delete "${student.first_name} ${student.middle_name}"?`,
+        text: `Are you sure you want to delete "${student.first_name} ${student.middle_name ?? ''} ${student.last_name}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, delete it!",

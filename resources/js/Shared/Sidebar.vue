@@ -279,6 +279,7 @@ const logout = () => {
                 </NavLink>
 
                 <NavLink
+                    v-if="$page.props.auth.user.role === 'admin'"
                     route="/users"
                     buttonName="User Management"
                     :isCollapsed="isCollapsed"
