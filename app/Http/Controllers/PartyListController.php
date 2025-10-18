@@ -11,6 +11,7 @@ class PartyListController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'election_id' => 'required|exists:elections,id',
             'name' => 'required|string|min:3',
             'slogan' => 'nullable|string|min:5',
         ]);

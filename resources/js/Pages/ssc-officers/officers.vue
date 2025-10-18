@@ -48,6 +48,7 @@ const formatDate = (dateString) => {
 };
 
 const partyForm = useForm({
+    election_id: election.value.id || null,
     name: "",
     slogan: "",
 });
@@ -59,6 +60,7 @@ const editPartyForm = useForm({
 });
 
 const roleForm = useForm({
+    election_id: election.value.id || null,
     name: "",
     description: "",
 });
@@ -87,6 +89,7 @@ const editElectionForm = useForm({
 
 // Candidate form
 const candidateForm = useForm({
+    election_id: election.value.id || null,
     full_name: "",
     election_id: election.value.id || null,
     role_id: selectedRole?.value?.id || null,
@@ -182,7 +185,8 @@ function handleAddParty() {
             );
             partyForm.reset();
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
             toastAlert(
                 page.props.errors.createParty?.[0] || "Failed to add party!",
@@ -504,8 +508,7 @@ function handleAssignCandidate() {
 }
 
 function setElection() {
-
-
+    console.log(CURRENT_ELECTION.value);
     router.get(
         "/scc-officers",
         { election_id: CURRENT_ELECTION.value },

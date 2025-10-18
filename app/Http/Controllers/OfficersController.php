@@ -16,22 +16,51 @@ class OfficersController extends Controller
     {
 
 
-        $selectedElectionId = $request->filled('election_id') ? $request->election_id
-            : null;
+        // If a specific election is selected manually
+        if ($request->filled('election_id')) {
+            $selectedElectionId = $request->election_id;
+
+            // ✅ Set this election as "is_set = true" and unset others
+            Election::where('id', '!=', $selectedElectionId)->update(['is_set' => false]);
+            Election::where('id', $selectedElectionId)->update(['is_set' => true]);
+        }
+
+        // If no election selected, check if there's a set election
+        $activeElection = Election::where('is_set', true)->first();
+
+        if (!$activeElection) {
+            // If none is set, automatically set the latest one
+            $activeElection = Election::latest()->first();
+            if ($activeElection) {
+                $activeElection->update(['is_set' => true]);
+            }
+        }
+
+        $selectedElectionId = $activeElection?->id;
 
         // Party list & roles remain the same
-        $partyList = PartyList::with(['user'])->get();
-        $roles = Role::select(['id', 'name', 'description'])
-            ->with([
-                'candidates' => function ($query) use ($selectedElectionId) {
-                    if ($selectedElectionId) {
-                        $query->where('election_id', $selectedElectionId);
-                    }
-                    $query->select(['id', 'full_name', 'role_id', 'party_id', 'election_id']);
-                },
-                'candidates.party_list:id,name'
-            ])
+        $partyList = PartyList::with([
+            'candidates' => function ($query) use ($selectedElectionId) {
+                if ($selectedElectionId) {
+                    $query->where('election_id', $selectedElectionId);
+                }
+            },
+            'user'
+        ])
+            ->where('election_id', $selectedElectionId) // ✅ Also filter party lists by election
             ->get();
+
+
+        $roles = Role::where('election_id', $selectedElectionId)
+            ->with(['candidates' => function ($q) use ($selectedElectionId) {
+                $q->where('election_id', $selectedElectionId)
+                    ->select(['id', 'full_name', 'role_id', 'party_id', 'election_id'])
+                    ->with('party_list:id,name');
+            }])
+            ->get();
+
+
+
 
         // If election_id not provided, fallback to latest election
         $election = $selectedElectionId
@@ -48,7 +77,7 @@ class OfficersController extends Controller
                     ->distinct('user_id')
                     ->count('user_id');
 
-                $rolesForResults = Role::all();
+                $rolesForResults = Role::where('election_id', $election->id)->get();
                 $results = [];
 
                 foreach ($rolesForResults as $role) {

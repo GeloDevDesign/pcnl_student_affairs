@@ -18,6 +18,7 @@ return new class extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->tinyInteger('status')->nullable()->default(0);
+            $table->boolean('is_set')->default(false);
             $table->timestamps();
         });
     }

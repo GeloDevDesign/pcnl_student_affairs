@@ -13,22 +13,24 @@ class ElectionSeeder extends Seeder
      */
     public function run(): void
     {
-        for ($i = 1; $i <= 10; $i++) {
-            Election::create([
-                'user_id' => 1,
-                'name' => "SSC Election {$i}",
-                'start_date' => Carbon::now()->subMonths($i)->startOfMonth(),
-                'end_date' => Carbon::now()->subMonths($i)->endOfMonth(),
-                'status' => $this->randomStatus(),
-            ]);
-        }
-    }
+        // First Election: 2024
+        Election::create([
+            'user_id' => 1,
+            'name' => '2024 PCNL Supreme Student Council Election',
+            'start_date' => Carbon::create(2024, 4, 1),
+            'end_date' => Carbon::create(2024, 4, 30),
+            'status' => 2, // Closed
+            'is_set' => false,
+        ]);
 
-    /**
-     * Get a random election status (0 = Scheduled, 1 = Ongoing, 2 = Closed)
-     */
-    private function randomStatus(): int
-    {
-        return [0, 1, 2][array_rand([0, 1, 2])];
+        // Second Election: 2025
+        Election::create([
+            'user_id' => 1,
+            'name' => '2025 PCNL Supreme Student Council Election',
+            'start_date' => Carbon::create(2025, 4, 1),
+            'end_date' => Carbon::create(2025, 4, 30),
+            'status' => 1, // Ongoing
+            'is_set' => true, // Make this the currently active one
+        ]);
     }
 }
