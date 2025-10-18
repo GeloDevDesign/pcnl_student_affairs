@@ -50,12 +50,12 @@ class VoteController extends Controller
         }
 
         $now = now();
-        if ($now < $election->start || $now > $election->end) {
+        if ($now < $election->start_date || $now > $election->end_date) {
             Log::warning('Election not active', [
                 'election_id' => $electionId,
                 'now' => $now,
-                'start' => $election->start,
-                'end' => $election->end,
+                'start_date' => $election->start_date,
+                'end_date' => $election->end_date,
             ]);
             return back()->with('error', 'Voting is not currently open for this election!');
         }
@@ -67,11 +67,8 @@ class VoteController extends Controller
 
         $votedRoles = collect($validated['votes'])->pluck('role_id')->unique()->toArray();
 
-        if (count($requiredRoles) !== count($votedRoles)) {
-            Log::warning('Incomplete ballot', [
-                'required_roles' => $requiredRoles,
-                'voted_roles' => $votedRoles,
-            ]);
+        if (count($votedRoles) <= 0) {
+
             return back()->with('error', 'Please vote for all positions!');
         }
 

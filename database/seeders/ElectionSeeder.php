@@ -27,8 +27,8 @@ class ElectionSeeder extends Seeder
         Election::create([
             'user_id' => 1,
             'name' => '2025 PCNL Supreme Student Council Election',
-            'start_date' => Carbon::create(2025, 11, 1),
-            'end_date' => Carbon::create(2025, 11, 30),
+            'start_date' => Carbon::create(2025, 10, 1),
+            'end_date' => Carbon::create(2025, 10, 30),
             'status' => 1, // Ongoing
             'is_set' => true, // Make this the currently active one
         ]);

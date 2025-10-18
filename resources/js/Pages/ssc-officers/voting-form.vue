@@ -21,7 +21,7 @@ const isCheckingVote = ref(true);
 
 // Election status: 0 = Not started, 1 = Ongoing, 2 = Closed
 const electionStatus = computed(() => {
-    return props.election?.status ?? 0; // Default to 0 if undefined
+    return props.election?.status ?? 0; 
 });
 
 // Form for submission
@@ -61,12 +61,13 @@ async function checkVoteStatus() {
 
 // Check vote status on mount
 onMounted(async () => {
+    console.log(props.election);
     await checkVoteStatus();
 });
 
 // Check if all roles have been voted
 const isAllVoted = computed(() => {
-    return props.roles.length === Object.keys(votes.value).length;
+    return  Object.keys(votes.value).length > 0;
 });
 
 // Handle candidate selection
