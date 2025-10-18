@@ -118,7 +118,7 @@ const handleUpdatePassword = () => {
                 :currentPage="$page.url"
             />
 
-            <div class="w-full mx-auto space-y-6 p-6">
+            <div class="w-full mx-auto space-y-6 ">
                 <!-- Profile Information Card -->
                 <div class="bg-white rounded-2xl shadow-lg p-8">
                     <h2 class="text-2xl font-bold text-blue-900 mb-6">
