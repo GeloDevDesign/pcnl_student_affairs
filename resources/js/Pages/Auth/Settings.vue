@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { router, useForm, usePage } from "@inertiajs/vue3";
 import { useToastAlert } from "../../composables/useToastAlert.js";
 import Layout from "../../shared/Layout.vue";
@@ -18,6 +18,9 @@ const props = defineProps({
     pageTitle: String,
 });
 
+// Check if user is admin
+const isAdmin = computed(() => props.user.role === "admin");
+
 // Profile form
 const form = useForm({
     first_name: props.user.first_name || "",
@@ -34,6 +37,17 @@ const passwordForm = useForm({
     current_password: "",
     password: "",
     password_confirmation: "",
+});
+
+// Get profile image URL
+const profileImageUrl = computed(() => {
+    if (previewImage.value) {
+        return previewImage.value;
+    }
+    if (props.user.profile_photo_path) {
+        return `/storage/${props.user.profile_photo_path}`;
+    }
+    return null;
 });
 
 // ✅ Handle profile image selection
@@ -58,17 +72,23 @@ const handleUpdateProfile = () => {
     isLoading.value = true;
     form.post(`/profile/update`, {
         preserveScroll: true,
+        forceFormData: true,
         onSuccess: () => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
+            previewImage.value = null;
         },
         onError: () => {
+            toastAlert(
+                "Failed to update profile. Please check the errors.",
+                "error"
+            );
             isLoading.value = false;
         },
     });
 };
 
-// ✅ Update Password
+// ✅ Update Password (Admin only)
 const handleUpdatePassword = () => {
     isLoading.value = true;
     passwordForm.put(`/profile/password`, {
@@ -79,6 +99,10 @@ const handleUpdatePassword = () => {
             isLoading.value = false;
         },
         onError: () => {
+            toastAlert(
+                "Failed to update password. Please check the errors.",
+                "error"
+            );
             isLoading.value = false;
         },
     });
@@ -90,18 +114,21 @@ const handleUpdatePassword = () => {
         <div class="w-full">
             <Banner
                 :pageName="'PROFILE SETTINGS'"
-             
+                :breadCrumbPages="['Settings']"
                 :currentPage="$page.url"
             />
 
-            <div class="w-full mx-auto space-y-6">
+            <div class="w-full mx-auto space-y-6 p-6">
                 <!-- Profile Information Card -->
                 <div class="bg-white rounded-2xl shadow-lg p-8">
                     <h2 class="text-2xl font-bold text-blue-900 mb-6">
                         Profile Information
                     </h2>
 
-                    <form @submit.prevent="handleUpdateProfile" class="space-y-6">
+                    <form
+                        @submit.prevent="handleUpdateProfile"
+                        class="space-y-6"
+                    >
                         <!-- Profile Image Section -->
                         <div class="flex flex-col items-center mb-8">
                             <div class="relative">
@@ -109,16 +136,24 @@ const handleUpdatePassword = () => {
                                     class="w-32 h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-blue-500 shadow-lg"
                                 >
                                     <img
-                                        v-if="previewImage || user.profile_image"
-                                        :src="previewImage || user.profile_image"
+                                        v-if="profileImageUrl"
+                                        :src="profileImageUrl"
                                         alt="Profile"
                                         class="w-full h-full object-cover"
                                     />
                                     <div
                                         v-else
-                                        class="w-full h-full flex items-center justify-center text-4xl font-bold text-blue-900"
+                                        class="w-full h-full flex items-center justify-center text-4xl font-bold text-blue-900 bg-blue-100"
                                     >
-                                        {{ user.first_name?.charAt(0) }}{{ user.last_name?.charAt(0) }}
+                                        {{
+                                            user.first_name
+                                                ?.charAt(0)
+                                                .toUpperCase()
+                                        }}{{
+                                            user.last_name
+                                                ?.charAt(0)
+                                                .toUpperCase()
+                                        }}
                                     </div>
                                 </div>
                                 <label
@@ -129,12 +164,21 @@ const handleUpdatePassword = () => {
                                         type="file"
                                         accept="image/*"
                                         class="hidden"
-                                        @change="(e) => onImageSelect(e.target.files[0])"
+                                        @change="
+                                            (e) =>
+                                                onImageSelect(e.target.files[0])
+                                        "
                                     />
                                 </label>
                             </div>
                             <p class="text-sm text-gray-500 mt-3">
                                 Click the camera icon to upload a new photo
+                            </p>
+                            <p
+                                v-if="form.errors.profile_image"
+                                class="text-red-500 text-xs mt-1"
+                            >
+                                {{ form.errors.profile_image }}
                             </p>
                         </div>
 
@@ -196,20 +240,28 @@ const handleUpdatePassword = () => {
                                 :disabled="isLoading"
                                 class="btn btn-primary text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <span v-if="isLoading" class="loading loading-spinner loading-sm"></span>
-                                {{ isLoading ? "Updating..." : "Update Profile" }}
+                                <span
+                                    v-if="isLoading"
+                                    class="loading loading-spinner loading-sm"
+                                ></span>
+                                {{
+                                    isLoading ? "Updating..." : "Update Profile"
+                                }}
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Change Password Card -->
+                <!-- Change Password Card (Admin Only) -->
                 <div class="bg-white rounded-2xl shadow-lg p-8">
                     <h2 class="text-2xl font-bold text-blue-900 mb-6">
                         Change Password
                     </h2>
 
-                    <form @submit.prevent="handleUpdatePassword" class="space-y-4">
+                    <form
+                        @submit.prevent="handleUpdatePassword"
+                        class="space-y-4"
+                    >
                         <InputFields
                             v-model="passwordForm.current_password"
                             label="Current Password"
@@ -241,8 +293,15 @@ const handleUpdatePassword = () => {
                                 :disabled="isLoading"
                                 class="btn btn-primary text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <span v-if="isLoading" class="loading loading-spinner loading-sm"></span>
-                                {{ isLoading ? "Updating..." : "Change Password" }}
+                                <span
+                                    v-if="isLoading"
+                                    class="loading loading-spinner loading-sm"
+                                ></span>
+                                {{
+                                    isLoading
+                                        ? "Updating..."
+                                        : "Change Password"
+                                }}
                             </button>
                         </div>
                     </form>

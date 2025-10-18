@@ -278,12 +278,6 @@ const resetPopulate = () => {
                                 >
                                     Delete
                                 </button>
-                                <button
-                                    class="btn btn-xs btn-error"
-                                    @click="handleDelete(student)"
-                                >
-                                    Force Reset Password
-                                </button>
                             </td>
                         </tr>
                     </tbody>

@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -35,7 +37,6 @@ class UserController extends Controller
                 ->orderBy('first_name')
                 ->paginate(10);
         }
-
 
         return inertia('user-management/index', compact('pageTitle', 'students'));
     }
@@ -134,8 +135,77 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        // Delete profile photo if exists
+        if ($user->profile_photo_path) {
+            Storage::disk('public')->delete($user->profile_photo_path);
+        }
+
         $user->delete();
 
         return redirect()->back()->with('success', 'Student deleted successfully.');
+    }
+
+    /**
+     * Update authenticated user profile.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'first_name'     => 'required|string|max:255',
+            'last_name'      => 'required|string|max:255',
+            'middle_name'    => 'nullable|string|max:255',
+            'department'     => 'nullable|string|max:150',
+            'email'          => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'id_number'      => ['nullable', 'string', 'max:50', Rule::unique('users', 'id_number')->ignore($user->id)],
+            'profile_image'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // Handle profile image upload
+        if ($request->hasFile('profile_image')) {
+            // Delete old profile photo if exists
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            // Store new image
+            $imagePath = $request->file('profile_image')->store('images', 'public');
+            $validated['profile_photo_path'] = $imagePath;
+        }
+
+        $user->update($validated);
+
+        return redirect()->back()->with('success', 'Profile updated successfully!');
+    }
+
+    /**
+     * Update authenticated user password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+        // Only admin can change password
+        if (!$user->isAdmin()) {
+            return redirect()->back()->withErrors(['error' => 'Unauthorized action.']);
+        }
+
+        $validated = $request->validate([
+            'current_password'      => 'required|string',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check if current password is correct
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect.']);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($validated['password'])
+        ]);
+
+        return redirect()->back()->with('success', 'Password updated successfully!');
     }
 }

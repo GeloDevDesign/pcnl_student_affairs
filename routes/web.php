@@ -61,6 +61,12 @@ Route::middleware(['web'])->group(function () {
                 'user' => Auth::user()
             ]);
         })->name('settings');
+
+        Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+
+
+
         Route::get('/concerns', function () {
             return Inertia::render('concerns/index', [
                 'pageTitle' => 'PCNL - Concerns'
