@@ -23,6 +23,7 @@ class Role extends Model
 
     public function candidates()
     {
+        
         return $this->hasMany(Candidate::class, 'role_id');
     }
 }

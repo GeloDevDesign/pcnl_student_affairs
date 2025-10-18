@@ -106,6 +106,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
             </div>
 
             <VotingForm
+            :election="resultsData?.election"
                 :roles="roles"
                 v-if="pageStore.currentPage === 'voting-forms'"
             />

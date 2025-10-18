@@ -47,6 +47,36 @@ const formatDate = (dateString) => {
     });
 };
 
+const SCHEDULED = 0;
+const ONGOING = 1;
+const CLOSED = 2;
+
+function statusLabel(status) {
+    switch (status) {
+        case SCHEDULED:
+            return "Scheduled";
+        case ONGOING:
+            return "Ongoing";
+        case CLOSED:
+            return "Closed";
+        default:
+            return "Unknown";
+    }
+}
+
+function statusColor(status) {
+    switch (status) {
+        case SCHEDULED:
+            return "bg-yellow-100 text-yellow-700";
+        case ONGOING:
+            return "bg-green-100 text-green-700";
+        case CLOSED:
+            return "bg-red-100 text-red-700";
+        default:
+            return "bg-gray-100 text-gray-700";
+    }
+}
+
 const partyForm = useForm({
     election_id: election.value.id || null,
     name: "",
@@ -508,7 +538,7 @@ function handleAssignCandidate() {
 }
 
 function setElection() {
-    console.log(CURRENT_ELECTION.value);
+    
     router.get(
         "/scc-officers",
         { election_id: CURRENT_ELECTION.value },
@@ -527,8 +557,25 @@ function setElection() {
             :selectionItems="props.elections"
             :errors="editElectionForm.errors.title"
         />
-        <button @click="setElection" class="btn btn-primary mt-7">
+        <button @click="setElection" class="btn mt-7 bg-green-600 text-white">
             Set Election
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="size-5"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"
+                />
+            </svg>
+        </button>
+        <button class="btn btn-primary mt-7" @click="openAddElectionModal">
+            Create New Election
         </button>
     </div>
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-6 mt-6">
@@ -549,9 +596,12 @@ function setElection() {
                         <p class="text-sm text-gray-500">Election Event</p>
                     </div>
                     <div
-                        class="badge bg-blue-100 border-0 font-medium badge-sm text-primary px-3 py-1"
+                        :class="[
+                            'badge border-0 font-medium badge-sm px-3 py-1',
+                            statusColor(election.status),
+                        ]"
                     >
-                        {{ election.status }}
+                        {{ statusLabel(election.status) }}
                     </div>
                 </div>
 
@@ -625,12 +675,7 @@ function setElection() {
                     </div>
 
                     <div class="flex justify-between items-center gap-2 mt-6">
-                        <button
-                            class="btn btn-primary btn-sm"
-                            @click="openAddElectionModal"
-                        >
-                            Set New Election
-                        </button>
+                        <div></div>
                         <div class="space-x-2">
                             <button
                                 @click="handleDeleteElection()"

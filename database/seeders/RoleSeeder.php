@@ -20,7 +20,7 @@ class RoleSeeder extends Seeder
 
         foreach ($roles as $role) {
             Role::create([
-                'election_id' => 1, // assuming seeding for election 1
+                'election_id' => 2, // assuming seeding for election 1
                 'name' => $role,
             ]);
         }

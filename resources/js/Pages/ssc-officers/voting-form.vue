@@ -9,7 +9,7 @@ const page = usePage();
 
 const props = defineProps({
     election: Object,
-    roles: Array,
+    roles: Array, // Changed from 'roles' to match original code; adjust based on backend data
     hasAlreadyVoted: Boolean,
 });
 
@@ -19,6 +19,11 @@ const isLoading = ref(false);
 const hasVoted = ref(props.hasAlreadyVoted || false);
 const isCheckingVote = ref(true);
 
+// Election status: 0 = Not started, 1 = Ongoing, 2 = Closed
+const electionStatus = computed(() => {
+    return props.election?.status ?? 0; // Default to 0 if undefined
+});
+
 // Form for submission
 const voteForm = useForm({
     votes: [],
@@ -27,8 +32,7 @@ const voteForm = useForm({
 // Check if user has already voted
 async function checkVoteStatus() {
     try {
-        const electionId = 1; // your payload value
-
+        const electionId = props.election?.id || 1; // Use props.election.id, fallback to 1
         const response = await fetch(
             `/votes/status?election_id=${electionId}`,
             {
@@ -79,7 +83,7 @@ function getSelectedCandidate(roleId) {
 
 async function handleSubmitVotes() {
     if (!isAllVoted.value) {
-        toastAlert("Please vote for all positions before submitting.", "error");
+        toastAlert("Please vote for all roles before submitting.", "error");
         return;
     }
 
@@ -176,13 +180,13 @@ function formatDate(dateString) {
         </div>
     </div>
 
-    <!-- Success Message After Voting -->
-    <div v-else-if="hasVoted" class="mt-6">
+    <!-- Voting Not Started -->
+    <div v-else-if="electionStatus === 0" class="mt-6">
         <div
-            class="bg-green-50 border border-green-200 rounded-lg p-8 text-center"
+            class="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center"
         >
             <svg
-                class="w-16 h-16 text-green-600 mx-auto mb-4"
+                class="w-16 h-16 text-yellow-500 mx-auto mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -191,20 +195,20 @@ function formatDate(dateString) {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z"
                 />
             </svg>
-            <h2 class="text-2xl font-bold text-green-900 mb-2">
-                Vote Submitted Successfully!
+            <h2 class="text-2xl font-bold text-yellow-800 mb-2">
+                Voting Has Not Started Yet
             </h2>
-            <p class="text-green-700">
-                Thank you for participating please wait for results.
+            <p class="text-yellow-700">
+                Please wait until the election period begins to cast your vote.
             </p>
         </div>
     </div>
 
-    <!-- Voting Form -->
-    <div v-else class="mt-6">
+    <!-- Voting Form (Ongoing) -->
+    <div v-else-if="electionStatus === 1 && !hasVoted" class="mt-6">
         <!-- Election Info Card -->
         <div
             class="bg-white p-6 shadow-sm rounded-lg border border-gray-100 mb-6"
@@ -222,7 +226,7 @@ function formatDate(dateString) {
                 <span
                     class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold uppercase"
                 >
-                    {{ election?.status }}
+                    Ongoing
                 </span>
             </div>
 
@@ -233,7 +237,7 @@ function formatDate(dateString) {
                 <ul class="text-sm text-blue-800 space-y-1">
                     <li>• Select one candidate for each position</li>
                     <li>• You can only vote once</li>
-                    <li>• All positions must be filled to submit</li>
+                    <li>• All roles must be filled to submit</li>
                 </ul>
             </div>
 
@@ -386,10 +390,37 @@ function formatDate(dateString) {
                     Submitting Vote...
                 </span>
                 <span v-else-if="!isAllVoted"
-                    >Complete All Positions to Submit</span
+                    >Complete All roles to Submit</span
                 >
                 <span v-else>Submit My Vote</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Voting Closed or Already Voted -->
+    <div v-else class="mt-6">
+        <div
+            class="bg-green-50 border border-green-200 rounded-lg p-8 text-center"
+        >
+            <svg
+                class="w-16 h-16 text-green-600 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+            </svg>
+            <h2 class="text-2xl font-bold text-green-900 mb-2">
+                {{ electionStatus === 2 ? "Voting Has Ended" : "Vote Submitted Successfully!" }}
+            </h2>
+            <p class="text-green-700">
+                {{ electionStatus === 2 ? "The election period has concluded. Thank you for participating!" : "Thank you for participating, please wait for results." }}
+            </p>
         </div>
     </div>
 </template>

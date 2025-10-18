@@ -11,7 +11,7 @@ class CandidateSeeder extends Seeder
 {
     public function run(): void
     {
-        $electionId = 1; // Adjust if needed
+        $electionId = 2; // Adjust if needed
 
         $partyLists = PartyList::where('election_id', $electionId)->get();
         $roles = Role::where('election_id', $electionId)->get();
