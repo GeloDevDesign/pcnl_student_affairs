@@ -19,7 +19,7 @@ class UserController extends Controller
         $pageTitle = 'Student List';
 
         if ($request->filled('search')) {
-            $students = User::where('role', 'student')
+            $students = User::whereIn('role', ['student', 'admin'])
                 ->where(function ($query) use ($request) {
                     $searchTerm = $request->input('search');
                     $query->where('first_name', 'like', '%' . $searchTerm . '%')

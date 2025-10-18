@@ -48,11 +48,19 @@ Route::middleware(['web'])->group(function () {
         Route::resource('/users', UserController::class)->middleware('role:admin');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+
         // General user routes
         Route::get('/', [AnnouncementController::class, 'index'])->name('home');
         Route::get('/lost-and-found', [ItemController::class, 'index'])->name('lost-found');
         Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluate');
         Route::get('/scc-officers', [OfficersController::class, 'index'])->name('scc-officers');
+
+        Route::get('/settings', function () {
+            return Inertia::render('Auth/Settings', [
+                'pageTitle' => 'PCNL - Settings',
+                'user' => Auth::user()
+            ]);
+        })->name('settings');
         Route::get('/concerns', function () {
             return Inertia::render('concerns/index', [
                 'pageTitle' => 'PCNL - Concerns'
