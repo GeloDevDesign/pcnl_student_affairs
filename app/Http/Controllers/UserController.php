@@ -38,6 +38,7 @@ class UserController extends Controller
                 ->paginate(10);
         }
 
+
         return inertia('user-management/index', compact('pageTitle', 'students'));
     }
 
@@ -120,6 +121,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'first_name'  => 'required|string|max:100',
             'middle_name' => 'nullable|string|max:100',
+            'last_name' => 'required|string|max:100',
             'department'  => 'required|string|max:150',
             'email'       => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'id_number'   => ['required', 'string', 'max:50', Rule::unique('users', 'id_number')->ignore($user->id)],

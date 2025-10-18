@@ -164,7 +164,7 @@ function handleFileChange(e) {
                 <option
                     v-for="(item, index) in props.selectionItems"
                     :key="index"
-                    :value="item.id"
+                    :value="item.id ?? item.name"
                 >
                     {{ item.name }}
                 </option>

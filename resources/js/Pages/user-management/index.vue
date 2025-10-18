@@ -44,6 +44,7 @@ const handleSubmit = ({ closeModal }) => {
     form.post("/users", {
         preserveScroll: true,
         onSuccess: () => {
+            resetPopulate();
             form.reset();
             closeModal();
             toastAlert(page.props.flash.success, "success");
@@ -63,7 +64,9 @@ const handleUpdate = () => {
     form.patch(`/users/${selectedStudent.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
+            resetPopulate();
             dialogRef.value.close();
+
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
@@ -93,6 +96,7 @@ const handleDelete = async (student) => {
     router.delete(`/users/${student.id}`, {
         preserveScroll: true,
         onSuccess: () => {
+            resetPopulate();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
@@ -109,12 +113,14 @@ const populateFormEdit = (student) => {
     selectedStudent.value = student;
     form.first_name = student.first_name;
     form.middle_name = student.middle_name;
+    form.last_name = student.last_name;
     form.department = student.department;
+    form.role = student.role;
     form.email = student.email;
     form.id_number = student.id_number;
+    console.log(form.department);
 };
 
-// ✅ Reset form on add modal open
 const resetPopulate = () => {
     form.reset();
     form.clearErrors();
@@ -192,14 +198,6 @@ const resetPopulate = () => {
                                 { id: 6, name: 'BEE' },
                             ]"
                             :errors="form.errors.department"
-                        />
-
-                        <InputFields
-                            v-model="form.email"
-                            :label="'Email'"
-                            type="email"
-                            placeholder="Enter email address"
-                            :errors="form.errors.email"
                         />
 
                         <InputFields
@@ -290,48 +288,78 @@ const resetPopulate = () => {
             <dialog ref="dialogRef" id="student_edit_modal" class="modal">
                 <div class="modal-box">
                     <h3 class="text-lg font-bold">
-                        Update Student:
+                        Update User:
                         <span class="text-primary">
                             {{ selectedStudent?.first_name }}
                         </span>
                     </h3>
                     <div class="modal-action">
                         <form method="dialog" class="w-full">
-                            <div class="w-full space-y-2">
+                            <div
+                                class="w-full space-y-2 grid grid-cols-2 gap-4"
+                            >
                                 <InputFields
                                     v-model="form.first_name"
-                                    label="First Name"
+                                    :label="'First Name'"
                                     type="text"
                                     placeholder="Enter first name"
                                     :errors="form.errors.first_name"
                                 />
+
                                 <InputFields
                                     v-model="form.middle_name"
-                                    label="Middle Name"
+                                    :label="'Middle Name'"
                                     type="text"
                                     placeholder="Enter middle name"
                                     :errors="form.errors.middle_name"
                                 />
+
                                 <InputFields
-                                    v-model="form.department"
-                                    label="Department"
+                                    v-model="form.last_name"
+                                    :label="'Last Name'"
                                     type="text"
-                                    placeholder="Enter department"
-                                    :errors="form.errors.department"
+                                    placeholder="Enter last name"
+                                    :errors="form.errors.last_name"
                                 />
                                 <InputFields
                                     v-model="form.email"
-                                    label="Email"
-                                    type="email"
+                                    :label="'Email'"
+                                    type="text"
                                     placeholder="Enter email"
                                     :errors="form.errors.email"
                                 />
+
+                                <InputFields
+                                    v-model="form.department"
+                                    :label="'Department'"
+                                    type="select"
+                                    :selectionItems="[
+                                        { id: 'BSA' , name: 'BSA' },
+                                        { id: 'BSBA', name: 'BSBA' },
+                                        { id: 'BSCRIM', name: 'BSCRIM' },
+                                        { id: 'BSIT', name: 'BSIT' },
+                                        { id: 'BSCE', name: 'BSCE' },
+                                        { id: 'BEE', name: 'BEE' },
+                                    ]"
+                                    :errors="form.errors.department"
+                                />
+
                                 <InputFields
                                     v-model="form.id_number"
-                                    label="ID Number"
+                                    :label="'ID Number'"
                                     type="text"
                                     placeholder="Enter ID number"
                                     :errors="form.errors.id_number"
+                                />
+                                <InputFields
+                                    v-model="form.role"
+                                    :label="'Role'"
+                                    type="select"
+                                    :selectionItems="[
+                                        { id: 'admin', name: 'Admin' },
+                                        { id: 'student', name: 'Student' },
+                                    ]"
+                                    :errors="form.errors.role"
                                 />
                             </div>
 
@@ -345,7 +373,11 @@ const resetPopulate = () => {
                                     type="button"
                                     class="btn btn-primary btn-sm"
                                 >
-                                    Update Student
+                                    {{
+                                        isLoading
+                                            ? " Updating User..."
+                                            : " Update User"
+                                    }}
                                     <span
                                         v-if="isLoading"
                                         class="loading loading-spinner loading-xs"
