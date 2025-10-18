@@ -16,13 +16,31 @@ use App\Http\Controllers\ElectionController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 
 Route::middleware(['web'])->group(function () {
     // Public routes (accessible without authentication)
-    Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
+    Route::get('/login', [AuthController::class, 'index'])->middleware('guest');
     Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    Route::get('/forgot-password', [AuthController::class, 'forgot_password_page'])
+        ->name('password.request');
 
+    Route::post('/forgot-password', [AuthController::class, 'forgot_password'])
+        ->middleware('guest')
+        ->name('password.email');
+
+    Route::get('/reset-password/{token}', function (Request $request, $token) {
+        return Inertia::render('Auth/ResetPassword', [
+            'token' => $token,
+            'email' => $request->query('email')
+        ]);
+    })->middleware('guest')->name('password.reset');
+
+    Route::post('/reset-password', [AuthController::class, 'reset_password'])
+        ->middleware('guest')
+        ->name('password.update');
 
 
     // Authenticated routes

@@ -59,26 +59,33 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
+    public function forgot_password_page(Request $request)
+    {
+        return Inertia::render('Auth/ForgotPassword');
+    }
+
     public function forgot_password(Request $request)
     {
-        $validated =   $request->validate(['email' => 'required|email']);
+        $validated = $request->validate(['email' => 'required|email']);
 
-        $status = Password::sendResetLink(
-            $validated['email']
-        );
+        $status = Password::sendResetLink($validated);
 
-        return $status === Password::ResetLinkSent
-            ? back()->with(['status' => __($status)])
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', __($status))
             : back()->withErrors(['email' => __($status)]);
     }
 
     public function reset_password(Request $request)
     {
-        $validated =   $request->validate([
+
+        $validated = $request->validate([
             'token'    => 'required',
             'email'    => 'required|email',
             'password' => 'required|string|min:8|confirmed',
         ]);
+
+
+    
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
@@ -88,15 +95,14 @@ class AuthController extends Controller
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();
-
-                // event(new PasswordReset($user));
             }
         );
 
-        return $status === Password::PasswordReset
-            ? redirect()->route('login')->with('status', __($status))
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('success', __($status))
             : back()->withErrors(['email' => [__($status)]]);
     }
+
 
 
     public function logout(Request $request)

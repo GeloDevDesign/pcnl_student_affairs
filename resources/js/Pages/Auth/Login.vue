@@ -3,6 +3,7 @@ import { ref, reactive } from "vue";
 import { useModalAlert } from "../../composables/useModalAlert";
 import { User, Lock, Play } from "lucide-vue-next";
 import { Form } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 
 const { modalAlert } = useModalAlert();
 
@@ -20,7 +21,7 @@ const showPassword = ref(false);
         class="min-h-screen bg-gray-100 flex flex-col items-center justify-center pt-12 overflow-x-hidden"
     >
         <!-- Navigation Bar -->
-        <nav
+        <nav7
             class="w-full bg-white shadow-sm py-2 flex items-center justify-center fixed top-0 left-0 z-10 min-h-[100px]"
         >
             <div class="flex items-center gap-3">
@@ -35,7 +36,7 @@ const showPassword = ref(false);
                     STUDENT AFFAIRS
                 </span>
             </div>
-        </nav>
+        </nav7>
 
         <!-- Main Login Container -->
         <div>
@@ -150,15 +151,14 @@ const showPassword = ref(false);
                         {{ $page.props.errors.password }}
                     </p>
 
-                    <!-- Forgot Password -->
                     <div class="mb-3 -mt-4 text-right">
-                        <a
-                            href="#"
-                            @click.prevent="showForgotPasswordForm"
+                        <Link
+                            as="button"
+                            href="/forgot-password"
                             class="text-xs font-semibold text-blue-500 underline hover:text-orange-500 transition-colors"
                         >
                             Forgot Password?
-                        </a>
+                        </Link>
                     </div>
 
                     <!-- Submit Button -->

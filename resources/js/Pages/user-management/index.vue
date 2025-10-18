@@ -73,7 +73,9 @@ const handleUpdate = () => {
 const handleDelete = async (student) => {
     const { isConfirmed } = await Swal.fire({
         title: "DELETE STUDENT",
-        text: `Are you sure you want to delete "${student.first_name} ${student.middle_name ?? ''} ${student.last_name}"?`,
+        text: `Are you sure you want to delete "${student.first_name} ${
+            student.middle_name ?? ""
+        } ${student.last_name}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, delete it!",
@@ -119,8 +121,8 @@ const resetPopulate = () => {
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
             <Banner
-                :pageName="'STUDENT MANAGEMENT'"
-                :breadCrumbPages="['Student List']"
+                :pageName="'USER MANAGEMENT'"
+                :breadCrumbPages="['User List']"
                 :currentPage="$page.url"
             >
                 <template #entity-actions>
@@ -134,14 +136,14 @@ const resetPopulate = () => {
                     v-if="$page.props.auth.user.role === 'admin'"
                     :isLoading="isLoading"
                     :modalTitle="'Student Form'"
-                    :buttonName="'Create New Student'"
+                    :buttonName="'Create New User'"
                     :buttonAction="
-                        isLoading ? 'Adding Student...' : 'Add Student'
+                        isLoading ? 'Adding New User...' : 'Add New User'
                     "
                     @reset-form="resetPopulate"
                     @submit-form="handleSubmit"
                 >
-                    <Form class="space-y-2 grid grid-cols-2 gap-4">
+                    <form class="space-y-2 grid grid-cols-2 gap-4">
                         <InputFields
                             v-model="form.first_name"
                             :label="'First Name'"
@@ -213,7 +215,7 @@ const resetPopulate = () => {
                             ]"
                             :errors="form.errors.role"
                         />
-                    </Form>
+                    </form>
                 </ModalAction>
             </div>
 
