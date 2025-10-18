@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthController extends Controller
 {
@@ -79,13 +81,22 @@ class AuthController extends Controller
     {
 
         $validated = $request->validate([
-            'token'    => 'required',
-            'email'    => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
+            'token' => ['required', 'string'],
+            'email' => ['required', 'email', Rule::exists('users', 'email')],
+            'password' => [
+                'required',
+                'confirmed',
+                PasswordRule::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ]);
 
 
-    
+
+
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),

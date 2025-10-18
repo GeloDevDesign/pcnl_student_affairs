@@ -1,7 +1,7 @@
 <script setup>
 import { useForm, usePage, Link } from "@inertiajs/vue3";
 import { ref } from "vue";
-import { usePage } from "@inertiajs/vue3";
+
 import InputFields from "../../components/InputFields.vue";
 import { useModalAlert } from "../../composables/useModalAlert";
 
@@ -53,58 +53,8 @@ const handleSubmit = () => {
                 />
             </div>
 
-            <template v-if="page.props.flash.success">
-                <div class="flex justify-center mb-4">
-                    <div
-                        class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center"
-                    >
-                        <svg
-                            class="w-8 h-8 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 13l4 4L19 7"
-                            />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Success Title -->
-                <h1 class="text-2xl font-bold mb-2 text-blue-900 uppercase">
-                    Password Reset Successfully
-                </h1>
-
-                <!-- Success Message -->
-                <div
-                    class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6"
-                >
-                    <p class="text-green-800 text-sm font-medium">
-                        {{ page.props.flash.success }}
-                    </p>
-                </div>
-
-                <!-- Instructions -->
-                <p class="text-gray-600 text-sm mb-6">
-                    Your password has been successfully reset. You can now log
-                    in with your new password.
-                </p>
-
-                <!-- Login Button -->
-                <Link
-                    href="/login"
-                    class="btn btn-primary w-full text-white inline-block"
-                >
-                    Go to Login
-                </Link>
-            </template>
-
             <!-- Initial Form State -->
-            <template v-else>
+            <div>
                 <!-- Title -->
                 <h1 class="text-2xl font-bold mb-2 text-blue-900 uppercase">
                     Reset Password
@@ -142,7 +92,7 @@ const handleSubmit = () => {
                         {{ isLoading ? "Resetting..." : "Reset Password" }}
                     </button>
                 </form>
-            </template>
+            </div>
 
             <!-- Footer Link -->
             <div class="mt-6 pt-6 border-t border-gray-200">
