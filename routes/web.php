@@ -46,8 +46,11 @@ Route::middleware(['web'])->group(function () {
     // Authenticated routes
     Route::middleware(['auth'])->group(function () {
         Route::resource('/users', UserController::class)->middleware('role:admin');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+
+        Route::resource('/elections', ElectionController::class)->middleware('role:admin');
 
         // General user routes
         Route::get('/', [AnnouncementController::class, 'index'])->name('home');

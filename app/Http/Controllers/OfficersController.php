@@ -14,21 +14,32 @@ class OfficersController extends Controller
 {
     public function index(Request $request)
     {
-        // Original queries - unchanged
+
+
+        $selectedElectionId = $request->filled('election_id') ? $request->election_id
+            : null;
+
+        // Party list & roles remain the same
         $partyList = PartyList::with(['user'])->get();
         $roles = Role::select(['id', 'name', 'description'])
             ->with([
-                'candidates' => function ($query) {
-                    $query->select(['id', 'full_name', 'role_id', 'party_id']);
+                'candidates' => function ($query) use ($selectedElectionId) {
+                    if ($selectedElectionId) {
+                        $query->where('election_id', $selectedElectionId);
+                    }
+                    $query->select(['id', 'full_name', 'role_id', 'party_id', 'election_id']);
                 },
                 'candidates.party_list:id,name'
             ])
             ->get();
 
-        // NEW: Results data query
+        // If election_id not provided, fallback to latest election
+        $election = $selectedElectionId
+            ? Election::find($selectedElectionId)
+            : Election::latest()->first();
+
         $resultsData = null;
-        $election = Election::latest()->first();
-        
+
         if ($election) {
             $canViewResults = (auth()->user()->isAdmin() ?? false) || $election->status == Election::CLOSED;
 
@@ -53,7 +64,9 @@ class OfficersController extends Controller
                             ->where('candidate_id', $candidate->id)
                             ->count();
 
-                        $percentage = $totalVoters > 0 ? round(($voteCount / $totalVoters) * 100, 2) : 0;
+                        $percentage = $totalVoters > 0
+                            ? round(($voteCount / $totalVoters) * 100, 2)
+                            : 0;
 
                         $candidatesWithVotes[] = [
                             'id' => $candidate->id,
@@ -65,9 +78,7 @@ class OfficersController extends Controller
                         ];
                     }
 
-                    usort($candidatesWithVotes, function($a, $b) {
-                        return $b['votes'] - $a['votes'];
-                    });
+                    usort($candidatesWithVotes, fn($a, $b) => $b['votes'] - $a['votes']);
 
                     if (count($candidatesWithVotes) > 0) {
                         $results[] = [
@@ -79,10 +90,11 @@ class OfficersController extends Controller
                     }
                 }
 
+                // Party statistics
                 $partyStats = PartyList::all()
                     ->map(function ($party) use ($election) {
                         $totalVotes = Vote::where('election_id', $election->id)
-                            ->whereIn('candidate_id', function($query) use ($party, $election) {
+                            ->whereIn('candidate_id', function ($query) use ($party, $election) {
                                 $query->select('id')
                                     ->from('candidates')
                                     ->where('party_id', $party->id)
@@ -96,9 +108,7 @@ class OfficersController extends Controller
                             'total_votes' => $totalVotes,
                         ];
                     })
-                    ->filter(function($party) {
-                        return $party['total_votes'] > 0;
-                    })
+                    ->filter(fn($party) => $party['total_votes'] > 0)
                     ->sortByDesc('total_votes')
                     ->values();
 
@@ -118,13 +128,27 @@ class OfficersController extends Controller
             }
         }
 
-   
+        $elections = Election::select('id', 'name', 'status', 'start_date', 'end_date')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $elections = Election::select('id', 'name', 'status', 'start_date', 'end_date')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($election) {
+                return [
+                    'id' => $election->id,
+                    'name' => $election->name,
+                ];
+            });
+
 
         return Inertia::render('ssc-officers/index', [
             'pageTitle' => 'PCNL - SCC Officers',
             'partyList' => $partyList,
             'roles' => $roles,
-            'resultsData' => $resultsData, // NEW: Added results data
+            'resultsData' => $resultsData,
+            'elections' => $elections
         ]);
     }
 }

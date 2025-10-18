@@ -28,7 +28,7 @@ class ElectionController extends Controller
             'name' => 'required|string|min:3|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'required|in:0,1,2'
+            // 'status' => 'required|in:0,1,2'
         ]);
 
 
@@ -42,6 +42,7 @@ class ElectionController extends Controller
      */
     public function destroy(Election $election)
     {
-        //
+        $election->delete();
+        return redirect()->back()->with('success', 'Election Deleted successfully!');
     }
 }
