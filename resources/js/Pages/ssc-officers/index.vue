@@ -75,6 +75,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
                 </NavCard>
 
                 <NavCard
+                    v-if="$page.props.auth.user.role === 'student'"
                     :cardTitle="'VOTING FORMS'"
                     :cardDescription="'Forms for voting'"
                     :cardValue="'voting-forms'"
@@ -106,7 +107,7 @@ const breadCrumbPages = ["SSC Officers", "Voting Forms", "Results"];
             </div>
 
             <VotingForm
-            :election="resultsData?.election"
+                :election="resultsData?.election"
                 :roles="roles"
                 v-if="pageStore.currentPage === 'voting-forms'"
             />

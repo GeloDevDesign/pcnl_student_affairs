@@ -118,7 +118,7 @@ const handleUpdatePassword = () => {
                 :currentPage="$page.url"
             />
 
-            <div class="w-full mx-auto space-y-6 ">
+            <div class="w-full mx-auto space-y-6">
                 <!-- Profile Information Card -->
                 <div class="bg-white rounded-2xl shadow-lg p-8">
                     <h2 class="text-2xl font-bold text-blue-900 mb-6">
@@ -218,9 +218,16 @@ const handleUpdatePassword = () => {
 
                             <InputFields
                                 v-model="form.department"
-                                label="Department"
-                                type="text"
-                                placeholder="Enter department"
+                                :label="'Department'"
+                                type="select"
+                                :selectionItems="[
+                                    { id: 'BSA', name: 'BSA' },
+                                    { id: 'BSBA', name: 'BSBA' },
+                                    { id: 'BSCRIM', name: 'BSCRIM' },
+                                    { id: 'BSIT', name: 'BSIT' },
+                                    { id: 'BSCE', name: 'BSCE' },
+                                    { id: 'BEE', name: 'BEE' },
+                                ]"
                                 :errors="form.errors.department"
                             />
 
