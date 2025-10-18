@@ -112,6 +112,7 @@ const electionForm = useForm({
 const editElectionForm = useForm({
     id: null,
     name: "",
+    status: null,
     start_date: "",
     end_date: "",
     description: "",
@@ -358,7 +359,7 @@ function openEditElectionModal() {
     editElectionForm.name = election.value.name;
     editElectionForm.start_date = election.value.start_date;
     editElectionForm.end_date = election.value.end_date;
-    editElectionForm.description = election.value.description;
+    editElectionForm.status = election.value.status;
     editElectionDialog.value.showModal();
 }
 
@@ -538,7 +539,6 @@ function handleAssignCandidate() {
 }
 
 function setElection() {
-    
     router.get(
         "/scc-officers",
         { election_id: CURRENT_ELECTION.value },
@@ -1127,21 +1127,25 @@ function setElection() {
                     />
                 </div>
 
-                <InputFields
-                    v-model="editElectionForm.title"
-                    label="Title"
-                    type="text"
-                    placeholder="Election title"
-                    :errors="editElectionForm.errors.name"
-                />
-                <InputFields
-                    v-model="editElectionForm.description"
-                    label="Description"
-                    type="textarea"
-                    placeholder="Election description"
-                    :errors="editElectionForm.errors.description"
-                    rows="3"
-                />
+                <fieldset
+                   
+                    class="fieldset w-full"
+                >
+                    <legend class="fieldset-legend">Status</legend>
+                    <select class="select w-full" v-model="editElectionForm.status">
+                        <option disabled value="">Select Status</option>
+                        <option value="0">SCHEDULED</option>
+                        <option value="1">ONGOING</option>
+                        <option value="2">CLOSED</option>
+                    </select>
+                    <p
+                        v-if="editElectionForm.errors.status"
+                        class="text-red-400 font-semibold bg-red-100 p-1"
+                    >
+                        {{ editElectionForm.errors.status }}
+                    </p>
+                </fieldset>
+
                 <div class="modal-action">
                     <button
                         type="button"
