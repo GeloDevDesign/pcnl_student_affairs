@@ -105,6 +105,11 @@ class User extends Authenticatable
         return $this->hasMany(Candidate::class);
     }
 
+    public function elections()
+    {
+        return $this->hasMany(Election::class);
+    }
+
     public function isAdmin()
     {
         return $this->role == self::TYPE_ADMIN;

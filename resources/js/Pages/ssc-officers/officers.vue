@@ -103,7 +103,7 @@ const editRoleForm = useForm({
 
 // Election forms
 const electionForm = useForm({
-    title: "",
+    name: "",
     start_date: "",
     end_date: "",
     description: "",
@@ -409,7 +409,8 @@ function handleAddElection() {
                 "success"
             );
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error)
             isLoading.value = false;
             toastAlert(
                 page.props.errors.createElection?.[0] ||
@@ -1048,11 +1049,11 @@ function setElection() {
             <h3 class="font-bold text-lg">Create New Election</h3>
             <form @submit.prevent="handleAddElection" class="space-y-4">
                 <InputFields
-                    v-model="electionForm.title"
+                    v-model="electionForm.name"
                     label="Title"
                     type="text"
                     placeholder="Election title"
-                    :errors="electionForm.errors.title"
+                    :errors="electionForm.errors.name"
                 />
                 <div class="grid grid-cols-2 gap-4">
                     <InputFields
