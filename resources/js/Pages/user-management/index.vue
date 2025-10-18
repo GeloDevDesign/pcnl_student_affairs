@@ -8,6 +8,7 @@ import Search from "../../components/Search.vue";
 import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
 import Pagination from "../../components/Pagination.vue";
+import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
 import Swal from "sweetalert2";
 
 const page = usePage();
@@ -16,6 +17,9 @@ const { toastAlert } = useToastAlert();
 const isLoading = ref(false);
 const selectedStudent = ref(null);
 const dialogRef = ref(null);
+
+const searchIndex = ref("users");
+const { applySearch } = useSearchAndFilter(searchIndex);
 
 const props = defineProps({
     students: Object, // comes from controller
@@ -126,7 +130,7 @@ const resetPopulate = () => {
                 :currentPage="$page.url"
             >
                 <template #entity-actions>
-                    <Search />
+                    <Search @query-search="applySearch" />
                 </template>
             </Banner>
 
