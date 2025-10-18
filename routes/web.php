@@ -15,14 +15,19 @@ use App\Http\Controllers\OfficersController;
 use App\Http\Controllers\ElectionController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\VoteController;
+use App\Http\Controllers\UserController;
 
 Route::middleware(['web'])->group(function () {
     // Public routes (accessible without authentication)
     Route::inertia('/login', 'auth/login')->middleware('guest')->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('guest')->name('login');
 
+
+
+
     // Authenticated routes
     Route::middleware(['auth'])->group(function () {
+        Route::resource('/users', UserController::class)->middleware('role:admin');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
         // General user routes
