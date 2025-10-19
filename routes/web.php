@@ -16,6 +16,7 @@ use App\Http\Controllers\ElectionController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ConversationController;
 use Illuminate\Http\Request;
 
 Route::middleware(['web'])->group(function () {
@@ -70,11 +71,12 @@ Route::middleware(['web'])->group(function () {
 
 
 
-        Route::get('/concerns', function () {
-            return Inertia::render('concerns/index', [
-                'pageTitle' => 'PCNL - Concerns'
-            ]);
-        })->name('concerns'); // Fixed typo from 'esvaluate'
+        Route::get('/concerns', [ConversationController::class, 'index'])->name('concerns.index');
+        Route::post('/concerns', [ConversationController::class, 'store'])->name('concerns.store');
+        Route::post('/concerns/{conversation}/messages', [ConversationController::class, 'sendMessage'])->name('concerns.sendMessage');
+        Route::delete('/concerns/{conversation}', [ConversationController::class, 'destroy'])->name('concerns.destroy');
+
+
 
         // Feedback routes
         Route::prefix('feedback')->name('feedback.')->group(function () {
