@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('party_lists', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('election_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('slogan')->nullable();

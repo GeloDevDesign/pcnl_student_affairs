@@ -8,7 +8,6 @@ class PartyList extends Model
 {
     protected  $fillable = [
         'election_id',
-        'user_id',
         'name',
         'slogan'
     ];

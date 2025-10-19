@@ -10,14 +10,14 @@ class PartyListSeeder extends Seeder
     public function run(): void
     {
         PartyList::create([
-            'user_id' => 1,
+
             'election_id' => 2,
             'name' => 'PARTIDO ISKOLAR',
             'slogan' => 'Iskolar Para sa Bayan!',
         ]);
 
         PartyList::create([
-            'user_id' => 1,
+          
             'election_id' => 2,
             'name' => 'ISKO UNITY',
             'slogan' => 'Unity for Progress!',

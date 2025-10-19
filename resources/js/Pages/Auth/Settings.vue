@@ -98,7 +98,8 @@ const handleUpdatePassword = () => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             toastAlert(
                 "Failed to update password. Please check the errors.",
                 "error"

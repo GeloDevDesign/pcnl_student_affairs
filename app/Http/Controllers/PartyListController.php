@@ -16,7 +16,8 @@ class PartyListController extends Controller
             'slogan' => 'nullable|string|min:5',
         ]);
 
-        $partyList = $request->user()->party_lists()->create($validated);
+        PartyList::create($validated);
+
 
         return redirect()->back()->with('success', 'Party List created successfully!');
     }
