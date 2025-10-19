@@ -19,6 +19,12 @@ onMounted(() => {
         activeConversation: props.activeConversation,
         messages: props.messages,
     });
+    
+    // Show messages if there's an active conversation
+    if (props.activeConversation) {
+        showMobileMessages.value = true;
+    }
+    
     scrollToBottom();
 });
 
@@ -26,12 +32,18 @@ const newMessage = ref('');
 const messagesContainer = ref(null);
 const selectedAdmin = ref(null);
 const startMessage = ref('');
+const showMobileMessages = ref(false);
 
 const loadConversation = (conversationId) => {
+    showMobileMessages.value = true; // Show messages on mobile
     router.get('/concerns', { conversation_id: conversationId }, {
         preserveScroll: true,
         preserveState: true,
     });
+};
+
+const backToConversations = () => {
+    showMobileMessages.value = false;
 };
 
 const openNewConversationModal = () => {
@@ -112,6 +124,11 @@ watch(() => props.messages, () => {
 }, { deep: true });
 
 onMounted(() => {
+    console.log('Props received:', {
+        conversations: props.conversations,
+        activeConversation: props.activeConversation,
+        messages: props.messages,
+    });
     scrollToBottom();
 });
 </script>
@@ -121,9 +138,12 @@ onMounted(() => {
         <div class="w-full">
             <Banner :pageName="'CONCERNS & MESSAGES'" />
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-200px)]">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-200px)]">
                 <!-- Left Sidebar: Conversations List -->
-                <div class="bg-white rounded-lg border border-gray-100 overflow-hidden">
+                <div 
+                    class="bg-white rounded-lg border border-gray-100 overflow-hidden"
+                    :class="{ 'hidden lg:block': showMobileMessages && activeConversation }"
+                >
                     <div class="p-4 border-b border-gray-200">
                         <div class="flex justify-between items-center mb-3">
                             <h2 class="text-lg font-semibold">Messages</h2>
@@ -178,7 +198,10 @@ onMounted(() => {
                 </div>
 
                 <!-- Right Content: Messages -->
-                <div class="col-span-2 bg-white rounded-lg border border-gray-100 flex flex-col overflow-hidden">
+                <div 
+                    class="lg:col-span-2 bg-white rounded-lg border border-gray-100 flex flex-col overflow-hidden"
+                    :class="{ 'hidden lg:flex': !showMobileMessages && !activeConversation }"
+                >
                     <div v-if="!activeConversation" class="flex-1 flex items-center justify-center text-gray-500">
                         <div class="text-center">
                             <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,8 +212,18 @@ onMounted(() => {
                     </div>
 
                     <div v-else class="flex flex-col h-full">
-                        <!-- Header -->
+                        <!-- Header with Back Button -->
                         <div class="p-4 border-b border-gray-200 flex items-center gap-3">
+                            <!-- Back button for mobile -->
+                            <button 
+                                @click="backToConversations"
+                                class="btn btn-ghost btn-sm btn-circle lg:hidden"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            
                             <div class="avatar placeholder">
                                 <div class="bg-primary text-primary-content rounded-full w-10">
                                     <span>{{ activeConversation.other_user.name.charAt(0).toUpperCase() }}</span>
@@ -231,26 +264,26 @@ onMounted(() => {
                         </div>
 
                         <!-- Input -->
-                        <div class="p-4 border-t border-gray-200">
+                        <div class="p-3 lg:p-4 border-t border-gray-200">
                             <form @submit.prevent="sendMessage" class="flex gap-2">
                                 <textarea
                                     v-model="newMessage"
                                     placeholder="Type your message..."
                                     rows="1"
-                                    class="textarea textarea-bordered flex-1 resize-none"
+                                    class="textarea textarea-bordered flex-1 resize-none text-sm lg:text-base"
                                     @keydown.enter.exact.prevent="sendMessage"
                                 ></textarea>
                                 <button
                                     type="submit"
                                     :disabled="!newMessage.trim()"
-                                    class="btn btn-primary btn-square"
+                                    class="btn btn-primary btn-square btn-sm lg:btn-md"
                                 >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                     </svg>
                                 </button>
                             </form>
-                            <p class="text-xs text-base-content/60 mt-1">
+                            <p class="text-xs text-base-content/60 mt-1 hidden sm:block">
                                 Press Enter to send
                             </p>
                         </div>
