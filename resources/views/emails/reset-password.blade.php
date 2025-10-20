@@ -101,6 +101,34 @@
       font-size: 20px;
     }
 
+    .button-wrapper {
+      text-align: left;
+      margin: 20px 0;
+    }
+
+    .reset-button {
+      display: inline-block;
+      background-color: #073c82;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 12px 30px;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .reset-button:hover {
+      background-color: #052a5c;
+    }
+
+    .link-note {
+      text-align: left;
+      color: #666;
+      font-size: 13px;
+      margin-top: 15px;
+      font-style: italic;
+    }
+
     .credential-item {
       display: flex;
       justify-content: space-between;
@@ -194,6 +222,11 @@
       .footer {
         font-size: 12px;
       }
+
+      .reset-button {
+        padding: 10px 25px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
@@ -201,8 +234,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <img src="{{ $message->embed(public_path('/icons/logo.svg')) }}" alt="PCNL Logo"
-        style="width: 80px; margin-bottom: 10px;">
+      <img src="{{ $message->embed(public_path('/icons/logo.svg')) }}" alt="PCNL Logo" style="width: 80px; margin-bottom: 10px;">
 
       <h1 class="header-title" style="margin-top: 5px;">PCNL Student Affairs</h1>
       <p class="header-subtitle">Your account is ready to go</p>

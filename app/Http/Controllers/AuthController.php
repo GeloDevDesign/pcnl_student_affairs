@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use App\Mail\ResetPasswordMail;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -70,11 +72,22 @@ class AuthController extends Controller
     {
         $validated = $request->validate(['email' => 'required|email']);
 
-        $status = Password::sendResetLink($validated);
+        $user = User::where('email', $validated['email'])->first();
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('success', __($status))
-            : back()->withErrors(['email' => __($status)]);
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email not found']);
+        }
+
+        $token = Password::createToken($user);
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $user->email,
+        ], false));
+
+        // Send Mailable
+        Mail::to($user->email)->send(new ResetPasswordMail($user->name, $user->email, $resetUrl));
+
+        return back()->with('success', 'Password reset link sent successfully.');
     }
 
     public function reset_password(Request $request)
