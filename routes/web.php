@@ -16,6 +16,8 @@ use App\Http\Controllers\ElectionController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\FormController;
 use Illuminate\Http\Request;
 
 Route::middleware(['web'])->group(function () {
@@ -51,6 +53,7 @@ Route::middleware(['web'])->group(function () {
 
 
         Route::resource('/elections', ElectionController::class)->middleware('role:admin');
+        Route::resource('/forms', FormController::class)->middleware('role:admin');
 
         // General user routes
         Route::get('/', [AnnouncementController::class, 'index'])->name('home');
@@ -66,15 +69,16 @@ Route::middleware(['web'])->group(function () {
         })->name('settings');
 
         Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
-        Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+        Route::put('/profile/password', [UserController::class, 'updatePasFesword'])->name('profile.password');
 
 
 
-        Route::get('/concerns', function () {
-            return Inertia::render('concerns/index', [
-                'pageTitle' => 'PCNL - Concerns'
-            ]);
-        })->name('concerns'); // Fixed typo from 'esvaluate'
+        Route::get('/concerns', [ConversationController::class, 'index'])->name('concerns.index');
+        Route::post('/concerns', [ConversationController::class, 'store'])->name('concerns.store');
+        Route::post('/concerns/{conversation}/messages', [ConversationController::class, 'sendMessage'])->name('concerns.sendMessage');
+        Route::delete('/concerns/{conversation}', [ConversationController::class, 'destroy'])->name('concerns.destroy');
+
+
 
         // Feedback routes
         Route::prefix('feedback')->name('feedback.')->group(function () {

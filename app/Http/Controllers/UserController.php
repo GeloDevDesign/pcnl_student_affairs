@@ -189,9 +189,9 @@ class UserController extends Controller
         $user = $request->user();
 
         // Only admin can change password
-        if (!$user->isAdmin()) {
-            return redirect()->back()->withErrors(['error' => 'Unauthorized action.']);
-        }
+        // if (!$user->isAdmin()) {
+        //     return redirect()->back()->withErrors(['error' => 'Unauthorized action.']);
+        // }
 
         $validated = $request->validate([
             'current_password'      => 'required|string',

@@ -18,7 +18,8 @@ class CandidateController extends Controller
             'party_id' => 'required|exists:party_lists,id',
         ]);
 
-        $request->user()->candidates()->create($validated);
+        Candidate::create($validated);
+  
 
         return redirect()->back()->with('success', 'Candidate assigned successfully!');
     }

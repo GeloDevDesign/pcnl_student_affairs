@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FeedBack;
 use App\Models\Event;
 use App\Models\Instructor;
+use App\Models\Form;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -16,13 +17,11 @@ class FeedBackController extends Controller
     {
         $user = $request->user();
 
-
-        $instructors = Instructor::with(['user'])->latest();
-
-        $eventsQuery = Event::query()->with([
-            $user->isAdmin()
-                ? 'feedbacks'
-                : 'userFeedback',
+        // Base queries
+        $instructorsQuery = Instructor::with(['user'])->latest();
+        $formsQuery       = Form::with(['user'])->latest();
+        $eventsQuery      = Event::query()->with([
+            $user->isAdmin() ? 'feedbacks' : 'userFeedback',
             'user',
         ])
             ->withExists([
@@ -34,18 +33,34 @@ class FeedBackController extends Controller
             ->withAvg('feedbacks', 'ratings')
             ->latest();
 
+        // Apply filters based on request page
+        if ($request->filled('search')) {
+          
+            switch ($request->page) {
 
-        if ($request->page == 'feedbacks' && $request->filled('filters')) {
-            $eventsQuery->where('id', $request->filters);
+                case 'feedbacks':
+
+                    $eventsQuery->where('id', $request->search);
+                    break;
+
+                case 'instructors':
+                    $instructorsQuery->where('name', 'like', '%' . $request->search . '%');
+                    break;
+
+                case 'forms':
+                    $formsQuery->where('name', 'like', '%' . $request->search . '%');
+                    break;
+            }
         }
 
-
         return Inertia::render('evaluate/index', [
-            'pageTitle' => 'PCNL - Evaluate',
-            'events'    => $eventsQuery->paginate(10)->onEachSide(1),
-            'instructors' => $instructors->paginate(10)->onEachSide(1)
+            'pageTitle'   => 'PCNL - Evaluate',
+            'events'      => $eventsQuery->paginate(10)->onEachSide(1),
+            'instructors' => $instructorsQuery->paginate(10)->onEachSide(1),
+            'forms'       => $formsQuery->paginate(10)->onEachSide(1),
         ]);
     }
+
 
 
 
