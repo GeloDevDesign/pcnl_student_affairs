@@ -12,6 +12,7 @@ import Search from "../../components/Search.vue";
 
 import Feedbacks from "./feedbacks.vue";
 import Instructor from "./instructor.vue";
+import EvalForms from "./eval-forms.vue";
 
 const pageStore = useNavigatePageStore();
 const searchIndex = ref("feedbacks");
@@ -29,6 +30,7 @@ defineProps({
     events: Object,
     instructors: Object,
     feedbacks: Object,
+    forms: Object,
 });
 
 onMounted(() => {
@@ -87,6 +89,21 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                         />
                     </template>
                 </NavCard>
+
+                <NavCard
+                    :cardTitle="'EVALUATION FORMS'"
+                    :cardDescription="'Evaluation Forms for Instructor'"
+                    :cardValue="'forms'"
+                    @navigate-action="pageStore.navigatePage"
+                >
+                    <template #icon>
+                        <img
+                            src="/public/icons/form.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
+                    </template>
+                </NavCard>
             </div>
 
             <Feedbacks
@@ -96,6 +113,11 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
             <Instructor
                 :instructors="instructors"
                 v-if="pageStore.currentPage === 'instructors'"
+            />
+
+            <EvalForms
+                :forms="forms"
+                v-if="pageStore.currentPage === 'forms'"
             />
         </div>
     </Layout>

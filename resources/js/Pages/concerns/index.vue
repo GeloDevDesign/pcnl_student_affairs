@@ -118,6 +118,24 @@ const formatDate = (date) => {
     }
 };
 
+// Get user initials
+const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
+};
+
+// Get profile image URL
+const getProfileImage = (user) => {
+    if (user?.profile_photo_path) {
+        return `/storage/${user.profile_photo_path}`;
+    }
+    return null;
+};
+
 // Watch for messages changes and scroll to bottom
 watch(() => props.messages, () => {
     scrollToBottom();
@@ -175,8 +193,21 @@ onMounted(() => {
                                 :class="{ 'bg-blue-50': activeConversation?.id === conv.id }"
                             >
                                 <div class="avatar placeholder">
-                                    <div class="bg-primary text-primary-content rounded-full w-10">
-                                        <span>{{ conv.other_user.name.charAt(0).toUpperCase() }}</span>
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border-2 border-primary shadow-sm">
+                                        <img
+                                            v-if="getProfileImage(conv.other_user)"
+                                            :src="getProfileImage(conv.other_user)"
+                                            :alt="conv.other_user.name"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <div
+                                            v-else
+                                            class="w-full h-full bg-primary flex items-center justify-center"
+                                        >
+                                            <span class="text-primary-content text-sm font-semibold">
+                                                {{ getInitials(conv.other_user.name) }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -225,8 +256,21 @@ onMounted(() => {
                             </button>
                             
                             <div class="avatar placeholder">
-                                <div class="bg-primary text-primary-content rounded-full w-10">
-                                    <span>{{ activeConversation.other_user.name.charAt(0).toUpperCase() }}</span>
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border-2 border-primary shadow-sm">
+                                    <img
+                                        v-if="getProfileImage(activeConversation.other_user)"
+                                        :src="getProfileImage(activeConversation.other_user)"
+                                        :alt="activeConversation.other_user.name"
+                                        class="w-full h-full object-cover"
+                                    />
+                                    <div
+                                        v-else
+                                        class="w-full h-full bg-primary flex items-center justify-center"
+                                    >
+                                        <span class="text-primary-content text-sm font-semibold">
+                                            {{ getInitials(activeConversation.other_user.name) }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <div>
@@ -248,6 +292,26 @@ onMounted(() => {
 
                             <div v-for="message in messages" :key="message.id" 
                                 :class="['chat', message.is_mine ? 'chat-end' : 'chat-start']">
+                                <!-- Avatar for received messages -->
+                                <div v-if="!message.is_mine" class="chat-image avatar">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border border-primary">
+                                        <img
+                                            v-if="getProfileImage(message.sender)"
+                                            :src="getProfileImage(message.sender)"
+                                            :alt="message.sender.name"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <div
+                                            v-else
+                                            class="w-full h-full bg-primary flex items-center justify-center"
+                                        >
+                                            <span class="text-primary-content text-xs font-semibold">
+                                                {{ getInitials(message.sender.name) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="chat-header mb-1">
                                     {{ message.sender.name }}
                                     <time class="text-xs opacity-50 ml-1">

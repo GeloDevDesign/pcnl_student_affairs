@@ -17,6 +17,7 @@ use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\FormController;
 use Illuminate\Http\Request;
 
 Route::middleware(['web'])->group(function () {
@@ -52,6 +53,7 @@ Route::middleware(['web'])->group(function () {
 
 
         Route::resource('/elections', ElectionController::class)->middleware('role:admin');
+        Route::resource('/forms', FormController::class)->middleware('role:admin');
 
         // General user routes
         Route::get('/', [AnnouncementController::class, 'index'])->name('home');
@@ -67,7 +69,7 @@ Route::middleware(['web'])->group(function () {
         })->name('settings');
 
         Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
-        Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+        Route::put('/profile/password', [UserController::class, 'updatePasFesword'])->name('profile.password');
 
 
 

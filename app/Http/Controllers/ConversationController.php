@@ -31,6 +31,7 @@ class ConversationController extends Controller
                         'name' => trim($otherUser->first_name . ' ' . $otherUser->last_name),
                         'email' => $otherUser->email,
                         'role' => $otherUser->role,
+                        'profile_photo_path' => $otherUser->profile_photo_path,
                     ],
                     'latest_message' => $conversation->latestMessage ? [
                         'body' => $conversation->latestMessage->body,
@@ -69,7 +70,7 @@ class ConversationController extends Controller
         $messages = [];
         
         if ($request->has('conversation_id')) {
-            $conversationId = $request->conversation_id;
+            $conversationId = $request->input('conversation_id');
             $conversation = Conversation::find($conversationId);
             
             if ($conversation && 
@@ -90,6 +91,7 @@ class ConversationController extends Controller
                         'name' => trim($otherUser->first_name . ' ' . $otherUser->last_name),
                         'email' => $otherUser->email,
                         'role' => $otherUser->role,
+                        'profile_photo_path' => $otherUser->profile_photo_path,
                     ],
                 ];
                 
@@ -106,6 +108,7 @@ class ConversationController extends Controller
                                 'id' => $message->sender->id,
                                 'name' => trim($message->sender->first_name . ' ' . $message->sender->last_name),
                                 'role' => $message->sender->role,
+                                'profile_photo_path' => $message->sender->profile_photo_path,
                             ],
                             'created_at' => $message->created_at,
                             'read_at' => $message->read_at,

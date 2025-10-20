@@ -8,7 +8,9 @@ export function useSearchAndFilter(pageRef) {
         "hand-books": "home",
         feedbacks: "evaluate",
         "lost-found": "lost-found",
-        "users": "users.index",
+        users: "users.index",
+        instructors: "evaluate",
+        forms: "evaluate",
     };
 
     function applySearch(value) {
