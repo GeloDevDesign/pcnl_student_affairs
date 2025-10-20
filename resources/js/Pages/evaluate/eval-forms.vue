@@ -238,7 +238,7 @@ const populateFormEdit = (entity) => {
                             />
                         </form>
                     </div>
-                    <div class="w-full flex justify-end gap-2 mt-2">
+                    <div class="w-full flex justify-end gap-2 mt-2" v-if="$page.props.auth.user.role === 'admin'">
                         <button class="btn btn-sm btn-soft">Close</button>
                         <button
                             :disabled="isLoading"
