@@ -69,7 +69,7 @@ Route::middleware(['web'])->group(function () {
         })->name('settings');
 
         Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
-        Route::put('/profile/password', [UserController::class, 'updatePasFesword'])->name('profile.password');
+        Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 
 
 
