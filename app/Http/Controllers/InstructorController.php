@@ -16,9 +16,19 @@ class InstructorController extends Controller
      */
     public function store(Request $request)
     {
+        $departments = [
+            1 => 'BSA',
+            2 => 'BSBA',
+            3 => 'BSCRIM',
+            4 => 'BSIT',
+            5 => 'BSCE',
+            6 => 'BEE',
+        ];
+
+
         $validated = $request->validate([
             'name' => 'required|min:2|max:255',
-            'department' => 'required|min:2|max:255',
+            'department'  => 'nullable|integer|in:' . implode(',', array_keys($departments)),
         ]);
 
         $request->user()->instructors()->create($validated);
@@ -35,9 +45,19 @@ class InstructorController extends Controller
      */
     public function update(Request $request, Instructor $instructor)
     {
+        $departments = [
+            1 => 'BSA',
+            2 => 'BSBA',
+            3 => 'BSCRIM',
+            4 => 'BSIT',
+            5 => 'BSCE',
+            6 => 'BEE',
+        ];
+
+
         $validated = $request->validate([
             'name' => 'required|min:2|max:255',
-            'department' => 'required|min:2|max:255',
+            'department'  => 'nullable|integer|in:' . implode(',', array_keys($departments)),
         ]);
 
         $instructor->update($validated);

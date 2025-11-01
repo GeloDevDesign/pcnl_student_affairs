@@ -16,7 +16,15 @@ class Event extends Model
         'date'
     ];
 
+    protected $appends = ['is_ended'];
 
+
+    public function getIsEndedAttribute()
+    {
+        return $this->date
+            ? now()->greaterThan($this->date)
+            : false;
+    }
 
     public function user()
     {

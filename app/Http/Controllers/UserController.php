@@ -71,7 +71,12 @@ class UserController extends Controller
         // If the role is student, department & id_number required
         if ($request->role === User::TYPE_STUDENT) {
             $rules['department'] = 'required|integer|in:' . implode(',', array_keys($departments));
-            $rules['id_number'] = 'required|string|unique:users,id_number';
+            $rules['id_number'] = [
+                'required',
+                'string',
+                'unique:users,id_number',
+                'regex:/^[0-9\-]+$/'
+            ];
         }
 
         $validated = $request->validate($rules);

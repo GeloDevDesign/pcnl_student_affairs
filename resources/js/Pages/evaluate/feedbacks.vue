@@ -148,9 +148,14 @@ function handleSubmit() {
                             $page.props.auth.user.role != 'admin'
                         "
                         class="btn btn-primary btn-xs text-white"
+                        :disabled="event.is_ended"
                         @click="openModal(event)"
                     >
-                        Give Feedback
+                        {{
+                            event.is_ended
+                                ? "Event has not ended yet."
+                                : "Give Feedback "
+                        }}
                     </button>
                 </div>
             </div>
@@ -237,7 +242,7 @@ function handleSubmit() {
                 </div>
 
                 <div class="flex gap-1">
-                    <span class="text-base font-bold ">
+                    <span class="text-base font-bold">
                         {{
                             Math.round(
                                 selectedFeedbacks?.feedbacks_avg_ratings * 10

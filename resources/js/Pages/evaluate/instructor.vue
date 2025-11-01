@@ -123,8 +123,15 @@ const populateFormEdit = (entity) => {
                 <InputFields
                     v-model="form.department"
                     :label="'Department'"
-                    :type="'text'"
-                    :placeholder="'Department'"
+                    type="select"
+                    :selectionItems="[
+                        { id: 1, name: 'BSA' },
+                        { id: 2, name: 'BSBA' },
+                        { id: 3, name: 'BSCRIM' },
+                        { id: 4, name: 'BSIT' },
+                        { id: 5, name: 'BSCE' },
+                        { id: 6, name: 'BEE' },
+                    ]"
                     :errors="form.errors.department"
                 />
             </Form>

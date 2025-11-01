@@ -32,7 +32,7 @@ const form = useForm({
     first_name: "",
     last_name: "",
     middle_name: "",
-    department: "",
+    department: 0,
     role: "",
     email: "",
     id_number: "",
@@ -118,7 +118,7 @@ const populateFormEdit = (student) => {
     form.role = student.role;
     form.email = student.email;
     form.id_number = student.id_number;
-    console.log(form.department);
+
 };
 
 const resetPopulate = () => {

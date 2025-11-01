@@ -35,7 +35,7 @@ defineProps({
 onMounted(() => {
     pageStore.navigatePage("home");
 });
-const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
+const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
 </script>
 
 <template>
@@ -89,8 +89,8 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
                 </NavCard>
 
                 <NavCard
-                    :cardTitle="'HAND-BOOKS'"
-                    :cardDescription="'View to see hand-books'"
+                    :cardTitle="'HANDBOOKS'"
+                    :cardDescription="'View to see handbooks'"
                     :cardValue="'hand-books'"
                     @navigate-action="pageStore.navigatePage"
                 >
