@@ -16,6 +16,9 @@ const dialogRef = ref(null);
 const form = useForm({
     name: "",
     description: "",
+    remarks: "",
+    found_at: null,
+    found_by: "",
     status: 0,
     image_url: null,
 });
@@ -49,14 +52,15 @@ function handleUpdate() {
     payload.append("name", form.name);
     payload.append("description", form.description);
     payload.append("status", form.status);
-
+    payload.append("remarks", form.remarks);
+    payload.append("found_by", form.found_by);
     if (form.image_url) {
         payload.append("image_url", form.image_url);
     }
 
     // Add _method=PATCH for Laravel to recognize patch request
     payload.append("_method", "PATCH");
-
+    console.log(payload);
     router.post(`/items/${selectedItem.value.id}`, payload, {
         preserveScroll: true,
         onSuccess: () => {
@@ -67,7 +71,8 @@ function handleUpdate() {
             isLoading.value = false;
             form.image_url = null;
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
         },
     });
@@ -109,7 +114,9 @@ function populateFormEdit(entity) {
     form.name = entity.name;
     form.description = entity.description;
     form.status = entity.status;
-    form.image_url = null; // keep null to preserve old image if no new file
+    form.remarks = entity.remarks;
+    form.found_by = entity.found_by;
+    form.image_url = null;
     dialogRef.value.showModal();
 }
 </script>
@@ -156,11 +163,16 @@ function populateFormEdit(entity) {
 
     <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 w-full gap-4">
         <div
-            class="card bg-white w-full shadow-sm"
             v-for="(item, index) in items.data || []"
             :key="item.id"
+            class="card bg-white w-full shadow-sm"
         >
-            <figure>
+            <figure
+                v-if="
+                    $page.props.auth.user.role === 'admin' ||
+                    item?.status_text !== 'archive'
+                "
+            >
                 <img
                     :src="
                         item?.image_url
@@ -171,7 +183,14 @@ function populateFormEdit(entity) {
                     alt="Lost Item Image"
                 />
             </figure>
-            <div class="card-body">
+
+            <div
+                class="card-body"
+                v-if="
+                    $page.props.auth.user.role === 'admin' ||
+                    item?.status_text !== 'archive'
+                "
+            >
                 <div class="flex items-start justify-between w-full">
                     <h2 class="card-title mb-2 w-2/3">
                         {{ item.name }}
@@ -189,15 +208,32 @@ function populateFormEdit(entity) {
                         {{ item.status_text }}
                     </div>
                 </div>
+
                 <p class="text-sm opacity-60 break-words">
                     {{ item.description }}
                 </p>
+
                 <div class="flex items-center">
-                    <p class="text-xs opacity-50 font-bold">Date Uploaded :</p>
-                    <span class="text-xs opacity-50">{{
-                        item.formatted_uploaded_at
-                    }}</span>
+                    <p class="text-xs opacity-50 font-bold">Date Uploaded:</p>
+                    <span class="text-xs opacity-50">
+                        {{ item.formatted_uploaded_at }}
+                    </span>
                 </div>
+
+                <div class="flex items-center" v-if="item.formatted_found_at">
+                    <p class="text-xs opacity-50 font-bold">Date Found:</p>
+                    <span class="text-xs opacity-50">
+                        {{ item.formatted_found_at }}
+                    </span>
+                </div>
+
+                <div class="flex items-center" v-if=" item.found_by">
+                    <p class="text-xs opacity-50 font-bold">Found By:</p>
+                    <span class="text-xs opacity-50">
+                        {{ item.found_by }}
+                    </span>
+                </div>
+
                 <div
                     v-if="$page.props.auth.user.role === 'admin'"
                     class="card-actions justify-end"
@@ -258,6 +294,13 @@ function populateFormEdit(entity) {
                                     { id: 2, name: 'Archive' },
                                 ]"
                                 :errors="form.errors.status"
+                            />
+
+                            <InputFields
+                                v-model="form.found_by"
+                                label="Found By"
+                                type="text"
+                                :errors="form.errors.found_at"
                             />
 
                             <InputFields

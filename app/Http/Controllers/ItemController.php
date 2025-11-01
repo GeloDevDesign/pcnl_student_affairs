@@ -70,11 +70,14 @@ class ItemController extends Controller
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
             'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'status'      => 'required|in:0,1,2', 
-            'found_by'    => 'nullable|exists:users,id', 
-            'found_at'    => 'nullable|date',            
-            'remarks'     => 'nullable|string|max:500',  
+            'status'      => 'required|in:0,1,2',
+            'found_by'    => 'required|max:255',
+            'remarks'     => 'nullable|string|max:500',
         ]);
+
+        if ($request->status == 1) {
+            $validated['found_at'] = now();
+        }
 
 
         // Only handle new image if uploaded

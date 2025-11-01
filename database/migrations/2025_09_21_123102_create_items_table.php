@@ -18,10 +18,10 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('image_url')->nullable();
             $table->dateTime('uploaded_at');
-            $table->tinyInteger('status')->nullable()->default(0); 
-            $table->foreignId('found_by')->nullable()->constrained('users')->nullOnDelete(); 
-            $table->dateTime('found_at')->nullable(); 
-            $table->text('remarks')->nullable(); 
+            $table->tinyInteger('status')->nullable()->default(0);
+            $table->string('found_by')->nullable();
+            $table->dateTime('found_at')->nullable();
+            $table->text('remarks')->nullable();
             $table->timestamps();
         });
     }

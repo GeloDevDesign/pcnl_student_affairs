@@ -29,7 +29,8 @@ class Item extends Model
     ];
 
 
-    protected $appends = ['formatted_uploaded_at', 'status_text'];
+    protected $appends = ['formatted_uploaded_at', 'formatted_found_at', 'status_text'];
+
 
     public function getFormattedUploadedAtAttribute()
     {
