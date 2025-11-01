@@ -7,42 +7,68 @@ use Inertia\Inertia;
 use App\Models\Announcement;
 use App\Models\Event;
 use App\Models\HandBook;
+use App\Models\Item;
+use Carbon\Carbon;
 
 class AnnouncementController extends Controller
 {
     public function index(Request $request)
     {
-        $announcement  = Announcement::with('user')->latest();
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $endOfWeek   = Carbon::now()->endOfWeek();
 
-
-        if ($request->page === 'announcement') {
-            $announcement->when($request->filled('search'), function ($q) use ($request) {
-                $q->whereAny(['title', 'details'], 'like', '%' . $request->search . '%');
+      
+        $announcement = Announcement::with('user')
+            ->latest()
+            ->when($request->page === 'announcement' && $request->filled('search'), function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('title', 'like', '%' . $request->search . '%')
+                        ->orWhere('details', 'like', '%' . $request->search . '%');
+                });
             });
-        }
+
+    
+        $announcementCount = Announcement::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
 
 
-        $event = Event::with('user')->latest();
-        if ($request->page === 'event') {
-            $event->when($request->filled('search'), function ($q) use ($request) {
-                $q->whereAny(['title', 'description'], 'like', '%' . $request->search . '%');
+
+        $event = Event::with('user')
+            ->latest()
+            ->when($request->page === 'event' && $request->filled('search'), function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('title', 'like', '%' . $request->search . '%')
+                        ->orWhere('description', 'like', '%' . $request->search . '%');
+                });
             });
-        }
+
+      
+        $eventCount = Event::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
 
 
-        $handBooks = HandBook::with('user')->latest();
-        if ($request->page === 'hand-books') {
-            $handBooks->when($request->filled('search'), function ($q) use ($request) {
-                $q->whereAny(['title', 'description'], 'like', '%' . $request->search . '%');
+
+        $handBooks = HandBook::with('user')
+            ->latest()
+            ->when($request->page === 'hand-books' && $request->filled('search'), function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('title', 'like', '%' . $request->search . '%')
+                        ->orWhere('description', 'like', '%' . $request->search . '%');
+                });
             });
-        }
 
 
+
+        $itemCount = Item::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
+
+
+   
         return Inertia::render('dashboard/index', [
-            'pageTitle' => 'PCNL - Dashboard',
-            'handBooks' => $handBooks->paginate(10)->onEachSide(1),
-            'announcements' => $announcement->paginate(10)->onEachSide(1),
-            'events' => $event->paginate(10)->onEachSide(1),
+            'pageTitle'       => 'PCNL - Dashboard',
+            'handBooks'       => $handBooks->paginate(10)->onEachSide(1),
+            'announcements'   => $announcement->paginate(10)->onEachSide(1),
+            'events'          => $event->paginate(10)->onEachSide(1),
+            'announcementCount' => $announcementCount,
+            'eventCount'        => $eventCount,
+            'itemCount'         => $itemCount,
         ]);
     }
 

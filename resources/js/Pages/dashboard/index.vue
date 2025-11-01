@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch,onMounted } from "vue";
+import { ref, reactive, watch, onMounted } from "vue";
 import { Head } from "@inertiajs/vue3";
 import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
@@ -31,6 +31,9 @@ defineProps({
     announcements: Object,
     handBooks: Object,
     events: Object,
+    eventCount: Number,
+    announcementCount: Number,
+    itemCount: Number,
 });
 onMounted(() => {
     pageStore.navigatePage("home");
@@ -108,7 +111,12 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
                 :announcements="announcements"
                 v-if="pageStore.currentPage === 'announcement'"
             />
-            <Welcome v-if="pageStore.currentPage === 'home'" />
+            <Welcome
+                :eventCount="eventCount"
+                :announcementCount="announcementCount"
+                :itemCount="itemCount"
+                v-if="pageStore.currentPage === 'home'"
+            />
             <Event :events="events" v-if="pageStore.currentPage === 'event'" />
             <Handbook
                 :handBooks="handBooks"

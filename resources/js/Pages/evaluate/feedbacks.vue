@@ -148,13 +148,13 @@ function handleSubmit() {
                             $page.props.auth.user.role != 'admin'
                         "
                         class="btn btn-primary btn-xs text-white"
-                        :disabled="event.is_ended"
+                        :disabled="!event.is_ended"
                         @click="openModal(event)"
                     >
                         {{
                             event.is_ended
-                                ? "Event has not ended yet."
-                                : "Give Feedback "
+                                ? "Give Feedback"
+                                : "Event has not ended yet."
                         }}
                     </button>
                 </div>

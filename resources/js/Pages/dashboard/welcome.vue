@@ -1,4 +1,15 @@
-<script setup></script>
+<script setup>
+import { Link } from "@inertiajs/vue3";
+import { useNavigatePageStore } from "../../stores/NavigatePageStore";
+
+const pageStore = useNavigatePageStore();
+
+const props = defineProps({
+    eventCount: Number,
+    announcementCount: Number,
+    itemCount: Number,
+});
+</script>
 
 <template>
     <div
@@ -19,24 +30,31 @@
 
         <!-- Right column -->
         <div class="w-full lg:w-1/2 space-y-4">
-            <div class="w-full bg-blue-50 p-4 rounded-lg">
+            <div
+                class="w-full bg-blue-50 p-4 rounded-lg"
+                @click="pageStore.navigatePage('announcement')"
+            >
                 <span class="font-bold text-primary">Announcement</span>
-                <p class="text-sm opacity-70">2 new posts to review</p>
+                <p class="text-sm opacity-70">
+                    {{ announcementCount ?? 0 }} new posts to review
+                </p>
             </div>
 
-            <div class="w-full bg-blue-50 p-4 rounded-lg">
+            <div
+                class="w-full bg-blue-50 p-4 rounded-lg"
+                @click="pageStore.navigatePage('event')"
+            >
                 <span class="font-bold text-primary">Events</span>
-                <p class="text-sm opacity-70">1 upcoming event this week</p>
+                <p class="text-sm opacity-70">
+                    {{ eventCount ?? 0 }} upcoming event this week
+                </p>
             </div>
 
-            <div class="w-full bg-blue-50 p-4 rounded-lg">
-                <span class="font-bold text-primary">Concerns</span>
-                <p class="text-sm opacity-70">3 unresolved student concerns</p>
-            </div>
-
-            <div class="w-full bg-blue-50 p-4 rounded-lg">
-                <span class="font-bold text-primary">Lost & Found</span>
-                <p class="text-sm opacity-70">1 new item reported</p>
+            <div  class="w-full bg-blue-50 p-4 rounded-lg">
+                <Link :href="'/lost-and-found'" class="font-bold text-primary">Lost & Found</Link>
+                <p class="text-sm opacity-70">
+                    {{ itemCount ?? 0 }} new item reported
+                </p>
             </div>
         </div>
     </div>
