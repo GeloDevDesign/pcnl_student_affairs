@@ -70,8 +70,12 @@ class ItemController extends Controller
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
             'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'status'      => 'required|in:0,1,2',
+            'status'      => 'required|in:0,1,2', 
+            'found_by'    => 'nullable|exists:users,id', 
+            'found_at'    => 'nullable|date',            
+            'remarks'     => 'nullable|string|max:500',  
         ]);
+
 
         // Only handle new image if uploaded
         if ($request->hasFile('image_url')) {
@@ -82,7 +86,7 @@ class ItemController extends Controller
 
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
             $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
-        } 
+        }
 
         $item->update($validated);
 

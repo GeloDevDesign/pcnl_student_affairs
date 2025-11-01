@@ -18,12 +18,14 @@ class Item extends Model
         'status',
         'found_at',
         'found_by',
+        'remarks',
         'uploaded_at'
     ];
 
-    // Automatically cast uploaded_at to Carbon instance
+
     protected $casts = [
         'uploaded_at' => 'datetime',
+        'found_at' => 'datetime',
     ];
 
 
@@ -35,6 +37,14 @@ class Item extends Model
             ? $this->uploaded_at->timezone('Asia/Manila')->format('Y-m-d h:i A')
             : null;
     }
+
+    public function getFormattedFoundAtAttribute()
+    {
+        return $this->found_at
+            ? $this->found_at->timezone('Asia/Manila')->format('Y-m-d h:i A')
+            : null;
+    }
+
 
 
     public function user()
