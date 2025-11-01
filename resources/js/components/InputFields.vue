@@ -11,6 +11,9 @@ const props = defineProps({
     form: Object,
 });
 
+const today = new Date();
+const minDate = today.toISOString().split("T")[0];
+
 // v-model for input value
 const model = defineModel({ required: true });
 
@@ -25,11 +28,8 @@ function handleFileChange(e) {
 
 <template>
     <div class="w-full">
-        <!-- For text/date inputs -->
-        <fieldset
-            v-if="props.type === 'text' || props.type === 'date'"
-            class="fieldset w-full"
-        >
+        <!-- For text -->
+        <fieldset v-if="props.type === 'text'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
@@ -42,7 +42,40 @@ function handleFileChange(e) {
                     v-model="model"
                     :type="type"
                     :placeholder="placeholder"
+                />
+            </label>
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
+        </fieldset>
+
+        <!-- for date inputs -->
+        <fieldset v-if="props.type === 'date'" class="fieldset w-full">
+            <legend class="fieldset-legend font-semibold">
+                {{ props.label }}
+            </legend>
+            <label
+                class="input w-full"
+                :class="props.errors ? 'border-1 border-red-500' : ''"
+            >
+                <slot></slot>
+
+                <input
+                    v-model="model"
+                    :type="type"
+                    :placeholder="placeholder"
                     :readonly="readonly"
+                    :min="minDate"
+                    @input="
+                        (e) => {
+                            if (e.target.value < minDate)
+                                e.target.value = minDate;
+                            model = minDate;
+                        }
+                    "
                 />
             </label>
             <p
@@ -54,10 +87,7 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For email inputs -->
-        <fieldset
-            v-if="props.type === 'email'"
-            class="fieldset w-full"
-        >
+        <fieldset v-if="props.type === 'email'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
@@ -83,10 +113,7 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For password inputs with eye toggle -->
-        <fieldset
-            v-if="props.type === 'password'"
-            class="fieldset w-full"
-        >
+        <fieldset v-if="props.type === 'password'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>

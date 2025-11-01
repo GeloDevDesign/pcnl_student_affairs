@@ -16,6 +16,8 @@ class Item extends Model
         'description',
         'image_url',
         'status',
+        'found_at',
+        'found_by',
         'uploaded_at'
     ];
 

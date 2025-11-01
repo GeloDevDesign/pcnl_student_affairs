@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); 
             $table->string('name');
             $table->text('description')->nullable();
             $table->text('image_url')->nullable();
             $table->dateTime('uploaded_at');
-            $table->tinyInteger('status')->nullable()->default(0);
+            $table->tinyInteger('status')->nullable()->default(0); 
+            $table->foreignId('found_by')->nullable()->constrained('users')->nullOnDelete(); 
+            $table->dateTime('found_at')->nullable();
+            $table->text('remarks')->nullable();
             $table->timestamps();
         });
     }
