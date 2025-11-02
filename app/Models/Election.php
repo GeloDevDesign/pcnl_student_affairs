@@ -10,6 +10,7 @@ class Election extends Model
     const SCHEDULED = 0;
     const ONGOING   = 1;
     const CLOSED    = 2;
+    const ARCHIVE    = 3;
 
     protected $fillable = [
         'user_id',

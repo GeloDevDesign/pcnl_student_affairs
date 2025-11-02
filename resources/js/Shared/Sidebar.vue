@@ -75,7 +75,7 @@ const logout = () => {
                         <!-- Evaluate -->
                         <NavLink
                             route="/evaluate"
-                            buttonName="Evaluate"
+                            buttonName="Evaluation"
                             :isCollapsed="isCollapsed"
                         >
                             <template #icon>
@@ -246,7 +246,7 @@ const logout = () => {
                 <!-- Evaluate -->
                 <NavLink
                     route="/evaluate"
-                    buttonName="Evaluate"
+                    buttonName="Evaluation"
                     :isCollapsed="isCollapsed"
                 >
                     <template #icon>
@@ -261,7 +261,7 @@ const logout = () => {
                 <!-- SCC Officers -->
                 <NavLink
                     route="/scc-officers"
-                    buttonName="SCC Officers"
+                    buttonName="SCC Voting"
                     :isCollapsed="isCollapsed"
                 >
                     <template #icon>

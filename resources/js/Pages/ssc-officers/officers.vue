@@ -50,6 +50,7 @@ const formatDate = (dateString) => {
 const SCHEDULED = 0;
 const ONGOING = 1;
 const CLOSED = 2;
+const ARCHIVE = 3;
 
 function statusLabel(status) {
     switch (status) {
@@ -59,6 +60,8 @@ function statusLabel(status) {
             return "Ongoing";
         case CLOSED:
             return "Closed";
+        case ARCHIVE:
+            return "Archive";
         default:
             return "Unknown";
     }
@@ -71,6 +74,8 @@ function statusColor(status) {
         case ONGOING:
             return "bg-green-100 text-green-700";
         case CLOSED:
+            return "bg-red-100 text-red-700";
+        case ARCHIVE:
             return "bg-red-100 text-red-700";
         default:
             return "bg-gray-100 text-gray-700";
@@ -410,7 +415,7 @@ function handleAddElection() {
             );
         },
         onError: (error) => {
-            console.log(error)
+            console.log(error);
             isLoading.value = false;
             toastAlert(
                 page.props.errors.createElection?.[0] ||
@@ -549,49 +554,49 @@ function setElection() {
 </script>
 
 <template>
-   <div class="flex flex-col md:flex-row md:items-end gap-3">
-    <!-- Election select -->
-    <div class="flex-1">
-        <InputFields
-            v-model="CURRENT_ELECTION"
-            label="Select Election"
-            type="select"
-            placeholder="Election title"
-            :selectionItems="props.elections"
-            :errors="editElectionForm.errors.title"
-        />
-    </div>
-
-    <!-- Set Election Button -->
-    <button
-        @click="setElection"
-        class="btn bg-green-600 text-white flex items-center justify-center gap-1 md:mt-0"
-    >
-        <span>Set Election</span>
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-5 h-5"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"
+    <div class="flex flex-col md:flex-row md:items-end gap-3">
+        <!-- Election select -->
+        <div class="flex-1">
+            <InputFields
+                v-model="CURRENT_ELECTION"
+                label="Select Election"
+                type="select"
+                placeholder="Election title"
+                :selectionItems="props.elections"
+                :errors="editElectionForm.errors.title"
             />
-        </svg>
-    </button>
+        </div>
 
-    <!-- Create New Election Button -->
-    <button
-        class="btn btn-primary flex items-center justify-center md:mt-0"
-        @click="openAddElectionModal"
-    >
-        Create New Election
-    </button>
-</div>
+        <!-- Set Election Button -->
+        <button
+            @click="setElection"
+            class="btn bg-green-600 text-white flex items-center justify-center gap-1 md:mt-0"
+        >
+            <span>Set Election</span>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"
+                />
+            </svg>
+        </button>
+
+        <!-- Create New Election Button -->
+        <button
+            class="btn btn-primary flex items-center justify-center md:mt-0"
+            @click="openAddElectionModal"
+        >
+            Create New Election
+        </button>
+    </div>
 
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-6 mt-6">
         <!-- Left Column: Election Details & Party List -->
@@ -1142,12 +1147,12 @@ function setElection() {
                     />
                 </div>
 
-                <fieldset
-                   
-                    class="fieldset w-full"
-                >
+                <fieldset class="fieldset w-full">
                     <legend class="fieldset-legend">Status</legend>
-                    <select class="select w-full" v-model="editElectionForm.status">
+                    <select
+                        class="select w-full"
+                        v-model="editElectionForm.status"
+                    >
                         <option disabled value="">Select Status</option>
                         <option value="0">SCHEDULED</option>
                         <option value="1">ONGOING</option>

@@ -92,7 +92,7 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
                 </NavCard>
 
                 <NavCard
-                    :cardTitle="'HANDBOOKS'"
+                    :cardTitle="'HAND BOOKS'"
                     :cardDescription="'View to see handbooks'"
                     :cardValue="'hand-books'"
                     @navigate-action="pageStore.navigatePage"
