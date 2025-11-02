@@ -44,7 +44,7 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
             <Banner
-                :pageName="'EVALUATE'"
+                :pageName="'EVALUATION'"
                 :breadCrumbPages="breadCrumbPages"
                 :currentPage="pageStore.currentPage"
                 @breadcrumb-click="(page) => pageStore.navigatePage(page)"

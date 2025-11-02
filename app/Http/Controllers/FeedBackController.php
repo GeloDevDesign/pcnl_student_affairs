@@ -20,10 +20,9 @@ class FeedBackController extends Controller
         // Base queries
         $instructorsQuery = Instructor::with(['user'])->latest();
         $formsQuery       = Form::with(['user'])->latest();
-        $eventsQuery      = Event::query()->with([
-            $user->isAdmin() ? 'feedbacks' : 'userFeedback',
-            'user',
-        ])
+        $eventsQuery = Event::query()
+            ->when($user->isAdmin(), fn($q) => $q->with(['feedbacks.user', 'user']))
+            ->unless($user->isAdmin(), fn($q) => $q->with(['userFeedback.user', 'user']))
             ->withExists([
                 'feedbacks as is_feedback' => function ($q) use ($user) {
                     $q->where('user_id', $user->id);
@@ -33,9 +32,11 @@ class FeedBackController extends Controller
             ->withAvg('feedbacks', 'ratings')
             ->latest();
 
+
+
         // Apply filters based on request page
         if ($request->filled('search')) {
-          
+
             switch ($request->page) {
 
                 case 'feedbacks':

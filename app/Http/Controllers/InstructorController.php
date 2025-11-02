@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Instructor;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class InstructorController extends Controller
 {
@@ -26,10 +27,11 @@ class InstructorController extends Controller
         ];
 
 
-        $validated = $request->validate([
-            'name' => 'required|min:2|max:255',
-            'department'  => 'nullable|integer|in:' . implode(',', array_keys($departments)),
+        $validated =   $request->validate([
+            'name' => 'required|min:2|max:255|unique:instructors,name',
+            'department' => 'required|string|max:255',
         ]);
+
 
         $request->user()->instructors()->create($validated);
 
@@ -45,6 +47,7 @@ class InstructorController extends Controller
      */
     public function update(Request $request, Instructor $instructor)
     {
+
         $departments = [
             1 => 'BSA',
             2 => 'BSBA',
@@ -55,9 +58,14 @@ class InstructorController extends Controller
         ];
 
 
-        $validated = $request->validate([
-            'name' => 'required|min:2|max:255',
-            'department'  => 'nullable|integer|in:' . implode(',', array_keys($departments)),
+        $validated =    $request->validate([
+            'name' => [
+                'required',
+                'min:2',
+                'max:255',
+                Rule::unique('instructors', 'name')->ignore($id),
+            ],
+            'department' => 'required|string|max:255',
         ]);
 
         $instructor->update($validated);
