@@ -152,6 +152,14 @@ function populateFormEdit(entity) {
                 />
 
                 <InputFields
+                    v-model="form.found_by"
+                    :label="'Found By'"
+                    :type="'text'"
+                    :placeholder="'Description for event'"
+                    :errors="form.errors.found_by"
+                />
+
+                <InputFields
                     v-model="form.image_url"
                     label="Upload Image"
                     type="file"
@@ -227,7 +235,7 @@ function populateFormEdit(entity) {
                     </span>
                 </div>
 
-                <div class="flex items-center" v-if=" item.found_by">
+                <div class="flex items-center" v-if="item.found_by">
                     <p class="text-xs opacity-50 font-bold">Found By:</p>
                     <span class="text-xs opacity-50">
                         {{ item.found_by }}
@@ -300,7 +308,7 @@ function populateFormEdit(entity) {
                                 v-model="form.found_by"
                                 label="Found By"
                                 type="text"
-                                :errors="form.errors.found_at"
+                                :errors="form.errors.found_by"
                             />
 
                             <InputFields

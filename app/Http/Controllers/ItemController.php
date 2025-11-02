@@ -40,7 +40,8 @@ class ItemController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
-            'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+            'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'found_by'    => 'required|string|max:255',
         ]);
 
 
@@ -71,7 +72,7 @@ class ItemController extends Controller
             'description' => 'required|string|max:255|min:5',
             'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'status'      => 'required|in:0,1,2',
-            'found_by'    => 'required|max:255',
+            'found_by'    => 'required|string|max:255',
             'remarks'     => 'nullable|string|max:500',
         ]);
 
