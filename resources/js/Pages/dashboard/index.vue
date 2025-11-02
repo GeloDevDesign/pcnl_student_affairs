@@ -98,7 +98,7 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
                 </NavCard>
 
                 <NavCard
-                    :cardTitle="'HAND BOOKS'"
+                    :cardTitle="'HAND BOOK'"
                     :cardDescription="
                         $page.props.auth.user.role === 'admin'
                             ? 'Upload Handbooks'

@@ -4,6 +4,7 @@ import { Head } from "@inertiajs/vue3";
 import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
+import { useForm, usePage } from "@inertiajs/vue3";
 
 import Layout from "../../shared/Layout.vue";
 import Banner from "../../components/Banner.vue";
@@ -16,6 +17,7 @@ import EvalForms from "./eval-forms.vue";
 
 const pageStore = useNavigatePageStore();
 const searchIndex = ref("feedbacks");
+const page = usePage();
 
 watch(
     () => pageStore.currentPage,
@@ -77,7 +79,12 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
 
                 <NavCard
                     :cardTitle="'INSTRUCTORS'"
-                    :cardDescription="'Evaluation Review'"
+                  
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Evaluation Review'
+                            : 'List of Instructors'
+                    "
                     :cardValue="'instructors'"
                     @navigate-action="pageStore.navigatePage"
                 >
