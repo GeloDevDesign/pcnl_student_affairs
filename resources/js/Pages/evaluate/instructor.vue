@@ -161,7 +161,7 @@ const populateFormEdit = (entity) => {
                         }}
                     </th>
                     <td>{{ ins.name }}</td>
-                    <td>{{ ins.department }}</td>
+                    <td>{{ ins.department_name }}</td>
                     <td
                         class="space-x-2"
                         v-if="$page.props.auth.user.role === 'admin'"

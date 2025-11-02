@@ -12,9 +12,37 @@ class Instructor extends Model
         'department'
     ];
 
+    protected $appends = ['department_name']; // to include department_name automatically when converting to JSON
+
+    protected static $departments = [
+        1 => 'BSA',
+        2 => 'BSBA',
+        3 => 'BSCRIM',
+        4 => 'BSIT',
+        5 => 'BSCE',
+        6 => 'BEE',
+    ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Accessor: Get readable department name
+    public function getDepartmentNameAttribute()
+    {
+        return self::$departments[$this->department] ?? 'Unknown';
+    }
+
+    // Optional: Mutator (so you can set by name or ID)
+    public function setDepartmentAttribute($value)
+    {
+        if (is_numeric($value)) {
+            $this->attributes['department'] = $value;
+        } else {
+            // find ID by name
+            $id = array_search(strtoupper($value), self::$departments);
+            $this->attributes['department'] = $id ?: null;
+        }
     }
 }

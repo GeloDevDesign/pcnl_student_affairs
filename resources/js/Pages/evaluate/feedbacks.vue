@@ -16,13 +16,13 @@ const props = defineProps({
 const isLoading = ref(false);
 const dialogRef = ref(null);
 const dialogRef2 = ref(null);
-const selectedItem = ref(null);
+const selectedItem = ref(null);             // <-- used for feedback modal title
 const selectedFeedbacks = ref(null);
 // form to submit feedback
 const form = useForm({
     event_id: null,
     comments: "",
-    ratings: 5, // ⭐ default is 5 stars
+    ratings: 0, // ⭐ default is 5 stars
 });
 
 function openModal(event) {
@@ -33,6 +33,7 @@ function openModal(event) {
     form.ratings = 5;
     form.comments = "";
     selectedFeedbacks.value = event;
+    selectedItem.value = event;               // <-- small fix: set selectedItem so modal title shows
 
     dialogRef.value.showModal();
 }
@@ -96,18 +97,18 @@ function handleSubmit() {
                             {{ event.user_feedback.comments }}
                         </p>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-center">
                         <span class="text-xs opacity-80"> Ratings:</span>
                         <div class="rating rating-sm">
+                            <!-- DISPLAY: disabled radio inputs with correct checked logic -->
                             <template v-for="star in 5" :key="star">
-                                <div
-                                    :aria-current="
-                                        star + 1 === event.user_feedback.ratings
-                                    "
-                                    :aria-label="`${star} star`"
+                                <input
+                                    type="radio"
+                                    aria-label="rating"
                                     class="mask mask-star-2 bg-orange-400"
                                     disabled
-                                ></div>
+                                    :checked="star <= (event.user_feedback.ratings || 0)"
+                                />
                             </template>
                         </div>
                     </div>
@@ -152,6 +153,7 @@ function handleSubmit() {
                         @click="openModal(event)"
                     >
                         {{
+
                             event.is_ended
                                 ? "Give Feedback"
                                 : "Event has not ended yet."
@@ -186,10 +188,13 @@ function handleSubmit() {
                         >Your Rating</span
                     >
                     <div class="rating rating-sm">
+                        <!-- FIXED: bind radio to form.ratings, use v-model.number and :value to keep numeric -->
                         <template v-for="star in 5" :key="star">
                             <input
                                 type="radio"
                                 :value="star"
+                                v-model.number="form.ratings"
+                                name="ratings"
                                 :aria-label="`${star} star`"
                                 class="mask mask-star-2 bg-orange-400"
                             />
@@ -241,7 +246,7 @@ function handleSubmit() {
                     </span>
                 </div>
 
-                <div class="flex gap-1">
+                <div class="flex gap-1 items-center">
                     <span class="text-base font-bold">
                         {{
                             Math.round(
@@ -249,13 +254,18 @@ function handleSubmit() {
                             ) / 10
                         }}
                     </span>
+
+                    <!-- display rounded average with filled stars -->
                     <div class="rating rating-sm">
-                        <div
-                            checked
-                            class="mask mask-star-2 bg-orange-400"
-                            aria-label="1 star"
-                            aria-current="true"
-                        ></div>
+                        <template v-for="star in 5" :key="star">
+                            <input
+                                type="radio"
+                                disabled
+                                class="mask mask-star-2 bg-orange-400"
+                                :checked="star <= Math.round(selectedFeedbacks?.feedbacks_avg_ratings || 0)"
+                                aria-label="avg star"
+                            />
+                        </template>
                     </div>
                 </div>
             </div>
