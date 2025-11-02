@@ -1157,6 +1157,7 @@ function setElection() {
                         <option value="0">SCHEDULED</option>
                         <option value="1">ONGOING</option>
                         <option value="2">CLOSED</option>
+                         <option value="3">ARCHIVE</option>
                     </select>
                     <p
                         v-if="editElectionForm.errors.status"
