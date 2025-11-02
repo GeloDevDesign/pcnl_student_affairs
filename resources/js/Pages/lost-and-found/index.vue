@@ -44,7 +44,11 @@ const breadCrumbPages = ["Items"];
             >
                 <NavCard
                     :cardTitle="'LOST & FOUND'"
-                    :cardDescription="'Post Item'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Post Item'
+                            : 'View Items'
+                    "
                     :cardValue="'announcement'"
                     @navigate-action="pageStore.navigatePage"
                 >

@@ -16,7 +16,7 @@ const props = defineProps({
 const isLoading = ref(false);
 const dialogRef = ref(null);
 const dialogRef2 = ref(null);
-const selectedItem = ref(null);             // <-- used for feedback modal title
+const selectedItem = ref(null); // <-- used for feedback modal title
 const selectedFeedbacks = ref(null);
 // form to submit feedback
 const form = useForm({
@@ -33,7 +33,7 @@ function openModal(event) {
     form.ratings = 5;
     form.comments = "";
     selectedFeedbacks.value = event;
-    selectedItem.value = event;               // <-- small fix: set selectedItem so modal title shows
+    selectedItem.value = event; // <-- small fix: set selectedItem so modal title shows
 
     dialogRef.value.showModal();
 }
@@ -107,7 +107,10 @@ function handleSubmit() {
                                     aria-label="rating"
                                     class="mask mask-star-2 bg-orange-400"
                                     disabled
-                                    :checked="star <= (event.user_feedback.ratings || 0)"
+                                    :checked="
+                                        star <=
+                                        (event.user_feedback.ratings || 0)
+                                    "
                                 />
                             </template>
                         </div>
@@ -153,7 +156,6 @@ function handleSubmit() {
                         @click="openModal(event)"
                     >
                         {{
-
                             event.is_ended
                                 ? "Give Feedback"
                                 : "Event has not ended yet."
@@ -262,7 +264,13 @@ function handleSubmit() {
                                 type="radio"
                                 disabled
                                 class="mask mask-star-2 bg-orange-400"
-                                :checked="star <= Math.round(selectedFeedbacks?.feedbacks_avg_ratings || 0)"
+                                :checked="
+                                    star <=
+                                    Math.round(
+                                        selectedFeedbacks?.feedbacks_avg_ratings ||
+                                            0
+                                    )
+                                "
                                 aria-label="avg star"
                             />
                         </template>
@@ -278,8 +286,15 @@ function handleSubmit() {
                 >
                     <div class="flex justify-between items-center mb-1">
                         <span class="font-semibold text-sm">
-                            {{ feedback.user?.name || "Anonymous" }}
+                            {{
+                                feedback.user
+                                    ? feedback.user.first_name +
+                                      " " +
+                                      feedback.user.last_name
+                                    : "Unknown User"
+                            }}
                         </span>
+
                         <div class="rating rating-sm">
                             <template v-for="star in 5" :key="star">
                                 <input

@@ -90,7 +90,7 @@ const logout = () => {
                         <!-- SCC Officers -->
                         <NavLink
                             route="/scc-officers"
-                            buttonName="SCC Voting"
+                            buttonName="SSC Voting"
                             :isCollapsed="isCollapsed"
                         >
                             <template #icon>
@@ -261,7 +261,7 @@ const logout = () => {
                 <!-- SCC Officers -->
                 <NavLink
                     route="/scc-officers"
-                    buttonName="SCC Voting"
+                    buttonName="SSC Voting"
                     :isCollapsed="isCollapsed"
                 >
                     <template #icon>

@@ -4,6 +4,7 @@ import { Head } from "@inertiajs/vue3";
 import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
+import { useForm, usePage } from "@inertiajs/vue3";
 
 import Layout from "../../shared/Layout.vue";
 import Banner from "../../components/Banner.vue";
@@ -17,6 +18,7 @@ import Annnouncement from "./announcement.vue";
 
 const pageStore = useNavigatePageStore();
 const searchIndex = ref("announcement");
+const page = usePage();
 
 watch(
     () => pageStore.currentPage,
@@ -63,7 +65,11 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
             >
                 <NavCard
                     :cardTitle="'ANNOUNCEMENTS'"
-                    :cardDescription="'Post annoucements'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Post annoucements'
+                            : 'View annoucements'
+                    "
                     :cardValue="'announcement'"
                     @navigate-action="pageStore.navigatePage"
                 >
@@ -78,7 +84,7 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
 
                 <NavCard
                     :cardTitle="'Events'"
-                    :cardDescription="'Add / Create Events'"
+                    :cardDescription=" $page.props.auth.user.role === 'admin' ? 'Add / Create Events' : 'View Events'"
                     :cardValue="'event'"
                     @navigate-action="pageStore.navigatePage"
                 >
@@ -93,7 +99,11 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
 
                 <NavCard
                     :cardTitle="'HAND BOOKS'"
-                    :cardDescription="'View to see handbooks'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Upload Handbooks'
+                            : 'View to see handbooks'
+                    "
                     :cardValue="'hand-books'"
                     @navigate-action="pageStore.navigatePage"
                 >

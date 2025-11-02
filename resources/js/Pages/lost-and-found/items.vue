@@ -147,7 +147,7 @@ function populateFormEdit(entity) {
                     v-model="form.description"
                     :label="'Description'"
                     :type="'text'"
-                    :placeholder="'Description for event'"
+                    :placeholder="'Description of lost item'"
                     :errors="form.errors.description"
                 />
 
@@ -155,7 +155,7 @@ function populateFormEdit(entity) {
                     v-model="form.found_by"
                     :label="'Found By'"
                     :type="'text'"
-                    :placeholder="'Description for event'"
+                    :placeholder="'Founded by name'"
                     :errors="form.errors.found_by"
                 />
 
@@ -288,7 +288,7 @@ function populateFormEdit(entity) {
                                 v-model="form.description"
                                 :label="'Description'"
                                 :type="'text'"
-                                :placeholder="'Description for event'"
+                                :placeholder="'Description of lost item'"
                                 :errors="form.errors.description"
                             />
 
