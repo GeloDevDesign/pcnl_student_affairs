@@ -27,11 +27,11 @@ class InstructorController extends Controller
         ];
 
 
-        $validated =   $request->validate([
-            'name' => 'required|min:2|max:255|unique:instructors,name',
-            'department' => 'required|string|max:255',
-        ]);
 
+        $validated = $request->validate([
+            'name' => 'required|min:2|max:255|unique:instructors,name',
+            'department'  => 'nullable|integer|in:' . implode(',', array_keys($departments)),
+        ]);
 
         $request->user()->instructors()->create($validated);
 
@@ -47,7 +47,6 @@ class InstructorController extends Controller
      */
     public function update(Request $request, Instructor $instructor)
     {
-
         $departments = [
             1 => 'BSA',
             2 => 'BSBA',
@@ -58,14 +57,14 @@ class InstructorController extends Controller
         ];
 
 
-        $validated =    $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'min:2',
                 'max:255',
                 Rule::unique('instructors', 'name')->ignore($id),
             ],
-            'department' => 'required|string|max:255',
+            'department'  => 'nullable|integer|in:' . implode(',', array_keys($departments)),
         ]);
 
         $instructor->update($validated);
