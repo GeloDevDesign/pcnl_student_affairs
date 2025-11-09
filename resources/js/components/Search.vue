@@ -2,6 +2,7 @@
 import { defineProps, defineModel } from "vue";
 import { ref, computed, watch } from "vue";
 
+
 const search = ref("");
 
 const emit = defineEmits(["query-search"]);
@@ -18,6 +19,7 @@ const reset = () => {
 
 <template>
     <div class="flex justify-end w-auto gap-2">
+        <Filter :buttonName="'Filter Role'" />
         <input
             v-model="search"
             class="input join-item bg-white lg:input-sm md:input-sm input-xs"

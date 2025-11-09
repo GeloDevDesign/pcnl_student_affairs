@@ -20,26 +20,23 @@ class UserController extends Controller
     {
         $pageTitle = 'Student List';
 
+        $filterRole = $request->filter ?? 'admin';
+
+        $query = User::where('role', $filterRole);
+
         if ($request->filled('search')) {
-            $students = User::whereIn('role', ['student', 'admin'])
-                ->where(function ($query) use ($request) {
-                    $searchTerm = $request->input('search');
-                    $query->where('first_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('email', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('id_number', 'like', '%' . $searchTerm . '%');
-                })
-                ->orderBy('first_name')
-                ->paginate(10)
-                ->withQueryString();
-        } else {
-            $students = User::where('role', 'student')
-                ->orderBy('first_name')
-                ->paginate(10);
+            $query->where(function ($query) use ($request) {
+                $searchTerm = $request->input('search');
+                $query->where('first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('id_number', 'like', '%' . $searchTerm . '%');
+            });
         }
 
+        $users =   $query->orderBy('last_name')->paginate(10)->withQueryString();
 
-        return inertia('user-management/index', compact('pageTitle', 'students'));
+        return inertia('user-management/index', compact('pageTitle', 'users'));
     }
 
     /**

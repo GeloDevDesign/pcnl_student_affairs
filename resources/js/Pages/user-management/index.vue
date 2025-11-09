@@ -9,6 +9,7 @@ import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
 import Pagination from "../../components/Pagination.vue";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
+import Filter from "../../components/Filter.vue";
 import Swal from "sweetalert2";
 
 const page = usePage();
@@ -22,7 +23,7 @@ const searchIndex = ref("users");
 const { applySearch } = useSearchAndFilter(searchIndex);
 
 const props = defineProps({
-    students: Object, // comes from controller
+    users: Object, // comes from controller
     errors: Object,
     pageTitle: String,
 });
@@ -118,7 +119,18 @@ const populateFormEdit = (student) => {
     form.role = student.role;
     form.email = student.email;
     form.id_number = student.id_number;
+};
 
+const applyRoleFilter = (roleValue) => {
+    router.get(
+        "/users",
+        { filter: roleValue },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        }
+    );
 };
 
 const resetPopulate = () => {
@@ -141,7 +153,15 @@ const resetPopulate = () => {
             </Banner>
 
             <!-- ✅ Add Student Modal -->
-            <div class="w-full flex justify-end mb-4">
+            <div class="w-full flex justify-end mb-4 gap-2">
+                <Filter
+                    :buttonName="'Filter Role'"
+                    @filter="applyRoleFilter"
+                    :filterItems="[
+                        { value: 'admin', name: 'Admin' },
+                        { value: 'student', name: 'Student' },
+                    ]"
+                />
                 <ModalAction
                     v-if="$page.props.auth.user.role === 'admin'"
                     :isLoading="isLoading"
@@ -221,7 +241,7 @@ const resetPopulate = () => {
                 </ModalAction>
             </div>
 
-            <!-- ✅ Students Table -->
+            <!-- ✅ users Table -->
             <div class="overflow-x-auto bg-white">
                 <table class="table">
                     <thead>
@@ -238,13 +258,12 @@ const resetPopulate = () => {
                     </thead>
                     <tbody>
                         <tr
-                            v-for="(student, index) in students.data"
+                            v-for="(student, index) in users.data"
                             :key="student.id"
                         >
                             <th>
                                 {{
-                                    (students.current_page - 1) *
-                                        students.per_page +
+                                    (users.current_page - 1) * users.per_page +
                                     (index + 1)
                                 }}
                             </th>
@@ -282,7 +301,7 @@ const resetPopulate = () => {
                 </table>
             </div>
 
-            <Pagination :data="students" />
+            <Pagination :data="users" />
 
             <!-- ✅ Edit Modal -->
             <dialog ref="dialogRef" id="student_edit_modal" class="modal">
@@ -334,7 +353,7 @@ const resetPopulate = () => {
                                     :label="'Department'"
                                     type="select"
                                     :selectionItems="[
-                                        { id: 'BSA' , name: 'BSA' },
+                                        { id: 'BSA', name: 'BSA' },
                                         { id: 'BSBA', name: 'BSBA' },
                                         { id: 'BSCRIM', name: 'BSCRIM' },
                                         { id: 'BSIT', name: 'BSIT' },

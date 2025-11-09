@@ -22,8 +22,12 @@ if (user && ["admin", "manager"].includes(user.role)) {
     let warningTimer;
     let alertShown = false;
 
-    const LOGOUT_TIME = 5000; // 5 min
-    const WARNING_TIME = 3000; // 30 sec before logout
+    // Conversions:
+    // 5 minutes * 60 seconds/minute * 1000 milliseconds/second = 300,000 ms
+    // 30 seconds * 1000 milliseconds/second = 30,000 ms
+
+    const LOGOUT_TIME = 5 * 60 * 1000; // 5 min
+    const WARNING_TIME = 30 * 1000; // 30 sec before logout
 
     function startTimers() {
         clearTimeout(idleTimer);
@@ -40,7 +44,7 @@ if (user && ["admin", "manager"].includes(user.role)) {
                     timer: WARNING_TIME,
                     timerProgressBar: true,
                     showConfirmButton: false,
-                })
+                });
             }
         }, LOGOUT_TIME - WARNING_TIME);
 
