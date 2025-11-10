@@ -35,8 +35,8 @@ class UserController extends Controller
         }
 
         $users =   $query->orderBy('last_name')->paginate(10)->withQueryString();
-
-        return inertia('user-management/index', compact('pageTitle', 'users'));
+        $currentFilter =  $filterRole;
+        return inertia('user-management/index', compact('pageTitle', 'users', 'currentFilter'));
     }
 
     /**

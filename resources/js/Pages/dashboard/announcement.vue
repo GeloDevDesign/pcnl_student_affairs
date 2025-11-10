@@ -18,11 +18,11 @@ const dialogRef = ref(null);
 const form = useForm({
     title: "",
     details: "",
+    image_url: null,
 });
 
 const props = defineProps({
     announcements: Object,
-  
     errors: Object,
 });
 
@@ -43,20 +43,37 @@ const handleSubmit = ({ closeModal }) => {
     });
 };
 
-const handleUpadte = () => {
+function handleUpadte() {
+    if (!selectedItem.value) return;
+
     isLoading.value = true;
-    form.patch(`/announcements/${selectedItem.value.id}`, {
+
+    // Use FormData for file uploads
+    const payload = new FormData();
+    payload.append("title", form.title);
+    payload.append("details", form.details);
+    if (form.image_url) {
+        payload.append("image_url", form.image_url);
+    }
+
+    // Add _method=PATCH for Laravel to recognize patch request
+    payload.append("_method", "PATCH");
+
+    router.post(`/announcements/${selectedItem.value.id}`, payload, {
         preserveScroll: true,
         onSuccess: () => {
+            form.reset();
+            selectedItem.value = null;
             dialogRef.value.close();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
+            form.image_url = null;
         },
-        onError: () => {
+        onError: (error) => {
             isLoading.value = false;
         },
     });
-};
+}
 
 const handleDelete = async (entity) => {
     // Show confirm dialog
@@ -128,6 +145,13 @@ const populateFormEdit = (entity) => {
                     :placeholder="'Details for announcement'"
                     :errors="form.errors.details"
                 />
+
+                <InputFields
+                    v-model="form.image_url"
+                    label="Upload Image"
+                    type="file"
+                    :errors="form.errors.image_url"
+                />
             </Form>
         </ModalAction>
     </div>
@@ -139,8 +163,11 @@ const populateFormEdit = (entity) => {
                     <th></th>
                     <th>Title</th>
                     <th>Details</th>
+                    <th>Image Attached</th>
                     <th>Date Created</th>
-                    <th  v-if="$page.props.auth.user.role === 'admin'">Action</th>
+                    <th v-if="$page.props.auth.user.role === 'admin'">
+                        Action
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -155,7 +182,19 @@ const populateFormEdit = (entity) => {
                     <td>{{ ann.title }}</td>
                     <td>{{ ann.details }}</td>
                     <td>{{ ann.created_at }}</td>
-                    <td class="space-x-2"  v-if="$page.props.auth.user.role === 'admin'">
+                    <td>
+                        <a :href="`/storage/${ann.image_url}`" target="_blank">
+                            <img
+                                :src="`/storage/${ann.image_url}`"
+                                class="h-14 w-14 object-cover rounded cursor-pointer"
+                            />
+                        </a>
+                    </td>
+
+                    <td
+                        class="space-x-2"
+                        v-if="$page.props.auth.user.role === 'admin'"
+                    >
                         <button
                             class="btn btn-primary btn-xs text-white"
                             @click="populateFormEdit(ann)"
@@ -206,6 +245,23 @@ const populateFormEdit = (entity) => {
                                 :placeholder="'Details for announcement'"
                                 :errors="form.errors.details"
                             />
+
+                            <InputFields
+                                v-model="form.image_url"
+                                label="Upload Image"
+                                type="file"
+                                :errors="form.errors.image_url"
+                            />
+                            <div
+                                role="alert"
+                                class="alert alert-warning alert-soft"
+                            >
+                                <span class="text-warning font-medium">
+                                    ⚠️ Note: Uploading a new file will remove
+                                    the existing file and replace it with the
+                                    new version.
+                                </span>
+                            </div>
                         </Form>
                     </div>
                     <div class="w-full flex justify-end gap-2 mt-2">

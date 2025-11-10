@@ -1,26 +1,34 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { Funnel } from "lucide-vue-next";
 
 const props = defineProps({
-    buttonName: {
-        type: String,
-        default: "No Filter Name",
-    },
-    filterItems: {
-        type: Array,
-        default: () => [],
-    },
+    buttonName: String,
+    filterItems: Array,
+    selected: String, // role from backend
 });
 
 const emit = defineEmits(["filter"]);
-
-// store selected item
 const selectedName = ref("");
 
+// Set selected label on load
+watch(
+    () => props.selected,
+    (newValue) => {
+        const found = props.filterItems.find((i) => i.value === newValue);
+        selectedName.value = found ? found.name : "";
+    },
+    { immediate: true }
+);
+
 function selectFilter(item) {
-    selectedName.value = item.name; // update displayed name
-    emit("filter", item.value); // emit selected value to parent
+    selectedName.value = item.name;
+    emit("filter", item.value);
+}
+
+function clearFilter() {
+    selectedName.value = "";
+    emit("filter", null);
 }
 </script>
 
@@ -41,10 +49,10 @@ function selectFilter(item) {
         id="popover-1"
         style="position-anchor: --anchor-1"
     >
-        <li v-for="(item, index) in filterItems" :key="index">
-            <a @click="selectFilter(item)">
-                {{ item.name }}
-            </a>
+        <li v-for="item in filterItems" :key="item.value">
+            <a @click="selectFilter(item)">{{ item.name }}</a>
         </li>
+
+        <!-- <li><a class="text-error" @click="clearFilter">Clear Filter</a></li> -->
     </ul>
 </template>

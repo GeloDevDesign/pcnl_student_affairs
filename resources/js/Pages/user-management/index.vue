@@ -26,6 +26,7 @@ const props = defineProps({
     users: Object, // comes from controller
     errors: Object,
     pageTitle: String,
+    currentFilter: String,
 });
 
 // Create & Update form
@@ -156,12 +157,14 @@ const resetPopulate = () => {
             <div class="w-full flex justify-end mb-4 gap-2">
                 <Filter
                     :buttonName="'Filter Role'"
-                    @filter="applyRoleFilter"
                     :filterItems="[
                         { value: 'admin', name: 'Admin' },
                         { value: 'student', name: 'Student' },
                     ]"
+                    :selected="currentFilter"
+                    @filter="applyRoleFilter"
                 />
+
                 <ModalAction
                     v-if="$page.props.auth.user.role === 'admin'"
                     :isLoading="isLoading"
