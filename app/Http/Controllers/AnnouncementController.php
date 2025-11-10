@@ -79,18 +79,24 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255|min:5',
             'details' => 'required|string',
             'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'date'        => 'required|date',
+        'publish_at' => 'required|date',
         ]);
 
-        // Handle image upload
+
         if ($request->hasFile('image_url')) {
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
-            $path = $request->file('image_url')->storeAs('items', $filename, 'public');
+            $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
         }
+
+        $validated['publish_at'] = $validated['publish_at']
+            ? Carbon::parse($validated['publish_at'])->format('Y-m-d')
+            : null;
+
         $request->user()->announcements()->create($validated);
 
         return redirect()->back()->with('success', 'Announcement created successfully.');
     }
+
 
     public function update(Request $request, Announcement $announcement)
     {
@@ -98,20 +104,20 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255|min:5',
             'details' => 'required|string',
             'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'date'        => 'required|date',
+            'publish_at'        => 'required|date',
         ]);
+       
 
         if ($request->hasFile('image_url')) {
-            // Delete old image if exists
-            if ($announcement->image_url) {
-                Storage::disk('public')->delete($announcement->image_url);
-            }
-
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
             $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
         }
 
+        $validated['publish_at'] = $validated['publish_at']
+            ? Carbon::parse($validated['publish_at'])->format('Y-m-d')
+            : null;
 
+        // dd($validated);
         $announcement->update($validated);
 
         return redirect()->back()->with('success', 'Announcement updated successfully.');
@@ -120,6 +126,10 @@ class AnnouncementController extends Controller
 
     public function destroy(Announcement $announcement)
     {
+        if ($announcement->image_url) {
+            Storage::disk('public')->delete($announcement->image_url);
+        }
+
         $announcement->delete();
 
         return redirect()->back()->with('success', 'Announcement updated successfully.');

@@ -31,11 +31,24 @@ class Announcement extends Model
 
     public function getShouldShowAttribute()
     {
-        return Carbon::today()->greaterThanOrEqualTo(Carbon::parse($this->show_at)) ?? false;
+        if (is_null($this->publish_at)) {
+            return true;
+        }
+        
+        return Carbon::today()->greaterThanOrEqualTo(Carbon::parse($this->publish_at));
     }
 
 
+
     protected function createdAt(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            // Format the original timestamp
+            return Carbon::parse($value)->format('m/d/Y');
+        });
+    }
+
+    protected function publishAt(): Attribute
     {
         return Attribute::get(function ($value) {
             // Format the original timestamp

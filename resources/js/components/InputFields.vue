@@ -12,7 +12,7 @@ const props = defineProps({
 });
 
 const today = new Date();
-const minDate = today.toISOString().split("T")[0];
+const minDate = ref(new Date().toISOString().split("T")[0]);
 
 // v-model for input value
 const model = defineModel({ required: true });
@@ -52,6 +52,21 @@ function handleFileChange(e) {
             </p>
         </fieldset>
 
+        <!-- For textarea inputs -->
+        <fieldset class="fieldset" v-if="props.type === 'textarea'">
+            <legend class="fieldset-legend font-semibold">
+                {{ props.label }}
+            </legend>
+            <textarea v-model="model" class="textarea h-24 w-full" :placeholder="placeholder"></textarea>
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
+        </fieldset>
+
+       
         <!-- for date inputs -->
         <fieldset v-if="props.type === 'date'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
@@ -65,17 +80,9 @@ function handleFileChange(e) {
 
                 <input
                     v-model="model"
-                    :type="type"
+                    type="date"
                     :placeholder="placeholder"
-                    :readonly="readonly"
-                    :min="minDate"
-                    @input="
-                        (e) => {
-                            if (e.target.value < minDate)
-                                e.target.value = minDate;
-                            model = minDate;
-                        }
-                    "
+                    :min="!props.isUpdate ? minDate : null"
                 />
             </label>
             <p
