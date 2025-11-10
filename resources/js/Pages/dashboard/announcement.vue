@@ -19,6 +19,7 @@ const form = useForm({
     title: "",
     details: "",
     image_url: null,
+    date: null,
 });
 
 const props = defineProps({
@@ -48,15 +49,12 @@ function handleUpadte() {
 
     isLoading.value = true;
 
-    // Use FormData for file uploads
     const payload = new FormData();
     payload.append("title", form.title);
     payload.append("details", form.details);
     if (form.image_url) {
         payload.append("image_url", form.image_url);
     }
-
-    // Add _method=PATCH for Laravel to recognize patch request
     payload.append("_method", "PATCH");
 
     router.post(`/announcements/${selectedItem.value.id}`, payload, {
@@ -70,13 +68,13 @@ function handleUpadte() {
             form.image_url = null;
         },
         onError: (error) => {
+            console.log(error);
             isLoading.value = false;
         },
     });
 }
 
 const handleDelete = async (entity) => {
-    // Show confirm dialog
     const { isConfirmed } = await Swal.fire({
         title: "DELETE ANNOUNCEMENT",
         text: `Are you sure you want to delete "${entity.title}"?`,
@@ -145,6 +143,13 @@ const populateFormEdit = (entity) => {
                     :placeholder="'Details for announcement'"
                     :errors="form.errors.details"
                 />
+                <InputFields
+                    v-model="form.date"
+                    :label="'Publish Date'"
+                    :type="'date'"
+                    :placeholder="'Choose the date when the announcement becomes visible'"
+                    :errors="form.errors.date"
+                />
 
                 <InputFields
                     v-model="form.image_url"
@@ -155,9 +160,67 @@ const populateFormEdit = (entity) => {
             </Form>
         </ModalAction>
     </div>
-    <div class="overflow-x-auto bg-white">
+
+    <!-- Student View: Card Layout -->
+    <div
+        v-if="$page.props.auth.user.role === 'student'"
+        class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"
+    >
+        <div
+            v-for="ann in announcements.data"
+            :key="ann.id"
+            class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow"
+        >
+            <figure class="h-48">
+                <img
+                    :src="`/storage/${ann.image_url}`"
+                    :alt="ann.title"
+                    class="h-full w-full object-cover"
+                />
+            </figure>
+            <div class="card-body">
+                <div class="flex items-start gap-2">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6 text-primary flex-shrink-0 mt-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                        />
+                    </svg>
+                    <h2 class="card-title text-lg">{{ ann.title }}</h2>
+                </div>
+                <p class="text-sm text-gray-600">{{ ann.details }}</p>
+                <div class="flex items-center gap-2 text-sm text-gray-500 mt-2">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                    </svg>
+                    <span>{{ ann.created_at }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin View: Table Layout -->
+    <div v-else class="overflow-x-auto bg-white">
         <table class="table">
-            <!-- head -->
             <thead>
                 <tr>
                     <th></th>
@@ -181,7 +244,6 @@ const populateFormEdit = (entity) => {
                     </th>
                     <td>{{ ann.title }}</td>
                     <td>{{ ann.details }}</td>
-                    <td>{{ ann.created_at }}</td>
                     <td>
                         <a :href="`/storage/${ann.image_url}`" target="_blank">
                             <img
@@ -190,7 +252,7 @@ const populateFormEdit = (entity) => {
                             />
                         </a>
                     </td>
-
+                    <td>{{ ann.created_at }}</td>
                     <td
                         class="space-x-2"
                         v-if="$page.props.auth.user.role === 'admin'"
@@ -244,6 +306,14 @@ const populateFormEdit = (entity) => {
                                 :type="'text'"
                                 :placeholder="'Details for announcement'"
                                 :errors="form.errors.details"
+                            />
+
+                            <InputFields
+                                v-model="form.date"
+                                :label="'Publish Date'"
+                                :type="'date'"
+                                :placeholder="'Choose the date when the announcement becomes visible'"
+                                :errors="form.errors.date"
                             />
 
                             <InputFields

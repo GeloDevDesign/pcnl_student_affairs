@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
-            $table->string('image_url');
+            $table->string('image_url')->nullable();
             $table->text('details');
+            $table->date('publish_at')->nullable();
             $table->timestamps();
-        }); 
+        });
     }
 
     /**

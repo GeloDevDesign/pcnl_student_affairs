@@ -79,9 +79,10 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255|min:5',
             'details' => 'required|string',
             'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'date'        => 'required|date',
         ]);
 
-         // Handle image upload
+        // Handle image upload
         if ($request->hasFile('image_url')) {
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
             $path = $request->file('image_url')->storeAs('items', $filename, 'public');
@@ -96,7 +97,8 @@ class AnnouncementController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255|min:5',
             'details' => 'required|string',
-            'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'date'        => 'required|date',
         ]);
 
         if ($request->hasFile('image_url')) {

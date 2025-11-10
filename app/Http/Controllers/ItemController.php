@@ -66,7 +66,7 @@ class ItemController extends Controller
      * Update an existing item.
      */
     public function update(Request $request, Item $item)
-    {
+{
         $validated = $request->validate([
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',

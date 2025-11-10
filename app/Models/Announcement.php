@@ -10,19 +10,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Announcement extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'user_id',
         'title',
         'date',
         'details',
-        'image_url'
+        'image_url',
+        'publish_at'
     ];
+
+    protected $appends = ['should_show'];
+
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+
+    public function getShouldShowAttribute()
+    {
+        return Carbon::today()->greaterThanOrEqualTo(Carbon::parse($this->show_at)) ?? false;
+    }
+
 
     protected function createdAt(): Attribute
     {
