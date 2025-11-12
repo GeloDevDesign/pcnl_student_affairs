@@ -66,6 +66,18 @@ function handleFileChange(e) {
             </p>
         </fieldset>
 
+         <fieldset class="fieldset" v-if="props.type === 'time'">
+            <legend class="fieldset-legend font-semibold">
+                {{ props.label }}
+            </legend>
+            <input v-model="model" type="time" class="input w-full"  :placeholder="placeholder">
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
+        </fieldset>
        
         <!-- for date inputs -->
         <fieldset v-if="props.type === 'date'" class="fieldset w-full">

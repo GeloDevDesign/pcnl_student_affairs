@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\FeedBack;
+use Carbon\Carbon;
 
 class Event extends Model
 {
@@ -13,9 +14,10 @@ class Event extends Model
         'title',
         'description',
         'date',
+        'time'
     ];
 
-    protected $appends = ['is_ended'];
+    protected $appends = ['is_ended','formatted_time'];
 
     /**
      * Check if the event has ended.
@@ -25,6 +27,13 @@ class Event extends Model
         return $this->date
             ? now()->greaterThan($this->date)
             : false;
+    }
+
+    public function getFormattedTimeAttribute(): ?string
+    {
+        return $this->time
+            ? Carbon::createFromFormat('H:i:s', $this->time)->format('g:i A')
+            : null;
     }
 
     /**

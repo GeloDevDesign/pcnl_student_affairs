@@ -19,6 +19,7 @@ const form = useForm({
     title: "",
     description: "",
     date: null,
+    time: null,
 });
 
 const props = defineProps({
@@ -33,7 +34,7 @@ const handleSubmit = ({ closeModal }) => {
         preserveScroll: true,
         onSuccess: () => {
             closeModal();
-            form.reset()
+            form.reset();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
@@ -97,6 +98,7 @@ const populateFormEdit = (entity) => {
     form.title = entity.title;
     form.description = entity.description;
     form.date = entity.date;
+    form.time = entity.time;
 };
 </script>
 
@@ -132,8 +134,16 @@ const populateFormEdit = (entity) => {
                     v-model="form.date"
                     :label="'Event Date'"
                     :type="'date'"
-                    :placeholder="'Title of eventouncement'"
+                    :placeholder="'Title of event'"
                     :errors="form.errors.date"
+                />
+
+                <InputFields
+                    v-model="form.time"
+                    :label="'Event Time'"
+                    :type="'time'"
+                    :placeholder="'Title of eventouncement'"
+                    :errors="form.errors.time"
                 />
             </Form>
         </ModalAction>
@@ -147,6 +157,7 @@ const populateFormEdit = (entity) => {
                     <th>Title</th>
                     <th>Description</th>
                     <th>Event Date</th>
+                    <th>Event Time</th>
                     <th v-if="$page.props.auth.user.role === 'admin'">
                         Action
                     </th>
@@ -163,6 +174,7 @@ const populateFormEdit = (entity) => {
                     <td>{{ event.title }}</td>
                     <td>{{ event.description }}</td>
                     <td>{{ event.date }}</td>
+                    <td>{{ event.formatted_time }}</td>
                     <td
                         class="space-x-2"
                         v-if="$page.props.auth.user.role === 'admin'"
@@ -222,8 +234,16 @@ const populateFormEdit = (entity) => {
                                 v-model="form.date"
                                 :label="'Title'"
                                 :type="'date'"
-                                :placeholder="'Title of eventouncement'"
+                                :placeholder="'Title of event'"
                                 :errors="form.errors.date"
+                            />
+
+                            <InputFields
+                                v-model="form.time"
+                                :label="'Event Time'"
+                                :type="'time'"
+                                :placeholder="'Title of eventouncement'"
+                                :errors="form.errors.time"
                             />
                         </Form>
                     </div>

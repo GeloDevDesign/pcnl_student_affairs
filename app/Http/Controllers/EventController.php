@@ -15,6 +15,7 @@ class EventController extends Controller
             'title'       => 'required|string|min:5|max:255',
             'description' => 'required|string',
             'date'        => 'required|date',
+            'time' => 'required|date_format:H:i:s',
         ]);
 
 
@@ -26,10 +27,11 @@ class EventController extends Controller
 
     public function update(Request $request, Event $event)
     {
-        $validated = $request->validate([
+       $validated = $request->validate([
             'title'       => 'required|string|min:5|max:255',
             'description' => 'required|string',
             'date'        => 'required|date',
+            'time' => 'required|date_format:H:i:s',
         ]);
 
         $event->update($validated);
