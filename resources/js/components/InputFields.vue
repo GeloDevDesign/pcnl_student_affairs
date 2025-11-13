@@ -30,7 +30,7 @@ function handleFileChange(e) {
     <div class="w-full">
         <!-- For text -->
         <fieldset v-if="props.type === 'text'" class="fieldset w-full">
-            <legend class="fieldset-legend font-semibold">
+            <legend class="fieldset-legend font-semibold text-start">
                 {{ props.label }}
             </legend>
             <label
@@ -224,7 +224,7 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For file inputs -->
-        <fieldset v-if="props.type === 'file'" class="fieldset w-full">
+        <fieldset v-if="props.type === 'file'" class="fieldset w-full text-start">
             <legend class="fieldset-legend">{{ props.label }}</legend>
 
             <input

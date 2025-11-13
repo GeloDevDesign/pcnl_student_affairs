@@ -43,28 +43,25 @@ function handleUpdate() {
 
     isLoading.value = true;
 
-    router.post(
-        `/hand-books/${selectedItem.value.id}`,
-        {
-            ...form,
-            _method: "PATCH",
+    form.post(`/hand-books/${selectedItem.value.id}`, {
+        data: {
+            ...form, 
+            _method: "PATCH", 
         },
-        {
-            forceFormData: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                selectedItem.value = null;
-                dialogRef.value.close();
-                toastAlert(page.props.flash.success, "success");
-                isLoading.value = false;
-                form.file_url = null;
-            },
-            onError: () => {
-                isLoading.value = false;
-            },
-        }
-    );
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            form.reset();
+            selectedItem.value = null;
+            dialogRef.value.close();
+            toastAlert(page.props.flash.success, "success");
+            isLoading.value = false;
+            form.file_url = null;
+        },
+        onError: () => {
+            isLoading.value = false;
+        },
+    });
 }
 
 async function handleDelete(entity) {

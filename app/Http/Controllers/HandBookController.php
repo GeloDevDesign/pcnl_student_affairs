@@ -79,6 +79,11 @@ class HandBookController extends Controller
      */
     public function download(HandBook $handbook)
     {
+        // Check if file exists
+        if (!$handbook->file_url || !Storage::disk('public')->exists($handbook->file_url)) {
+            return redirect()->back()->withErrors(['error' => 'File not found.']);
+        }
+
         // Relative path stored in the database, e.g. "handbooks/file.pdf"
         $filePath = $handbook->file_url;
 

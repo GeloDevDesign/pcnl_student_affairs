@@ -19,7 +19,7 @@ const reset = () => {
 
 <template>
     <div class="flex justify-end w-auto gap-2">
-        <Filter :buttonName="'Filter Role'" />
+        
         <input
             v-model="search"
             class="input join-item bg-white lg:input-sm md:input-sm input-xs"
