@@ -117,7 +117,7 @@ Route::middleware(['web'])->group(function () {
             // Handbooks
             Route::prefix('hand-books')->name('hand-books.')->group(function () {
                 Route::post('/', [HandBookController::class, 'store'])->name('store');
-                Route::patch('/{handbook}', [HandBookController::class, 'update'])->name('update');
+                Route::post('/{handbook}', [HandBookController::class, 'update'])->name('update');
                 Route::delete('/{handbook}', [HandBookController::class, 'destroy'])->name('destroy');
                 Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('download');
             });
