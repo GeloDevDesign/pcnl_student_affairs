@@ -238,7 +238,7 @@ function populateFormEdit(entity) {
                 <div class="flex items-center" v-if="item.found_by">
                     <p class="text-xs opacity-50 font-bold">Found By:</p>
                     <span class="text-xs opacity-50">
-                        {{ item.found_by }}
+                        {{ item.found_by ?? 'N/A' }}
                     </span>
                 </div>
 

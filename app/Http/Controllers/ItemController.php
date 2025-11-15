@@ -44,6 +44,7 @@ class ItemController extends Controller
             'found_by'    => 'required|string|max:255',
         ]);
 
+        // dd($validated);
 
         // Handle image upload
         if ($request->hasFile('image_url')) {
@@ -57,6 +58,7 @@ class ItemController extends Controller
             'description' => $validated['description'],
             'image_url'   => $path,
             'status'      => Item::NOT_FOUND,
+            'found_by' => $validated['found_by']
         ]);
 
         return redirect()->back()->with('success', 'Item created successfully!');
