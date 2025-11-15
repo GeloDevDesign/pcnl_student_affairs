@@ -46,37 +46,27 @@ function handleUpdate() {
     if (!selectedItem.value) return;
 
     isLoading.value = true;
-
-    // Use FormData for file uploads
-    const payload = new FormData();
-    payload.append("name", form.name);
-    payload.append("description", form.description);
-    payload.append("status", form.status);
-    payload.append("remarks", form.remarks);
-    payload.append("found_by", form.found_by);
-    if (form.image_url) {
-        payload.append("image_url", form.image_url);
-    }
-
-    // Add _method=PATCH for Laravel to recognize patch request
-    payload.append("_method", "PATCH");
-    console.log(payload);
-    router.post(`/items/${selectedItem.value.id}`, payload, {
+    form._method = 'PATCH';
+    form.transform((data) => ({
+        ...data,
+        _method: 'PATCH'
+    })).post(`/items/${selectedItem.value.id}`, {
+        forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
-            selectedItem.value = null;
-            dialogRef.value.close();
+            dialogRef.value?.close();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
-            form.image_url = null;
+            form.file_url = null;
         },
-        onError: (error) => {
-            console.log(error);
+        onError: () => {
             isLoading.value = false;
         },
     });
 }
+
+
 
 async function handleDelete(entity) {
     const { isConfirmed } = await Swal.fire({

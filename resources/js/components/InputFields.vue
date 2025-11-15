@@ -9,6 +9,8 @@ const props = defineProps({
     errors: String,
     selectionItems: { type: Array, default: [] },
     form: Object,
+    multiple: Boolean,  // Add this
+    size: Number,       // Add this (optional, for visible options)
 });
 
 const today = new Date();
@@ -57,7 +59,11 @@ function handleFileChange(e) {
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
-            <textarea v-model="model" class="textarea h-24 w-full" :placeholder="placeholder"></textarea>
+            <textarea
+                v-model="model"
+                class="textarea h-24 w-full"
+                :placeholder="placeholder"
+            ></textarea>
             <p
                 v-if="props.errors"
                 class="text-red-400 font-semibold bg-red-100 p-1"
@@ -66,11 +72,16 @@ function handleFileChange(e) {
             </p>
         </fieldset>
 
-         <fieldset class="fieldset" v-if="props.type === 'time'">
+        <fieldset class="fieldset" v-if="props.type === 'time'">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
-            <input v-model="model" type="time" class="input w-full"  :placeholder="placeholder">
+            <input
+                v-model="model"
+                type="time"
+                class="input w-full"
+                :placeholder="placeholder"
+            />
             <p
                 v-if="props.errors"
                 class="text-red-400 font-semibold bg-red-100 p-1"
@@ -78,7 +89,7 @@ function handleFileChange(e) {
                 {{ props.errors }}
             </p>
         </fieldset>
-       
+
         <!-- for date inputs -->
         <fieldset v-if="props.type === 'date'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
@@ -224,7 +235,10 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For file inputs -->
-        <fieldset v-if="props.type === 'file'" class="fieldset w-full text-start">
+        <fieldset
+            v-if="props.type === 'file'"
+            class="fieldset w-full text-start"
+        >
             <legend class="fieldset-legend">{{ props.label }}</legend>
 
             <input
@@ -248,6 +262,33 @@ function handleFileChange(e) {
             >
                 {{ props.form.progress.percentage }}%
             </progress>
+        </fieldset>
+
+        <!-- For Multi Select -->
+
+        <fieldset v-if="props.type === 'select'" class="fieldset w-full">
+            <legend class="fieldset-legend">{{ props.label }}</legend>
+            <select
+                class="select w-full"
+                v-model="model"
+                :multiple="props.multiple"
+                :size="props.multiple ? props.size || 4 : undefined"
+            >
+                <option disabled value="">Select {{ props.label }}</option>
+                <option
+                    v-for="(item, index) in props.selectionItems"
+                    :key="index"
+                    :value="item.id ?? item.name"
+                >
+                    {{ item.name }}
+                </option>
+            </select>
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
         </fieldset>
     </div>
 </template>

@@ -9,7 +9,7 @@ class Instructor extends Model
     protected $fillable = [
         'user_id',
         'name',
-        'department'
+        'department',
     ];
 
     protected $appends = ['department_name']; // to include department_name automatically when converting to JSON
@@ -26,6 +26,11 @@ class Instructor extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class);
     }
 
     // Accessor: Get readable department name
