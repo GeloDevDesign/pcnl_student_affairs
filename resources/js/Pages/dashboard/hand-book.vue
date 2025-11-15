@@ -18,16 +18,27 @@ const form = useForm({
 });
 
 const props = defineProps({
-    handBooks: Object,
-    errors: Object,
+    handBook: {
+        type: Object,
+        default: null
+    },
+    errors: {
+        type: Object,
+        default: () => ({})
+    }
 });
 
-// Get the first (and only) handbook
-const handbook = computed(() => {
-    return props.handBooks?.data?.[0] || null;
-});
+// Simplified - just use the prop directly
+const currentHandBook = computed(() => props.handBook);
 
-const isAdmin = computed(() => page.props.auth.user.role === 'admin');
+const isAdmin = computed(() => {
+    try {
+        return page.props?.auth?.user?.role === 'admin';
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+    }
+});
 
 function handleSubmit({ closeModal }) {
     isLoading.value = true;
@@ -44,13 +55,11 @@ function handleSubmit({ closeModal }) {
     });
 }
 
-
 function handleUpdate() {
     if (!handbook.value) return;
 
     isLoading.value = true;
     form._method = 'PATCH';
-    // Add _method field for Laravel method spoofing
     form.transform((data) => ({
         ...data,
         _method: 'PATCH'
@@ -59,12 +68,11 @@ function handleUpdate() {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
-            selectedItem.value = null;
-            dialogRef.value.close();
+            dialogRef.value?.close();
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
             form.file_url = null;
-      },
+        },
         onError: () => {
             isLoading.value = false;
         },
@@ -113,7 +121,7 @@ function populateFormEdit() {
 
 <template>
     <!-- No Handbook State -->
-    <div v-if="!handbook" class="mt-6">
+    <div v-if="!currentHandBook" class="mt-6">
         <div
             class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center"
         >
@@ -201,7 +209,7 @@ function populateFormEdit() {
                     />
                 </svg>
                 <h2 class="text-2xl font-bold text-gray-700 mb-2">
-                    {{ handbook.title }}
+                    {{ currentHandBook?.title }}
                 </h2>
             </div>
 
@@ -211,19 +219,26 @@ function populateFormEdit() {
                     DESCRIPTION
                 </h3>
                 <p class="text-gray-700 text-lg">
-                    {{ handbook.description }}
+                    {{ currentHandBook?.description }}
                 </p>
             </div>
 
             <!-- Actions -->
             <div class="flex flex-wrap justify-center gap-3">
                 <a
-                    :href="`/storage/${handbook.file_url}`"
+                    :href="`/storage/${currentHandBook?.file_url}`"
                     target="_blank"
                     class="text-blue-600 underline hover:text-blue-800"
                 >
                     View File
                 </a>
+
+                 <a v-if="!isAdmin"
+                        :href="route('hand-books.download', currentHandBook?.id)"
+                        class="btn bg-green-800 btn-xs text-white"
+                >
+                        Download
+                    </a>
 
                 <!-- Admin Only Actions -->
                 <template v-if="isAdmin">
@@ -243,7 +258,7 @@ function populateFormEdit() {
                     </button>
 
                     <a
-                        :href="route('hand-books.download', handbook.id)"
+                        :href="route('hand-books.download', currentHandBook?.id)"
                         class="btn bg-green-800 btn-xs text-white"
                     >
                         Download

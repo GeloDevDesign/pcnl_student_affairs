@@ -31,7 +31,7 @@ const { applySearch } = useSearchAndFilter(searchIndex);
 defineProps({
     pageTitle: String,
     announcements: Object,
-    handBooks: Object,
+    handBook: Object,
     events: Object,
     eventCount: Number,
     announcementCount: Number,
@@ -129,7 +129,7 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
             />
             <Event :events="events" v-if="pageStore.currentPage === 'event'" />
             <Handbook
-                :handBooks="handBooks"
+                :handBook="handBook"
                 v-if="pageStore.currentPage === 'hand-books'"
             />
         </div>

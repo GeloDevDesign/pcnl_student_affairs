@@ -18,7 +18,6 @@ class AnnouncementController extends Controller
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek   = Carbon::now()->endOfWeek();
 
-
         $announcement = Announcement::with('user')
             ->latest()
             ->when($request->page === 'announcement' && $request->filled('search'), function ($query) use ($request) {
@@ -28,10 +27,7 @@ class AnnouncementController extends Controller
                 });
             });
 
-
         $announcementCount = Announcement::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
-
-
 
         $event = Event::with('user')
             ->latest()
@@ -42,31 +38,26 @@ class AnnouncementController extends Controller
                 });
             });
 
-
         $eventCount = Event::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
 
-
-
-        $handBooks = HandBook::with('user')
+        // Get only the latest handbook (single record)
+        $handBook = HandBook::with('user')
             ->latest()
             ->when($request->page === 'hand-books' && $request->filled('search'), function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
                     $q->where('title', 'like', '%' . $request->search . '%')
                         ->orWhere('description', 'like', '%' . $request->search . '%');
                 });
-            });
-
-
+            })
+            ->first(); // Get only the first/latest record
 
         $itemCount = Item::whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
 
-
-
         return Inertia::render('dashboard/index', [
-            'pageTitle'       => 'PCNL - Dashboard',
-            'handBooks'       => $handBooks->paginate(10)->onEachSide(1),
-            'announcements'   => $announcement->paginate(10)->onEachSide(1),
-            'events'          => $event->paginate(10)->onEachSide(1),
+            'pageTitle'         => 'PCNL - Dashboard',
+            'handBook'          => $handBook, // Changed from handBooks to handBook (singular)
+            'announcements'     => $announcement->paginate(10)->onEachSide(1),
+            'events'            => $event->paginate(10)->onEachSide(1),
             'announcementCount' => $announcementCount,
             'eventCount'        => $eventCount,
             'itemCount'         => $itemCount,
@@ -79,9 +70,8 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255|min:5',
             'details' => 'required|string',
             'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-        'publish_at' => 'required|date',
+            'publish_at' => 'required|date',
         ]);
-
 
         if ($request->hasFile('image_url')) {
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
@@ -97,7 +87,6 @@ class AnnouncementController extends Controller
         return redirect()->back()->with('success', 'Announcement created successfully.');
     }
 
-
     public function update(Request $request, Announcement $announcement)
     {
         $validated = $request->validate([
@@ -106,7 +95,6 @@ class AnnouncementController extends Controller
             'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'publish_at'        => 'required|date',
         ]);
-       
 
         if ($request->hasFile('image_url')) {
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
@@ -117,12 +105,10 @@ class AnnouncementController extends Controller
             ? Carbon::parse($validated['publish_at'])->format('Y-m-d')
             : null;
 
-        // dd($validated);
         $announcement->update($validated);
 
         return redirect()->back()->with('success', 'Announcement updated successfully.');
     }
-
 
     public function destroy(Announcement $announcement)
     {
@@ -132,6 +118,6 @@ class AnnouncementController extends Controller
 
         $announcement->delete();
 
-        return redirect()->back()->with('success', 'Announcement updated successfully.');
+        return redirect()->back()->with('success', 'Announcement deleted successfully.');
     }
 }

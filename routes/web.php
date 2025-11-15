@@ -119,7 +119,7 @@ Route::middleware(['web'])->group(function () {
                 Route::post('/', [HandBookController::class, 'store'])->name('store');
                 Route::patch('/{handbook}', [HandBookController::class, 'update'])->name('update');
                 Route::delete('/{handbook}', [HandBookController::class, 'destroy'])->name('destroy');
-                Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('download');
+                // Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('download');
             });
 
             // Items (Lost and Found)
@@ -163,6 +163,8 @@ Route::middleware(['web'])->group(function () {
                 Route::patch('/{candidate}', [CandidateController::class, 'update'])->name('update');
                 Route::delete('/{candidate}', [CandidateController::class, 'destroy'])->name('destroy');
             });
-        });
+    });
+
+         Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('download');
     });
 });
