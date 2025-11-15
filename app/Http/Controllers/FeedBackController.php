@@ -18,7 +18,7 @@ class FeedBackController extends Controller
         $user = $request->user();
 
         // Base queries
-        $instructorsQuery = Instructor::with(['user'])->latest();
+        $instructorsQuery = Instructor::with(['user', 'subjects'])->latest();
         $formsQuery       = Form::with(['user'])->latest();
         $eventsQuery = Event::query()
             ->when($user->isAdmin(), fn($q) => $q->with(['feedbacks.user', 'user']))

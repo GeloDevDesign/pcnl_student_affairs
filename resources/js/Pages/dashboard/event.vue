@@ -29,6 +29,7 @@ const props = defineProps({
 
 const handleSubmit = ({ closeModal }) => {
     isLoading.value = true;
+    console.log(form.time)
 
     form.post("/events", {
         preserveScroll: true,

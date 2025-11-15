@@ -15,7 +15,7 @@ class EventController extends Controller
             'title'       => 'required|string|min:5|max:255',
             'description' => 'required|string',
             'date'        => 'required|date',
-            'time' => 'required|date_format:H:i:s',
+            'time' => 'required|date_format:H:i',
         ]);
 
 
@@ -31,7 +31,7 @@ class EventController extends Controller
             'title'       => 'required|string|min:5|max:255',
             'description' => 'required|string',
             'date'        => 'required|date',
-            'time' => 'required|date_format:H:i:s',
+            'time' => 'required|date_format:H:i',
         ]);
 
         $event->update($validated);
