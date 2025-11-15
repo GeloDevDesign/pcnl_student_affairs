@@ -165,6 +165,6 @@ Route::middleware(['web'])->group(function () {
             });
     });
 
-         Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('download');
+         Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('hand-books.download');
     });
 });

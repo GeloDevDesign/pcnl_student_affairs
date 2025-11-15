@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed , onMounted} from "vue";
 import { router, useForm, usePage } from "@inertiajs/vue3";
 import { useToastAlert } from "../../composables/useToastAlert.js";
 import ModalAction from "../../components/ModalAction.vue";
@@ -29,7 +29,12 @@ const props = defineProps({
 });
 
 // Simplified - just use the prop directly
-const currentHandBook = computed(() => props.handBook);
+const currentHandBook = computed(() => {
+    if (!props.handBook || !props.handBook.id) {
+        return null;
+    }
+    return props.handBook;
+});
 
 const isAdmin = computed(() => {
     try {
@@ -56,14 +61,14 @@ function handleSubmit({ closeModal }) {
 }
 
 function handleUpdate() {
-    if (!handbook.value) return;
+    if (!currentHandBook.value) return;
 
     isLoading.value = true;
     form._method = 'PATCH';
     form.transform((data) => ({
         ...data,
         _method: 'PATCH'
-    })).post(`/hand-books/${handbook.value.id}`, {
+    })).post(`/hand-books/${currentHandBook.value.id}`, {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
@@ -80,11 +85,11 @@ function handleUpdate() {
 }
 
 async function handleDelete() {
-    if (!handbook.value) return;
+    if (!currentHandBook.value) return;
 
     const { isConfirmed } = await Swal.fire({
         title: "DELETE HAND-BOOK",
-        text: `Are you sure you want to delete "${handbook.value.title}"?`,
+        text: `Are you sure you want to delete "${currentHandBook.value.title}"?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, delete it!",
@@ -94,7 +99,7 @@ async function handleDelete() {
     if (!isConfirmed) return;
 
     isLoading.value = true;
-    router.delete(`/hand-books/${handbook.value.id}`, {
+    router.delete(`/hand-books/${currentHandBook.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             toastAlert(page.props.flash.success, "success");
@@ -110,13 +115,14 @@ function resetPopulate() {
 }
 
 function populateFormEdit() {
-    if (!handbook.value) return;
+    if (!currentHandBook.value) return;
     form.reset();
     form.clearErrors();
-    form.title = handbook.value.title;
-    form.description = handbook.value.description;
+    form.title = currentHandBook.value.title;
+    form.description = currentHandBook.value.description;
     form.file_url = null;
 }
+
 </script>
 
 <template>
@@ -273,7 +279,7 @@ function populateFormEdit() {
         <div class="modal-box">
             <h3 class="text-lg font-bold">
                 Update Handbook
-                <span class="text-primary">{{ handbook?.title }}</span>
+                <span class="text-primary">{{ currentHandBook?.title }}</span>
             </h3>
             <div class="modal-action">
                 <form method="dialog" class="w-full">

@@ -28,7 +28,7 @@ watch(
 );
 const { applySearch } = useSearchAndFilter(searchIndex);
 
-defineProps({
+const props = defineProps({
     pageTitle: String,
     announcements: Object,
     handBook: Object,
@@ -84,7 +84,11 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
 
                 <NavCard
                     :cardTitle="'Events'"
-                    :cardDescription=" $page.props.auth.user.role === 'admin' ? 'Add / Create Events' : 'View Events'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Add / Create Events'
+                            : 'View Events'
+                    "
                     :cardValue="'event'"
                     @navigate-action="pageStore.navigatePage"
                 >
