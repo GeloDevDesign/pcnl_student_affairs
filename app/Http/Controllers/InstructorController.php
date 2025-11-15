@@ -21,7 +21,7 @@ class InstructorController extends Controller
         $validated = $request->validate([
             'name' => 'required|min:2|max:255|unique:instructors,name',
             'department' => ['nullable', 'integer', Rule::in(DepartmentList::ids())],
-            'subject_ids' => ['nullable', 'array'],
+            'subject_ids' => ['required', 'array'],
             'subject_ids.*' => ['integer', 'exists:subjects,id'],
         ]);
 
@@ -51,8 +51,8 @@ class InstructorController extends Controller
         $validated = $request->validate([
             'name' => ['required','min:2','max:255', Rule::unique('instructors','name')->ignore($instructor->id)],
             'department' => ['nullable', 'integer', Rule::in(DepartmentList::ids())],
-            'subject_ids' => ['nullable', 'array'],
-            'subject_ids.*' => ['integer', 'exists:subjects,id'],
+            'subject_ids' => ['required', 'array'],
+            'subject_ids.*' => ['required','integer', 'exists:subjects,id'],
         ]);
 
         // Update instructor info

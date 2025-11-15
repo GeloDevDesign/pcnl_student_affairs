@@ -12,7 +12,7 @@ class Instructor extends Model
         'department',
     ];
 
-    protected $appends = ['department_name']; // to include department_name automatically when converting to JSON
+    protected $appends = ['department_name']; 
 
     protected static $departments = [
         1 => 'BSA',
