@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useForm, router } from "@inertiajs/vue3";
 import { usePage } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
@@ -20,18 +20,11 @@ const form = useForm({
     subject_ids: [], // store array of subject IDs
 });
 
-const subjectList = ref([
-    { id: 1, name: "Mathematics" },
-    { id: 2, name: "English" },
-    { id: 3, name: "Science" },
-    { id: 4, name: "History" },
-    { id: 5, name: "Programming" },
-    { id: 6, name: "Physics" },
-    { id: 7, name: "Chemistry" },
-]);
+
 
 const props = defineProps({
     instructors: Object,
+    subjects: Array ,
     errors: Object,
 });
 
@@ -104,6 +97,10 @@ const handleDelete = async (entity) => {
         onError: () => (isLoading.value = false),
     });
 };
+
+onMounted(() => {
+    console.log(props.subjects)
+})
 </script>
 
 <template>
@@ -149,7 +146,7 @@ const handleDelete = async (entity) => {
                     </legend>
                     <div class="space-y-2">
                         <label
-                            v-for="subject in subjectList"
+                            v-for="subject in subjects"
                             :key="subject.id"
                             class="label cursor-pointer gap-2"
                         >
@@ -266,7 +263,7 @@ const handleDelete = async (entity) => {
                     </legend>
                     <div class="space-y-4">
                         <label
-                            v-for="subject in subjectList"
+                            v-for="subject in subjects"
                             :key="subject.id"
                             class="label cursor-pointer ml-2"
                         >

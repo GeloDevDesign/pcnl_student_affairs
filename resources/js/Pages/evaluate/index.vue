@@ -30,6 +30,7 @@ const { applySearch } = useSearchAndFilter(searchIndex);
 defineProps({
     pageTitle: String,
     events: Object,
+    subjects: Array,
     instructors: Object,
     feedbacks: Object,
     forms: Object,
@@ -118,6 +119,7 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                 v-if="pageStore.currentPage === 'feedbacks'"
             />
             <Instructor
+                :subjects="subjects"
                 :instructors="instructors"
                 v-if="pageStore.currentPage === 'instructors'"
             />

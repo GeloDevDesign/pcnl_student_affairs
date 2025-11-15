@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FeedBack;
 use App\Models\Event;
+use App\Models\Subject;
 use App\Models\Instructor;
 use App\Models\Form;
 use Illuminate\Http\Request;
@@ -56,6 +57,7 @@ class FeedBackController extends Controller
 
         return Inertia::render('evaluate/index', [
             'pageTitle'   => 'PCNL - Evaluate',
+            'subjects'   => Subject::latest()->get()->toArray(),
             'events'      => $eventsQuery->paginate(10)->onEachSide(1),
             'instructors' => $instructorsQuery->paginate(10)->onEachSide(1),
             'forms'       => $formsQuery->paginate(10)->onEachSide(1),
