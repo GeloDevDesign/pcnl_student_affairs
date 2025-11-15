@@ -1,18 +1,29 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-
+use Inertia\Inertia;
 class SubjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $subjects = Subject::with('instructors')->get();
-        return view('subjects.index', compact('subjects'));
+        $search = $request->input('search');
+
+        $subjectsQuery = Subject::latest();
+
+        if ($search) {
+            $subjectsQuery->where('name', 'like', "%{$search}%");
+        }
+
+        $subjects = $subjectsQuery->paginate(10)->withQueryString();
+
+        return Inertia::render('subjects/index', [
+            'subjects' => $subjects,
+            'pageTitle' => 'Subject Management'
+        ]);
     }
 
     public function create()
@@ -39,7 +50,7 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject)
     {
         $validated = $request->validate([
-            'name' => ['required','min:2','max:255', Rule::unique('subjects')->ignore($subject->id)],
+            'name' => ['required', 'min:2', 'max:255', Rule::unique('subjects')->ignore($subject->id)],
         ]);
 
         $subject->update($validated);
@@ -54,4 +65,3 @@ class SubjectController extends Controller
         return redirect()->route('subjects.index')->with('success', 'Subject deleted successfully.');
     }
 }
-

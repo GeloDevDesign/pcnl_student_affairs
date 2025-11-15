@@ -12,7 +12,7 @@ class Instructor extends Model
         'department',
     ];
 
-    protected $appends = ['department_name']; 
+    protected $appends = ['department_name'];
 
     protected static $departments = [
         1 => 'BSA',
@@ -30,7 +30,7 @@ class Instructor extends Model
 
     public function subjects()
     {
-        return $this->belongsToMany(Subject::class);
+        return $this->belongsToMany(Subject::class, 'instructor_subject');
     }
 
     // Accessor: Get readable department name

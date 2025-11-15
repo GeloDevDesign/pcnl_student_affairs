@@ -18,7 +18,9 @@ use App\Http\Controllers\VoteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\SubjectController;
 use Illuminate\Http\Request;
+
 
 Route::middleware(['web'])->group(function () {
     // Public routes (accessible without authentication)
@@ -105,6 +107,15 @@ Route::middleware(['web'])->group(function () {
                 Route::post('/', [AnnouncementController::class, 'store'])->name('store');
                 Route::patch('/{announcement}', [AnnouncementController::class, 'update'])->name('update');
                 Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
+            });
+
+
+            // Subjects
+             Route::prefix('subjects')->name('subjects.')->group(function () {
+                Route::get('/', [SubjectController::class, 'index'])->name('index');
+                Route::post('/', [SubjectController::class, 'store'])->name('store');
+                Route::patch('/{subjects}', [SubjectController::class, 'update'])->name('update');
+                Route::delete('/{subjects}', [SubjectController::class, 'destroy'])->name('destroy');
             });
 
             // Events

@@ -9,6 +9,7 @@ export function useSearchAndFilter(pageRef) {
         feedbacks: "evaluate",
         "lost-found": "lost-found",
         users: "users.index",
+        subjects: "subjects.index",
         instructors: "evaluate",
         forms: "evaluate",
     };
