@@ -20,11 +20,9 @@ const form = useForm({
     subject_ids: [], // store array of subject IDs
 });
 
-
-
 const props = defineProps({
     instructors: Object,
-    subjects: Array ,
+    subjects: Array,
     errors: Object,
 });
 
@@ -40,7 +38,7 @@ const populateFormEdit = (instructor) => {
     form.name = instructor.name;
     form.department = instructor.department;
     form.subject_ids = instructor.subjects.map((s) => s.id);
-    console.log(form.subject_ids)
+    console.log(form.subject_ids);
     dialogRef.value.showModal();
 };
 
@@ -99,8 +97,8 @@ const handleDelete = async (entity) => {
 };
 
 onMounted(() => {
-    console.log(props.subjects)
-})
+    console.log(props.subjects);
+});
 </script>
 
 <template>
@@ -140,15 +138,17 @@ onMounted(() => {
                     :errors="form.errors.department"
                 />
 
-                <fieldset class="fieldset border p-4 rounded-box">
+                <fieldset
+                    class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-6"
+                >
                     <legend class="fieldset-legend font-semibold">
                         Subjects
                     </legend>
-                    <div class="space-y-2">
+                    <div class="space-y-4">
                         <label
                             v-for="subject in subjects"
                             :key="subject.id"
-                            class="label cursor-pointer gap-2"
+                            class="label cursor-pointer ml-2"
                         >
                             <input
                                 type="checkbox"
@@ -257,7 +257,9 @@ onMounted(() => {
                     :errors="form.errors.department"
                 />
 
-                <fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-6">
+                <fieldset
+                    class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-6"
+                >
                     <legend class="fieldset-legend font-semibold">
                         Subjects
                     </legend>
