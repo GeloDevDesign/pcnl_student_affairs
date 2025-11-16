@@ -1,15 +1,27 @@
 <?php
 
 namespace App\Models;
+use App\Models\Instructor;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
-    protected $fillable = ['name', 'instructor_id'];
+    protected $fillable = ['name'];
 
-    public function u()
+
+    public function instructors()
     {
-        return $this->hasMany(Form::class);
+       return $this->belongsToMany(Instructor::class, 'instructor_subject');
     }
+
+
 }
+
+
+
+
+
+
+
+

@@ -7,6 +7,7 @@ import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
 import Pagination from "../../components/Pagination.vue";
 import { useToastAlert } from "../../composables/useToastAlert.js";
+import Filter from "../../components/Filter.vue";
 
 const { toastAlert } = useToastAlert();
 const page = usePage();
@@ -20,10 +21,24 @@ const form = useForm({
     subject_ids: [], // store array of subject IDs
 });
 
+const applyDepartmentFilter = (departmentValue) => {
+    
+    router.get(
+        "/evaluate",
+        { filter: departmentValue, page : "instructors" , search : "1"},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        }
+    );
+};
+
 const props = defineProps({
     instructors: Object,
     subjects: Array,
     errors: Object,
+    currentFilter: String
 });
 
 const resetForm = () => {
@@ -96,13 +111,25 @@ const handleDelete = async (entity) => {
     });
 };
 
-onMounted(() => {
-    console.log(props.subjects);
-});
+
 </script>
 
 <template>
-    <div class="w-full flex justify-end mb-4">
+    <div class="w-full flex justify-end mb-4 gap-2">
+         <Filter
+                    :buttonName="'Filter Department'"
+                    
+                    :filterItems="[
+                        { value: 1, name: 'BSA' },
+                        { value: 2, name: 'BSBA' },
+                        { value: 3, name: 'BSCRIM' },
+                        { value: 4, name: 'BSIT' },
+                        { value: 5, name: 'BSCE' },
+                        { value: 6, name: 'BEE' },
+                    ]"
+                    :selected="currentFilter"
+                    @filter="applyDepartmentFilter"
+                />
         <ModalAction
             v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"

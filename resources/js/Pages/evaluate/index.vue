@@ -34,6 +34,7 @@ defineProps({
     instructors: Object,
     feedbacks: Object,
     forms: Object,
+    currentFilter: String,
 });
 
 onMounted(() => {
@@ -120,6 +121,7 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
             />
             <Instructor
                 :subjects="subjects"
+                :currentFilter="currentFilter"
                 :instructors="instructors"
                 v-if="pageStore.currentPage === 'instructors'"
             />
