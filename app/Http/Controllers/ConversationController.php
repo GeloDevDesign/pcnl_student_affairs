@@ -125,6 +125,7 @@ class ConversationController extends Controller
             'availableAdmins' => $availableAdmins,
             'activeConversation' => $activeConversation,
             'messages' => $messages,
+            'notifications' => $notifications,
             'pageTitle' => 'Concerns & Messages',
         ]);
     }
