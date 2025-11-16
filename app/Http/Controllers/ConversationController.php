@@ -17,7 +17,6 @@ class ConversationController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        // $notifications = auth()->user()->notifications;
 
         // Get all conversations of current user
         $conversations = Conversation::where('admin_id', $user->id)
@@ -31,7 +30,8 @@ class ConversationController extends Controller
                     'id' => $conversation->id,
                     'other_user' => [
                         'id' => $otherUser->id,
-                        'name' => trim($otherUser->first_name.' '.$otherUser->last_name),
+                        // If other user is a student, show as Anonymous
+                        'name' => $otherUser->role === 'student' ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
                         'email' => $otherUser->email,
                         'role' => $otherUser->role,
                         'profile_photo_path' => $otherUser->profile_photo_path,
@@ -91,7 +91,8 @@ class ConversationController extends Controller
                     'id' => $conversation->id,
                     'other_user' => [
                         'id' => $otherUser->id,
-                        'name' => trim($otherUser->first_name.' '.$otherUser->last_name),
+                        // If other user is a student, show as Anonymous
+                        'name' => $otherUser->role === 'student' ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
                         'email' => $otherUser->email,
                         'role' => $otherUser->role,
                         'profile_photo_path' => $otherUser->profile_photo_path,
@@ -109,7 +110,10 @@ class ConversationController extends Controller
                             'is_mine' => $message->sender_id === $user->id,
                             'sender' => [
                                 'id' => $message->sender->id,
-                                'name' => trim($message->sender->first_name.' '.$message->sender->last_name),
+                                // Show sender's name as Anonymous if they are a student
+                                'name' => $message->sender->role === 'student'
+                                    ? 'Anonymous'
+                                    : trim($message->sender->first_name.' '.$message->sender->last_name),
                                 'role' => $message->sender->role,
                                 'profile_photo_path' => $message->sender->profile_photo_path,
                             ],
@@ -125,7 +129,6 @@ class ConversationController extends Controller
             'availableAdmins' => $availableAdmins,
             'activeConversation' => $activeConversation,
             'messages' => $messages,
-            // 'notifications' => $notifications,
             'pageTitle' => 'Concerns & Messages',
         ]);
     }
@@ -222,6 +225,4 @@ class ConversationController extends Controller
 
         return redirect()->route('concerns.index')->with('success', 'Conversation deleted.');
     }
-
-    
 }
