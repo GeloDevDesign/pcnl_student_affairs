@@ -26,6 +26,7 @@ class MessageReceivedNotification extends Notification
     public function toDatabase($notifiable)
     {
          return [
+            'title'          => 'New Message Received',
             'conversation_id' => $this->message->conversation_id,
             'message_id'      => $this->message->id,
             'sender_id'       => $this->sender->id,
