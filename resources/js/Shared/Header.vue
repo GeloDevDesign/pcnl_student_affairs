@@ -22,7 +22,7 @@ const notifications = computed(() => page.props.notifications || []);
 
 // Get unread notifications count
 const unreadCount = computed(() => {
-    return notifications.value.filter(n => !n.read_at).length;
+    return notifications.value.filter((n) => !n.read_at).length;
 });
 
 // Format notification time
@@ -30,19 +30,50 @@ const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600)
+        return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400)
+        return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800)
+        return `${Math.floor(diffInSeconds / 86400)} days ago`;
     return date.toLocaleDateString();
 };
 
 // Handle notification click
 const handleNotificationClick = (notification) => {
-    if (notification.data?.conversation_id) {
-        router.visit(`/concerns?conversation_id=${notification.data.conversation_id}`);
+    // Mark notification as read
+    if (!notification.read_at) {
+        router.post(
+            `/notifications/${notification.id}/mark-as-read`,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                only: ["notifications"],
+            }
+        );
     }
+
+    // Navigate to conversation
+    if (notification.data?.conversation_id) {
+        router.visit(
+            `/concerns?conversation_id=${notification.data.conversation_id}`
+        );
+    }
+};
+
+const markAllAsRead = () => {
+    router.post(
+        `/notifications/mark-all-as-read`,
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true,
+            only: ["notifications"],
+        }
+    );
 };
 
 // Get user initials
@@ -56,7 +87,9 @@ const userInitials = computed(() => {
 // Get user full name
 const userFullName = computed(() => {
     if (!user.value) return "User";
-    return `${user.value.first_name || ""} ${user.value.last_name || ""}`.trim();
+    return `${user.value.first_name || ""} ${
+        user.value.last_name || ""
+    }`.trim();
 });
 
 // Get profile image URL
@@ -95,82 +128,121 @@ const profileImageUrl = computed(() => {
                     <div
                         tabindex="0"
                         role="button"
-                        class="btn btn-ghost btn-circle hover:bg-gray-100"
+                        class="btn btn-ghost btn-circle hover:bg-gray-100 relative"
                     >
-                        <div class="indicator">
-                            <Bell :size="20" />
-                            <span
-                                v-if="unreadCount > 0"
-                                class="badge badge-xs badge-primary indicator-item"
-                            >{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
-                        </div>
+                        <Bell :size="20" />
+                        <span
+                            v-if="unreadCount > 0"
+                            class="absolute top-1 right-1 w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                            >{{ unreadCount > 9 ? "9+" : unreadCount }}</span
+                        >
                     </div>
 
                     <!-- Notification Dropdown Menu -->
-                    <ul
+                    <div
                         tabindex="0"
-                        class="dropdown-content menu bg-white rounded-box z-[1] w-80 p-0 shadow-lg border border-gray-200 mt-2 max-h-[500px] overflow-y-auto"
+                        class="dropdown-content bg-white rounded-lg z-[1] w-96 shadow-xl border border-gray-200 mt-2"
                     >
                         <!-- Header -->
-                        <li class="menu-title px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
-                            <div class="flex items-center justify-between">
-                                <span class="font-semibold text-gray-800">Notifications</span>
-                                <span
-                                    v-if="unreadCount > 0"
-                                    class="badge badge-primary badge-sm"
-                                >{{ unreadCount }}</span>
-                            </div>
-                        </li>
+                        <div
+                            class="flex items-center justify-between px-4 py-3 border-b border-gray-200"
+                        >
+                            <span class="font-semibold text-gray-800 text-base"
+                                >Notifications</span
+                            >
 
-                        <!-- Notification Items -->
-                        <template v-if="notifications.length > 0">
-                            <li v-for="notification in notifications" :key="notification.id">
-                                <a
-                                    @click="handleNotificationClick(notification)"
-                                    class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                                    :class="{ 'bg-blue-50': !notification.read_at }"
+                            <span
+                                class="font-semibold text-gray-800 text-sm cursor-pointer hover:underline"
+                                @click="markAllAsRead"
+                            >
+                                Mark all as read
+                            </span>
+
+                            <span
+                                v-if="unreadCount > 0"
+                                class="w-7 h-7 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                                >{{ unreadCount }}</span
+                            >
+                        </div>
+
+                        <!-- Notification Items - Scrollable -->
+                        <div class="max-h-[450px] overflow-y-auto">
+                            <template v-if="notifications.length > 0">
+                                <div
+                                    v-for="notification in page.props.notifications"
+                                    :key="notification.id"
+                                    @click="
+                                        handleNotificationClick(notification)
+                                    "
+                                    class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                    :class="{
+                                        'bg-blue-50': !notification.read_at,
+                                    }"
                                 >
-                                    <div
-                                        v-if="!notification.read_at"
-                                        class="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"
-                                    ></div>
-                                    <div
-                                        v-else
-                                        class="w-2 h-2 mt-2 flex-shrink-0"
-                                    ></div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-800">
-                                            {{ notification.data?.title || 'New Message' }}
-                                        </p>
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            {{ notification.data?.message || 'You have a new notification' }}
-                                        </p>
-                                        <p class="text-xs text-gray-400 mt-1">
-                                            {{ formatTime(notification.created_at) }}
-                                        </p>
+                                    <div class="flex items-start gap-3">
+                                        <div
+                                            class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                                            :class="
+                                                !notification.read_at
+                                                    ? 'bg-blue-600'
+                                                    : 'bg-transparent'
+                                            "
+                                        ></div>
+                                        <div class="flex-1 min-w-0">
+                                            <p
+                                                class="text-sm font-semibold text-gray-900 mb-1"
+                                            >
+                                                {{
+                                                    notification.data?.title ||
+                                                    "New Message Received"
+                                                }}
+                                            </p>
+                                            <p
+                                                class="text-sm text-gray-600 mb-1"
+                                            >
+                                                {{
+                                                    notification.data
+                                                        ?.body ||
+                                                    "You have a new notification"
+                                                }}
+                                            </p>
+                                            <p class="text-xs text-gray-400">
+                                                {{
+                                                    formatTime(
+                                                        notification.created_at
+                                                    )
+                                                }}
+                                            </p>
+                                        </div>
                                     </div>
-                                </a>
-                            </li>
-                        </template>
+                                </div>
+                            </template>
 
-                        <!-- Empty State -->
-                        <li v-else>
-                            <div class="px-4 py-8 text-center">
-                                <Bell :size="48" class="mx-auto text-gray-300 mb-2" />
-                                <p class="text-sm text-gray-500">No notifications yet</p>
+                            <!-- Empty State -->
+                            <div v-else class="px-4 py-12 text-center">
+                                <Bell
+                                    :size="48"
+                                    class="mx-auto text-gray-300 mb-3"
+                                />
+                                <p class="text-sm text-gray-500">
+                                    No notifications yet
+                                </p>
                             </div>
-                        </li>
+                        </div>
 
                         <!-- Footer -->
-                        <li v-if="notifications.length > 0" class="border-t border-gray-200 sticky bottom-0 bg-white">
+                        <div
+                            v-if="notifications.length > 0"
+                            class="border-t border-gray-200"
+                        >
                             <Link
                                 href="/concerns"
-                                class="text-center text-sm text-blue-600 hover:bg-gray-50 py-3"
+                                class="block text-center text-sm text-blue-600 hover:bg-gray-50 py-3 font-medium"
                             >
                                 View all notifications
                             </Link>
-                        </li>
-                    </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Profile Dropdown -->

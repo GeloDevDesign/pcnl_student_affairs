@@ -17,7 +17,7 @@ class ConversationController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $notifications = auth()->user()->notifications;
+        // $notifications = auth()->user()->notifications;
 
         // Get all conversations of current user
         $conversations = Conversation::where('admin_id', $user->id)
@@ -125,7 +125,7 @@ class ConversationController extends Controller
             'availableAdmins' => $availableAdmins,
             'activeConversation' => $activeConversation,
             'messages' => $messages,
-            'notifications' => $notifications,
+            // 'notifications' => $notifications,
             'pageTitle' => 'Concerns & Messages',
         ]);
     }
@@ -222,4 +222,6 @@ class ConversationController extends Controller
 
         return redirect()->route('concerns.index')->with('success', 'Conversation deleted.');
     }
+
+    
 }

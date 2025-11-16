@@ -1,26 +1,26 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CandidateController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\ElectionController;
 use App\Http\Controllers\EventController;
-use App\Http\Controllers\HandBookController;
-use App\Http\Controllers\ItemController;
 use App\Http\Controllers\FeedBackController;
+use App\Http\Controllers\FormController;
+use App\Http\Controllers\HandBookController;
 use App\Http\Controllers\InstructorController;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\OfficersController;
 use App\Http\Controllers\PartyListController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\OfficersController;
-use App\Http\Controllers\ElectionController;
-use App\Http\Controllers\CandidateController;
-use App\Http\Controllers\VoteController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ConversationController;
-use App\Http\Controllers\FormController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VoteController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::middleware(['web'])->group(function () {
     // Public routes (accessible without authentication)
@@ -38,7 +38,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/reset-password/{token}', function (Request $request, $token) {
         return Inertia::render('Auth/ResetPassword', [
             'token' => $token,
-            'email' => $request->query('email')
+            'email' => $request->query('email'),
         ]);
     })->middleware('guest')->name('password.reset');
 
@@ -46,13 +46,11 @@ Route::middleware(['web'])->group(function () {
         ->middleware('guest')
         ->name('password.update');
 
-
     // Authenticated routes
     Route::middleware(['auth'])->group(function () {
         Route::resource('/users', UserController::class)->middleware('role:admin');
 
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
 
         Route::resource('/elections', ElectionController::class)->middleware('role:admin');
         Route::resource('/forms', FormController::class)->middleware('role:admin');
@@ -66,21 +64,17 @@ Route::middleware(['web'])->group(function () {
         Route::get('/settings', function () {
             return Inertia::render('Auth/Settings', [
                 'pageTitle' => 'PCNL - Settings',
-                'user' => Auth::user()
+                'user' => Auth::user(),
             ]);
         })->name('settings');
 
         Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
         Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 
-
-
         Route::get('/concerns', [ConversationController::class, 'index'])->name('concerns.index');
         Route::post('/concerns', [ConversationController::class, 'store'])->name('concerns.store');
         Route::post('/concerns/{conversation}/messages', [ConversationController::class, 'sendMessage'])->name('concerns.sendMessage');
         Route::delete('/concerns/{conversation}', [ConversationController::class, 'destroy'])->name('concerns.destroy');
-
-
 
         // Feedback routes
         Route::prefix('feedback')->name('feedback.')->group(function () {
@@ -109,9 +103,8 @@ Route::middleware(['web'])->group(function () {
                 Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
             });
 
-
             // Subjects
-             Route::prefix('subjects')->name('subjects.')->group(function () {
+            Route::prefix('subjects')->name('subjects.')->group(function () {
                 Route::get('/', [SubjectController::class, 'index'])->name('index');
                 Route::post('/', [SubjectController::class, 'store'])->name('store');
                 Route::patch('/{subjects}', [SubjectController::class, 'update'])->name('update');
@@ -174,8 +167,10 @@ Route::middleware(['web'])->group(function () {
                 Route::patch('/{candidate}', [CandidateController::class, 'update'])->name('update');
                 Route::delete('/{candidate}', [CandidateController::class, 'destroy'])->name('destroy');
             });
-    });
+        });
 
-         Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('hand-books.download');
+        Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('hand-books.download');
+        Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+        Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
     });
 });
