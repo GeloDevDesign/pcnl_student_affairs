@@ -35,7 +35,7 @@ const form = useForm({
     last_name: "",
     middle_name: "",
     department: 0,
-    role: "student",
+    role: "admin",
     email: "",
     id_number: "",
 });
@@ -72,7 +72,8 @@ const handleUpdate = () => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
         },
     });
@@ -122,17 +123,7 @@ const populateFormEdit = (student) => {
     form.id_number = student.id_number;
 };
 
-const applyRoleFilter = (roleValue) => {
-    router.get(
-        "/users",
-        { filter: roleValue },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        }
-    );
-};
+
 
 const resetPopulate = () => {
     form.reset();
@@ -144,8 +135,8 @@ const resetPopulate = () => {
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
             <Banner
-                :pageName="'STUDENT MANAGEMENT'"
-                :breadCrumbPages="['Student List']"
+                :pageName="'ADMIN MANAGEMENT'"
+                :breadCrumbPages="['Admin List']"
                 :currentPage="$page.url"
             >
                 <template #entity-actions>
@@ -153,15 +144,15 @@ const resetPopulate = () => {
                 </template>
             </Banner>
 
-            <!-- ✅ Add Student Modal -->
+          
             <div class="w-full flex justify-end mb-4 gap-2">
                 <ModalAction
                     v-if="$page.props.auth.user.role === 'admin'"
                     :isLoading="isLoading"
                     :modalTitle="'Student Form'"
-                    :buttonName="'Add New Student'"
+                    :buttonName="'Add New Admin'"
                     :buttonAction="
-                        isLoading ? 'Adding New Student...' : 'Add New Student'
+                        isLoading ? 'Adding New User...' : 'Add New User'
                     "
                     @reset-form="resetPopulate"
                     @submit-form="handleSubmit"
@@ -198,20 +189,7 @@ const resetPopulate = () => {
                             :errors="form.errors.email"
                         />
 
-                        <InputFields
-                            v-model="form.department"
-                            :label="'Department'"
-                            type="select"
-                            :selectionItems="[
-                                { id: 1, name: 'BSA' },
-                                { id: 2, name: 'BSBA' },
-                                { id: 3, name: 'BSCRIM' },
-                                { id: 4, name: 'BSIT' },
-                                { id: 5, name: 'BSCE' },
-                                { id: 6, name: 'BEE' },
-                            ]"
-                            :errors="form.errors.department"
-                        />
+                       
 
                         <InputFields
                             v-model="form.id_number"
@@ -221,7 +199,7 @@ const resetPopulate = () => {
                             :errors="form.errors.id_number"
                         />
                         <InputFields
-                            :disabled="true"
+                           :disabled="true"
                             v-model="form.role"
                             :label="'Role'"
                             type="select"
@@ -242,7 +220,6 @@ const resetPopulate = () => {
                         <tr>
                             <th>#</th>
                             <th>Full Name</th>
-                            <th>Department</th>
                             <th>Email</th>
                             <th>ID Number</th>
                             <th v-if="$page.props.auth.user.role === 'admin'">
@@ -268,8 +245,6 @@ const resetPopulate = () => {
                                     {{ student.last_name }}
                                 </span>
                             </td>
-
-                            <td>{{ student.department }}</td>
                             <td>{{ student.email }}</td>
                             <td>{{ student.id_number }}</td>
                             <td
@@ -301,7 +276,7 @@ const resetPopulate = () => {
             <dialog ref="dialogRef" id="student_edit_modal" class="modal">
                 <div class="modal-box">
                     <h3 class="text-lg font-bold">
-                        Update Student:
+                        Update User:
                         <span class="text-primary">
                             {{ selectedStudent?.first_name }}
                         </span>
@@ -343,21 +318,6 @@ const resetPopulate = () => {
                                 />
 
                                 <InputFields
-                                    v-model="form.department"
-                                    :label="'Department'"
-                                    type="select"
-                                    :selectionItems="[
-                                        { id: 1, name: 'BSA' },
-                                        { id: 2, name: 'BSBA' },
-                                        { id: 3, name: 'BSCRIM' },
-                                        { id: 4, name: 'BSIT' },
-                                        { id: 5, name: 'BSCE' },
-                                        { id: 6, name: 'BEE' },
-                                    ]"
-                                    :errors="form.errors.department"
-                                />
-
-                                <InputFields
                                     v-model="form.id_number"
                                     :label="'ID Number'"
                                     type="text"
@@ -368,7 +328,6 @@ const resetPopulate = () => {
                                     v-model="form.role"
                                     :label="'Role'"
                                     type="select"
-                                    :disabled="true"
                                     :selectionItems="[
                                         { id: 'admin', name: 'Admin' },
                                         { id: 'student', name: 'Student' },

@@ -18,6 +18,7 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -48,6 +49,7 @@ Route::middleware(['web'])->group(function () {
 
     // Authenticated routes
     Route::middleware(['auth'])->group(function () {
+        
         Route::resource('/users', UserController::class)->middleware('role:admin');
 
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -167,6 +169,8 @@ Route::middleware(['web'])->group(function () {
                 Route::patch('/{candidate}', [CandidateController::class, 'update'])->name('update');
                 Route::delete('/{candidate}', [CandidateController::class, 'destroy'])->name('destroy');
             });
+
+            Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
         });
 
         Route::get('/{handbook}/download', [HandBookController::class, 'download'])->name('hand-books.download');

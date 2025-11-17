@@ -20,7 +20,7 @@ class UserController extends Controller
     {
         $pageTitle = 'Student List';
 
-        $filterRole = $request->filter ?? 'admin';
+        $filterRole = $request->filter ?? 'student';
 
         $query = User::where('role', $filterRole);
 
@@ -123,19 +123,62 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'nullable|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'department' => 'required|string|max:150',
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'id_number' => ['required', 'string',   'min:6',
-                'max:10', Rule::unique('users', 'id_number')->ignore($user->id)],
-        ]);
+        // Department mapping (ID to name)
+        $departments = [
+            1 => 'BSA',
+            2 => 'BSBA',
+            3 => 'BSCRIM',
+            4 => 'BSIT',
+            5 => 'BSCE',
+            6 => 'BEE',
+        ];
 
+        // Base validation rules
+        $rules = [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'role' => ['required', Rule::in(['admin', 'student'])],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'department' => 'nullable|integer|in:'.implode(',', array_keys($departments)),
+            'id_number' => [
+                'nullable',
+                'string',
+                Rule::unique('users', 'id_number')->ignore($user->id),
+            ],
+        ];
+
+        // If student → department and id_number become REQUIRED
+        if ($request->role === User::TYPE_STUDENT) {
+            $rules['department'] = 'required|integer|in:'.implode(',', array_keys($departments));
+            $rules['id_number'] = [
+                'required',
+                'string',
+                'regex:/^[0-9\-]+$/',
+                'min:6',
+                'max:10',
+                Rule::unique('users', 'id_number')->ignore($user->id),
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        // Convert department ID → department name
+        $departmentName = $validated['department']
+            ? $departments[$validated['department']]
+            : null;
+
+        // Merge converted department into validated data
+        $validated['department'] = $departmentName;
+
+        // Update user
         $user->update($validated);
 
-        return redirect()->back()->with('success', 'Student updated successfully.');
+        return redirect()->back()->with('success', 'User updated successfully!');
     }
 
     /**

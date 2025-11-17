@@ -9,6 +9,10 @@ const props = defineProps({
     errors: String,
     selectionItems: { type: Array, default: [] },
     form: Object,
+    disabled : {
+        type: Boolean,
+        default: false
+    }
 });
 
 const today = new Date();
@@ -203,9 +207,9 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For select inputs -->
-        <fieldset v-if="props.type === 'select'" class="fieldset w-full">
+        <fieldset v-if="props.type === 'select'" class="fieldset w-full" :disabled="props.disabled">
             <legend class="fieldset-legend">{{ props.label }}</legend>
-            <select class="select w-full" v-model="model">
+            <select class="select w-full" v-model="model" readonly>
                 <option disabled value="">Select {{ props.label }}</option>
                 <option
                     v-for="(item, index) in props.selectionItems"
