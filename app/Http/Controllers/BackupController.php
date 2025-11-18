@@ -31,64 +31,80 @@ class BackupController extends Controller
         $zipname = $filename.'.zip';
         $path = 'backups/'.$zipname;
 
-        $zipDirectory = storage_path('app/backups'); // storage/app/backups
+        $tempSqlPath = storage_path('app/temp/'.$filename);
+        $zipFilePath = storage_path('app/backups/'.$zipname);
 
-        if (! is_dir($zipDirectory)) {
-            mkdir($zipDirectory, 0755, true);
+        // Create directories
+        foreach (['temp', 'backups'] as $dir) {
+            $fullDir = storage_path('app/'.$dir);
+            if (! is_dir($fullDir)) {
+                mkdir($fullDir, 0755, true);
+            }
         }
 
-        $mysqlPath = env('DB_HOST');
+        // === HOSTINGER-FRIENDLY CREDENTIALS ===
+        $host = env('DB_HOST');        // e.g. mysql.hostinger.com or 127.0.0.1
+        $port = env('DB_PORT', '3307');
         $username = env('DB_USERNAME');
-        $password = env('DB_PASSWORD');
+        $password = env('DB_PASSWORD', '');   // often contains special chars!
         $database = env('DB_DATABASE');
 
-        // Simple mysqldump using shell (works on Hostinger)
-        $command = sprintf(
-            'mysqldump --user=%s --password=%s --host=%s %s > %s',
-            $username,
-            $password,
-            $mysqlPath,
-            $database,
-            storage_path('app/temp/'.$filename)
-        );
+        // === THE MAGIC COMMAND THAT WORKS EVERYWHERE ===
+        
+        $command = '"C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe"';
 
-        // Create temp folder if not exists (This part is already correct)
-        if (! is_dir(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0755, true);
+
+        $command .= ' -h '.escapeshellarg($host);
+        $command .= ' -P '.escapeshellarg($port);
+        $command .= ' -u '.escapeshellarg($username);
+
+        // Critical: safely pass password even with special chars
+        if (filled(trim($password))) {
+            $command .= ' --password='.escapeshellarg($password);
         }
 
-        // Run dump
-        exec($command);
+        $command .= ' --single-transaction --routines --triggers --quick --lock-tables=false';
+        $command .= ' '.escapeshellarg($database);
+        $command .= ' > '.escapeshellarg($tempSqlPath);
 
-        // Compress to ZIP
-        // Use the defined $zipDirectory in the path
-        $zipFilePath = $zipDirectory.'/'.$zipname;
+        // Optional: log the exact command (remove later if you want)
+        \Log::info('mysqldump command', ['command' => $command]);
 
+        $output = [];
+        $returnVar = 0;
+        exec($command.' 2>&1', $output, $returnVar);
+
+        \Log::info('mysqldump result', ['return' => $returnVar, 'output' => $output]);
+
+        if ($returnVar !== 0 || ! file_exists($tempSqlPath) || filesize($tempSqlPath) === 0) {
+            if (file_exists($tempSqlPath)) {
+                unlink($tempSqlPath);
+            }
+
+            return redirect()->back()->with('error', 'Backup failed – check logs (common on Hostinger: wrong DB_HOST or special chars in password)');
+        }
+
+        // ZIP it
         $zip = new ZipArchive;
-        // Open the file using the full, fixed path
-        if ($zip->open($zipFilePath, ZipArchive::CREATE) === true) {
-            $zip->addFile(storage_path('app/temp/'.$filename), $filename);
-            $zip->close();
+        if ($zip->open($zipFilePath, ZipArchive::CREATE) !== true) {
+            unlink($tempSqlPath);
 
-            // Delete temp SQL file
-            unlink(storage_path('app/temp/'.$filename));
+            return redirect()->back()->with('error', 'Failed to create ZIP');
         }
+        $zip->addFile($tempSqlPath, $filename);
+        $zip->close();
+        unlink($tempSqlPath);
 
-        // Save to database
+        // Save record
         Backup::create([
             'filename' => $zipname,
-            'path' => $path, // This path is relative to storage/app, which is correct for the DB record
-            'size' => filesize($zipFilePath), // Use the explicit, resolved file path here
+            'path' => $path,
+            'size' => filesize($zipFilePath),
             'backed_up_at' => now(),
         ]);
 
         return redirect()->back()->with('success', 'Database backup created successfully!');
     }
-
-    // app/Http/Controllers/BackupController.php
-
-    // Ensure you are using the Storage facade if you switch to that method:
-    // use Illuminate\Support\Facades\Storage;
 
     // ...
 
@@ -96,20 +112,17 @@ class BackupController extends Controller
     {
         $backup = Backup::findOrFail($id);
 
-
         $filePath = storage_path('app/'.$backup->path);
 
         if (! file_exists($filePath)) {
-         
+
             \Log::error('Backup file not found at path: '.$filePath);
 
             return redirect()->back()->with('error', 'File not found on server.');
         }
 
-        
         return response()->download($filePath, $backup->filename);
 
-      
     }
 
     public function destroy($id)
