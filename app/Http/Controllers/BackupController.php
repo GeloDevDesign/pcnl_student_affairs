@@ -11,7 +11,7 @@ class BackupController extends Controller
     public function index()
     {
 
-        $backups = Backup::latest()->paginate(20);
+        $backups = Backup::latest()->paginate(10);
 
         return inertia('backups/index', [
             'pageTitle' => 'Database Backups',
