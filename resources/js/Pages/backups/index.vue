@@ -32,14 +32,15 @@ const handleCreateBackup = async () => {
         icon: "info",
         showCancelButton: true,
         confirmButtonText: "Yes, create it!",
-        confirmButtonColor: "#10B981", // Tailwind green-500
+        confirmButtonColor: "#10B981", 
         cancelButtonColor: "#6b7280",
     });
 
     if (!isConfirmed) return;
 
     isLoading.value = true;
-    createForm.post(route('backups.store'), { // Assumes 'backups.store' route exists
+    // --- CHANGE IS HERE ---
+    router.post(route('backups.store'), {}, { 
         preserveScroll: true,
         onSuccess: () => {
             toastAlert(page.props.flash.success, "success");
@@ -69,7 +70,7 @@ const handleDelete = async (backup) => {
     if (!isConfirmed) return;
 
     isLoading.value = true;
-    router.delete(route('backups.destroy', backup.id), { // Assumes 'backups.destroy' route exists
+    router.delete(route('backups.destroy', backup.id), { 
         preserveScroll: true,
         onSuccess: () => {
             toastAlert(page.props.flash.success, "success");
@@ -106,7 +107,7 @@ const handleDownload = (downloadUrl) => {
                     v-if="$page.props.auth.user.role === 'admin'"
                     :disabled="isLoading"
                     @click="handleCreateBackup"
-                    class="btn btn-success text-white"
+                    class="btn btn-primary text-white btn-sm"
                 >
                     <span v-if="isLoading" class="loading loading-spinner loading-xs"></span>
                     {{ isLoading ? 'Creating Backup...' : 'Create New Backup' }}

@@ -13,9 +13,9 @@ class Backup extends Model
         'size' => 'integer',
     ];
 
-    public function getHumanSizeAttribute()
+    public function getSizeAttribute()
     {
-        $bytes = $this->size;
+        $bytes = $this->attributes['size'];
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
 

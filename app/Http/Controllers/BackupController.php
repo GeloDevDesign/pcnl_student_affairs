@@ -10,16 +10,16 @@ class BackupController extends Controller
 {
     public function index()
     {
-        $backups = Backup::latest()->get();
 
+        $backups = Backup::latest()->paginate(20);
 
         return inertia('backups/index', [
             'pageTitle' => 'Database Backups',
-            'backups' => $backups->map(fn ($b) => [
+            'backups' => $backups->through(fn ($b) => [
                 'id' => $b->id,
                 'filename' => $b->filename,
                 'date' => $b->created_at->format('M d, Y h:i A'),
-                'size' => $b->getSizeAttribute(),
+                'size' => $b->size,
                 'download_url' => route('backups.download', $b->id),
             ]),
         ]);
@@ -31,7 +31,12 @@ class BackupController extends Controller
         $zipname = $filename.'.zip';
         $path = 'backups/'.$zipname;
 
-        // Get raw SQL dump
+        $zipDirectory = storage_path('app/backups'); // storage/app/backups
+
+        if (! is_dir($zipDirectory)) {
+            mkdir($zipDirectory, 0755, true);
+        }
+
         $mysqlPath = env('DB_HOST');
         $username = env('DB_USERNAME');
         $password = env('DB_PASSWORD');
@@ -47,7 +52,7 @@ class BackupController extends Controller
             storage_path('app/temp/'.$filename)
         );
 
-        // Create temp folder if not exists
+        // Create temp folder if not exists (This part is already correct)
         if (! is_dir(storage_path('app/temp'))) {
             mkdir(storage_path('app/temp'), 0755, true);
         }
@@ -56,8 +61,12 @@ class BackupController extends Controller
         exec($command);
 
         // Compress to ZIP
+        // Use the defined $zipDirectory in the path
+        $zipFilePath = $zipDirectory.'/'.$zipname;
+
         $zip = new ZipArchive;
-        if ($zip->open(storage_path('app/'.$path), ZipArchive::CREATE) === true) {
+        // Open the file using the full, fixed path
+        if ($zip->open($zipFilePath, ZipArchive::CREATE) === true) {
             $zip->addFile(storage_path('app/temp/'.$filename), $filename);
             $zip->close();
 
@@ -68,23 +77,39 @@ class BackupController extends Controller
         // Save to database
         Backup::create([
             'filename' => $zipname,
-            'path' => $path,
-            'size' => filesize(storage_path('app/'.$path)),
+            'path' => $path, // This path is relative to storage/app, which is correct for the DB record
+            'size' => filesize($zipFilePath), // Use the explicit, resolved file path here
+            'backed_up_at' => now(),
         ]);
 
         return redirect()->back()->with('success', 'Database backup created successfully!');
     }
 
+    // app/Http/Controllers/BackupController.php
+
+    // Ensure you are using the Storage facade if you switch to that method:
+    // use Illuminate\Support\Facades\Storage;
+
+    // ...
+
     public function download($id)
     {
         $backup = Backup::findOrFail($id);
+
+
         $filePath = storage_path('app/'.$backup->path);
 
         if (! file_exists($filePath)) {
-            return redirect()->back()->with('error', 'File not found.');
+         
+            \Log::error('Backup file not found at path: '.$filePath);
+
+            return redirect()->back()->with('error', 'File not found on server.');
         }
 
+        
         return response()->download($filePath, $backup->filename);
+
+      
     }
 
     public function destroy($id)
@@ -92,7 +117,7 @@ class BackupController extends Controller
         $backup = Backup::findOrFail($id);
 
         if (file_exists(storage_path('app/'.$backup->path))) {
-            unlink(storage_path('app/'.$backup->path)); 
+            unlink(storage_path('app/'.$backup->path));
         }
 
         $backup->delete();

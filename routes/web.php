@@ -115,10 +115,12 @@ Route::middleware(['web'])->group(function () {
             });
 
             // Backup
-            Route::get('/backups', [BackupController::class, 'index'])->name('index');
-            Route::post('/backups', [BackupController::class, 'store'])->name('store');
-            Route::get('/backups/{id}/download', [BackupController::class, 'download'])->name('download');
-            Route::delete('/backups/{id}', [BackupController::class, 'destroy'])->name('destroy');
+            Route::prefix('backups')->name('backups.')->group(function () {
+                Route::get('/', [BackupController::class, 'index'])->name('index');
+                Route::post('/', [BackupController::class, 'store'])->name('store');
+                Route::get('/{id}/download', [BackupController::class, 'download'])->name('download');
+                Route::delete('/{id}', [BackupController::class, 'destroy'])->name('destroy');
+            });
 
             // Events
             Route::prefix('events')->name('events.')->group(function () {
