@@ -459,13 +459,13 @@ const logout = () => {
                 </NavLink>
                 <NavLink
                     v-if="$page.props.auth.user.role === 'admin'"
-                    route="/backups"
+                    route="backups"
                     buttonName="Back up"
                     :isCollapsed="isCollapsed"
                 >
                     <template #icon>
                         <div>
-                             <svg
+                            <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"

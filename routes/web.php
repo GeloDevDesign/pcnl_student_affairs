@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ElectionController;
@@ -113,12 +114,11 @@ Route::middleware(['web'])->group(function () {
                 Route::delete('/{subjects}', [SubjectController::class, 'destroy'])->name('destroy');
             });
 
-            Route::prefix('subjects')->name('subjects.')->group(function () {
-                Route::get('/', [SubjectController::class, 'index'])->name('index');
-                Route::post('/', [SubjectController::class, 'store'])->name('store');
-                Route::patch('/{subjects}', [SubjectController::class, 'update'])->name('update');
-                Route::delete('/{subjects}', [SubjectController::class, 'destroy'])->name('destroy');
-            });
+            // Backup
+            Route::get('/backups', [BackupController::class, 'index'])->name('index');
+            Route::post('/backups', [BackupController::class, 'store'])->name('store');
+            Route::get('/backups/{id}/download', [BackupController::class, 'download'])->name('download');
+            Route::delete('/backups/{id}', [BackupController::class, 'destroy'])->name('destroy');
 
             // Events
             Route::prefix('events')->name('events.')->group(function () {
