@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidateController;
@@ -11,14 +12,13 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\HandBookController;
 use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficersController;
 use App\Http\Controllers\PartyListController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoteController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -49,7 +49,7 @@ Route::middleware(['web'])->group(function () {
 
     // Authenticated routes
     Route::middleware(['auth'])->group(function () {
-        
+
         Route::resource('/users', UserController::class)->middleware('role:admin');
 
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -106,6 +106,13 @@ Route::middleware(['web'])->group(function () {
             });
 
             // Subjects
+            Route::prefix('subjects')->name('subjects.')->group(function () {
+                Route::get('/', [SubjectController::class, 'index'])->name('index');
+                Route::post('/', [SubjectController::class, 'store'])->name('store');
+                Route::patch('/{subjects}', [SubjectController::class, 'update'])->name('update');
+                Route::delete('/{subjects}', [SubjectController::class, 'destroy'])->name('destroy');
+            });
+
             Route::prefix('subjects')->name('subjects.')->group(function () {
                 Route::get('/', [SubjectController::class, 'index'])->name('index');
                 Route::post('/', [SubjectController::class, 'store'])->name('store');
