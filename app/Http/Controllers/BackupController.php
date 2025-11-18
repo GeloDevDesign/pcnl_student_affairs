@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Backup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use ZipArchive;
 
 class BackupController extends Controller
@@ -50,9 +51,12 @@ class BackupController extends Controller
         $database = env('DB_DATABASE');
 
         // === THE MAGIC COMMAND THAT WORKS EVERYWHERE ===
-        
-        $command = '"C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe"';
 
+        if (App::environment('production')) {
+            $command = 'mysqldump --no-tablespaces';
+        } else {
+            $command = '"C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe"';
+        }
 
         $command .= ' -h '.escapeshellarg($host);
         $command .= ' -P '.escapeshellarg($port);
