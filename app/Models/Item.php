@@ -16,16 +16,21 @@ class Item extends Model
         'description',
         'image_url',
         'status',
+        'found_at',
+        'found_by',
+        'remarks',
         'uploaded_at'
     ];
 
-    // Automatically cast uploaded_at to Carbon instance
+
     protected $casts = [
         'uploaded_at' => 'datetime',
+        'found_at' => 'datetime',
     ];
 
 
-    protected $appends = ['formatted_uploaded_at', 'status_text'];
+    protected $appends = ['formatted_uploaded_at', 'formatted_found_at', 'status_text'];
+
 
     public function getFormattedUploadedAtAttribute()
     {
@@ -33,6 +38,14 @@ class Item extends Model
             ? $this->uploaded_at->timezone('Asia/Manila')->format('Y-m-d h:i A')
             : null;
     }
+
+    public function getFormattedFoundAtAttribute()
+    {
+        return $this->found_at
+            ? $this->found_at->timezone('Asia/Manila')->format('Y-m-d h:i A')
+            : null;
+    }
+
 
 
     public function user()

@@ -40,9 +40,11 @@ class ItemController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
-            'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+            'image_url'   => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'found_by'    => 'required|string|max:255',
         ]);
 
+        // dd($validated);
 
         // Handle image upload
         if ($request->hasFile('image_url')) {
@@ -56,6 +58,7 @@ class ItemController extends Controller
             'description' => $validated['description'],
             'image_url'   => $path,
             'status'      => Item::NOT_FOUND,
+            'found_by' => $validated['found_by']
         ]);
 
         return redirect()->back()->with('success', 'Item created successfully!');
@@ -65,13 +68,20 @@ class ItemController extends Controller
      * Update an existing item.
      */
     public function update(Request $request, Item $item)
-    {
+{
         $validated = $request->validate([
             'name'        => 'required|string|max:255|min:5',
             'description' => 'required|string|max:255|min:5',
             'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'status'      => 'required|in:0,1,2',
+            'found_by'    => 'required|string|max:255',
+            'remarks'     => 'nullable|string|max:500',
         ]);
+
+        if ($request->status == 1) {
+            $validated['found_at'] = now();
+        }
+
 
         // Only handle new image if uploaded
         if ($request->hasFile('image_url')) {
@@ -82,7 +92,7 @@ class ItemController extends Controller
 
             $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
             $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
-        } 
+        }
 
         $item->update($validated);
 

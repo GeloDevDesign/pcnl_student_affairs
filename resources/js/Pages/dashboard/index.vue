@@ -1,9 +1,10 @@
 <script setup>
-import { ref, reactive, watch,onMounted } from "vue";
+import { ref, reactive, watch, onMounted } from "vue";
 import { Head } from "@inertiajs/vue3";
 import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
+import { useForm, usePage } from "@inertiajs/vue3";
 
 import Layout from "../../shared/Layout.vue";
 import Banner from "../../components/Banner.vue";
@@ -17,6 +18,7 @@ import Annnouncement from "./announcement.vue";
 
 const pageStore = useNavigatePageStore();
 const searchIndex = ref("announcement");
+const page = usePage();
 
 watch(
     () => pageStore.currentPage,
@@ -26,16 +28,19 @@ watch(
 );
 const { applySearch } = useSearchAndFilter(searchIndex);
 
-defineProps({
+const props = defineProps({
     pageTitle: String,
     announcements: Object,
-    handBooks: Object,
+    handBook: Object,
     events: Object,
+    eventCount: Number,
+    announcementCount: Number,
+    itemCount: Number,
 });
 onMounted(() => {
     pageStore.navigatePage("home");
 });
-const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
+const breadCrumbPages = ["Home", "Announcement", "Event", "HandBooks"];
 </script>
 
 <template>
@@ -60,7 +65,11 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
             >
                 <NavCard
                     :cardTitle="'ANNOUNCEMENTS'"
-                    :cardDescription="'Post annoucements'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Post annoucements'
+                            : 'View annoucements'
+                    "
                     :cardValue="'announcement'"
                     @navigate-action="pageStore.navigatePage"
                 >
@@ -75,7 +84,11 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
 
                 <NavCard
                     :cardTitle="'Events'"
-                    :cardDescription="'Add / Create Events'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Add / Create Events'
+                            : 'View Events'
+                    "
                     :cardValue="'event'"
                     @navigate-action="pageStore.navigatePage"
                 >
@@ -89,8 +102,12 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
                 </NavCard>
 
                 <NavCard
-                    :cardTitle="'HAND-BOOKS'"
-                    :cardDescription="'View to see hand-books'"
+                    :cardTitle="'HAND BOOK'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Upload Handbooks'
+                            : 'View to see handbooks'
+                    "
                     :cardValue="'hand-books'"
                     @navigate-action="pageStore.navigatePage"
                 >
@@ -108,10 +125,15 @@ const breadCrumbPages = ["Home", "Announcement", "Event", "Hand-Books"];
                 :announcements="announcements"
                 v-if="pageStore.currentPage === 'announcement'"
             />
-            <Welcome v-if="pageStore.currentPage === 'home'" />
+            <Welcome
+                :eventCount="eventCount"
+                :announcementCount="announcementCount"
+                :itemCount="itemCount"
+                v-if="pageStore.currentPage === 'home'"
+            />
             <Event :events="events" v-if="pageStore.currentPage === 'event'" />
             <Handbook
-                :handBooks="handBooks"
+                :handBook="handBook"
                 v-if="pageStore.currentPage === 'hand-books'"
             />
         </div>

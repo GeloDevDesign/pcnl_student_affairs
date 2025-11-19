@@ -75,7 +75,7 @@ const logout = () => {
                         <!-- Evaluate -->
                         <NavLink
                             route="/evaluate"
-                            buttonName="Evaluate"
+                            buttonName="Evaluation"
                             :isCollapsed="isCollapsed"
                         >
                             <template #icon>
@@ -90,7 +90,7 @@ const logout = () => {
                         <!-- SCC Officers -->
                         <NavLink
                             route="/scc-officers"
-                            buttonName="SCC Officers"
+                            buttonName="SSC Voting"
                             :isCollapsed="isCollapsed"
                         >
                             <template #icon>
@@ -135,7 +135,7 @@ const logout = () => {
                         <NavLink
                             v-if="$page.props.auth.user.role === 'admin'"
                             route="/users"
-                            buttonName="User Management"
+                            buttonName="Student Management"
                             :isCollapsed="isCollapsed"
                         >
                             <template #icon>
@@ -151,6 +151,84 @@ const logout = () => {
                                             fill-rule="evenodd"
                                             d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
                                             clip-rule="evenodd"
+                                        />
+                                    </svg>
+                                </div>
+                            </template>
+                        </NavLink>
+                        <NavLink
+                            v-if="$page.props.auth.user.role === 'admin'"
+                            route="/admin"
+                            buttonName="Admin Management"
+                            :isCollapsed="isCollapsed"
+                        >
+                            <template #icon>
+                                <div>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                        style="color: #073c82"
+                                        class="size-5.5"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+                                            clip-rule="evenodd"
+                                        />
+                                    </svg>
+                                </div>
+                            </template>
+                        </NavLink>
+
+                        <NavLink
+                            v-if="$page.props.auth.user.role === 'admin'"
+                            route="/subjects"
+                            buttonName="Subject Management"
+                            :isCollapsed="isCollapsed"
+                        >
+                            <template #icon>
+                                <div>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="1.5"
+                                        stroke="currentColor"
+                                        class="size-5.5"
+                                        style="color: #073c82"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 1 1 1.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 0 1 0 2.25H3.74m0-.002h.375a1.125 1.125 0 0 1 0 2.25H2.99"
+                                        />
+                                    </svg>
+                                </div>
+                            </template>
+                        </NavLink>
+
+                        <NavLink
+                            v-if="$page.props.auth.user.role === 'admin'"
+                            route="/backups"
+                            buttonName="Back up"
+                            :isCollapsed="isCollapsed"
+                        >
+                            <template #icon>
+                                <div>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="1.5"
+                                        stroke="currentColor"
+                                        class="size-5.5"
+                                        style="color: #073c82"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 1 1 1.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 0 1 0 2.25H3.74m0-.002h.375a1.125 1.125 0 0 1 0 2.25H2.99"
                                         />
                                     </svg>
                                 </div>
@@ -246,7 +324,7 @@ const logout = () => {
                 <!-- Evaluate -->
                 <NavLink
                     route="/evaluate"
-                    buttonName="Evaluate"
+                    buttonName="Evaluation"
                     :isCollapsed="isCollapsed"
                 >
                     <template #icon>
@@ -261,7 +339,7 @@ const logout = () => {
                 <!-- SCC Officers -->
                 <NavLink
                     route="/scc-officers"
-                    buttonName="SCC Officers"
+                    buttonName="SSC Voting"
                     :isCollapsed="isCollapsed"
                 >
                     <template #icon>
@@ -306,7 +384,7 @@ const logout = () => {
                 <NavLink
                     v-if="$page.props.auth.user.role === 'admin'"
                     route="/users"
-                    buttonName="User Management"
+                    buttonName="Student Management"
                     :isCollapsed="isCollapsed"
                 >
                     <template #icon>
@@ -322,6 +400,85 @@ const logout = () => {
                                     fill-rule="evenodd"
                                     d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
                                     clip-rule="evenodd"
+                                />
+                            </svg>
+                        </div>
+                    </template>
+                </NavLink>
+
+                <NavLink
+                    v-if="$page.props.auth.user.role === 'admin'"
+                    route="/admin"
+                    buttonName="Admin Management"
+                    :isCollapsed="isCollapsed"
+                >
+                    <template #icon>
+                        <div>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                style="color: #073c82"
+                                class="size-5.5"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </div>
+                    </template>
+                </NavLink>
+
+                <NavLink
+                    v-if="$page.props.auth.user.role === 'admin'"
+                    route="/subjects"
+                    buttonName="Subject Management"
+                    :isCollapsed="isCollapsed"
+                >
+                    <template #icon>
+                        <div>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-5.5"
+                                style="color: #073c82"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 1 1 1.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 0 1 0 2.25H3.74m0-.002h.375a1.125 1.125 0 0 1 0 2.25H2.99"
+                                />
+                            </svg>
+                        </div>
+                    </template>
+                </NavLink>
+                <NavLink
+                    v-if="$page.props.auth.user.role === 'admin'"
+                    route="backups"
+                    buttonName="Back up"
+                    :isCollapsed="isCollapsed"
+                >
+                    <template #icon>
+                        <div>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-6"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="size-5.5"
+                                    style="color: #073c82"
+                                    d="m9 13.5 3 3m0 0 3-3m-3 3v-6m1.06-4.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
                                 />
                             </svg>
                         </div>

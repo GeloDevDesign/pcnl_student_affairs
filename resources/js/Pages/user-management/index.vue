@@ -9,6 +9,7 @@ import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
 import Pagination from "../../components/Pagination.vue";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
+import Filter from "../../components/Filter.vue";
 import Swal from "sweetalert2";
 
 const page = usePage();
@@ -22,9 +23,10 @@ const searchIndex = ref("users");
 const { applySearch } = useSearchAndFilter(searchIndex);
 
 const props = defineProps({
-    students: Object, // comes from controller
+    users: Object, // comes from controller
     errors: Object,
     pageTitle: String,
+    currentFilter: String,
 });
 
 // Create & Update form
@@ -32,8 +34,8 @@ const form = useForm({
     first_name: "",
     last_name: "",
     middle_name: "",
-    department: "",
-    role: "",
+    department: 0,
+    role: "student",
     email: "",
     id_number: "",
 });
@@ -118,7 +120,18 @@ const populateFormEdit = (student) => {
     form.role = student.role;
     form.email = student.email;
     form.id_number = student.id_number;
-    console.log(form.department);
+};
+
+const applyRoleFilter = (roleValue) => {
+    router.get(
+        "/users",
+        { filter: roleValue },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        }
+    );
 };
 
 const resetPopulate = () => {
@@ -131,8 +144,8 @@ const resetPopulate = () => {
     <Layout :pageTitle="pageTitle">
         <div class="w-full">
             <Banner
-                :pageName="'USER MANAGEMENT'"
-                :breadCrumbPages="['User List']"
+                :pageName="'STUDENT MANAGEMENT'"
+                :breadCrumbPages="['Student List']"
                 :currentPage="$page.url"
             >
                 <template #entity-actions>
@@ -141,14 +154,14 @@ const resetPopulate = () => {
             </Banner>
 
             <!-- ✅ Add Student Modal -->
-            <div class="w-full flex justify-end mb-4">
+            <div class="w-full flex justify-end mb-4 gap-2">
                 <ModalAction
                     v-if="$page.props.auth.user.role === 'admin'"
                     :isLoading="isLoading"
                     :modalTitle="'Student Form'"
-                    :buttonName="'Create New User'"
+                    :buttonName="'Add New Student'"
                     :buttonAction="
-                        isLoading ? 'Adding New User...' : 'Add New User'
+                        isLoading ? 'Adding New Student...' : 'Add New Student'
                     "
                     @reset-form="resetPopulate"
                     @submit-form="handleSubmit"
@@ -208,6 +221,7 @@ const resetPopulate = () => {
                             :errors="form.errors.id_number"
                         />
                         <InputFields
+                            :disabled="true"
                             v-model="form.role"
                             :label="'Role'"
                             type="select"
@@ -221,7 +235,7 @@ const resetPopulate = () => {
                 </ModalAction>
             </div>
 
-            <!-- ✅ Students Table -->
+            <!-- ✅ users Table -->
             <div class="overflow-x-auto bg-white">
                 <table class="table">
                     <thead>
@@ -238,13 +252,12 @@ const resetPopulate = () => {
                     </thead>
                     <tbody>
                         <tr
-                            v-for="(student, index) in students.data"
+                            v-for="(student, index) in users.data"
                             :key="student.id"
                         >
                             <th>
                                 {{
-                                    (students.current_page - 1) *
-                                        students.per_page +
+                                    (users.current_page - 1) * users.per_page +
                                     (index + 1)
                                 }}
                             </th>
@@ -282,13 +295,13 @@ const resetPopulate = () => {
                 </table>
             </div>
 
-            <Pagination :data="students" />
+            <Pagination :data="users" />
 
             <!-- ✅ Edit Modal -->
             <dialog ref="dialogRef" id="student_edit_modal" class="modal">
                 <div class="modal-box">
                     <h3 class="text-lg font-bold">
-                        Update User:
+                        Update Student:
                         <span class="text-primary">
                             {{ selectedStudent?.first_name }}
                         </span>
@@ -334,12 +347,12 @@ const resetPopulate = () => {
                                     :label="'Department'"
                                     type="select"
                                     :selectionItems="[
-                                        { id: 'BSA' , name: 'BSA' },
-                                        { id: 'BSBA', name: 'BSBA' },
-                                        { id: 'BSCRIM', name: 'BSCRIM' },
-                                        { id: 'BSIT', name: 'BSIT' },
-                                        { id: 'BSCE', name: 'BSCE' },
-                                        { id: 'BEE', name: 'BEE' },
+                                        { id: 1, name: 'BSA' },
+                                        { id: 2, name: 'BSBA' },
+                                        { id: 3, name: 'BSCRIM' },
+                                        { id: 4, name: 'BSIT' },
+                                        { id: 5, name: 'BSCE' },
+                                        { id: 6, name: 'BEE' },
                                     ]"
                                     :errors="form.errors.department"
                                 />
@@ -355,6 +368,7 @@ const resetPopulate = () => {
                                     v-model="form.role"
                                     :label="'Role'"
                                     type="select"
+                                    :disabled="true"
                                     :selectionItems="[
                                         { id: 'admin', name: 'Admin' },
                                         { id: 'student', name: 'Student' },

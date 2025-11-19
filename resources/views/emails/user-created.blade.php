@@ -201,8 +201,10 @@
 <body>
   <div class="container">
     <div class="header">
-      <img src="{{ $message->embed(public_path('/icons/logo.svg')) }}" alt="PCNL Logo"
-        style="width: 80px; margin-bottom: 10px;">
+      <img src="{{ asset('icons/logo.svg') }}" alt="PCNL Logo"
+     style="width: 80px; margin-bottom: 10px;">
+
+
 
       <h1 class="header-title" style="margin-top: 5px;">PCNL Student Affairs</h1>
       <p class="header-subtitle">Your account is ready to go</p>

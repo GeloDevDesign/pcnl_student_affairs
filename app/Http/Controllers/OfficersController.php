@@ -47,7 +47,7 @@ class OfficersController extends Controller
             },
             'user'
         ])
-            ->where('election_id', $selectedElectionId) 
+            ->where('election_id', $selectedElectionId)
             ->get();
 
 
@@ -71,7 +71,7 @@ class OfficersController extends Controller
 
         if ($election) {
 
-            $canViewResults =  $election->status == 2;
+            $canViewResults =  $election->status == 2 || $request->user()->isAdmin();
 
             $totalVoters = Vote::where('election_id', $election->id)
                 ->distinct('user_id')

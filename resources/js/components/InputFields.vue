@@ -9,7 +9,14 @@ const props = defineProps({
     errors: String,
     selectionItems: { type: Array, default: [] },
     form: Object,
+    disabled : {
+        type: Boolean,
+        default: false
+    }
 });
+
+const today = new Date();
+const minDate = ref(new Date().toISOString().split("T")[0]);
 
 // v-model for input value
 const model = defineModel({ required: true });
@@ -25,12 +32,9 @@ function handleFileChange(e) {
 
 <template>
     <div class="w-full">
-        <!-- For text/date inputs -->
-        <fieldset
-            v-if="props.type === 'text' || props.type === 'date'"
-            class="fieldset w-full"
-        >
-            <legend class="fieldset-legend font-semibold">
+        <!-- For text -->
+        <fieldset v-if="props.type === 'text'" class="fieldset w-full">
+            <legend class="fieldset-legend font-semibold text-start">
                 {{ props.label }}
             </legend>
             <label
@@ -42,7 +46,59 @@ function handleFileChange(e) {
                     v-model="model"
                     :type="type"
                     :placeholder="placeholder"
-                    :readonly="readonly"
+                />
+            </label>
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
+        </fieldset>
+
+        <!-- For textarea inputs -->
+        <fieldset class="fieldset" v-if="props.type === 'textarea'">
+            <legend class="fieldset-legend font-semibold">
+                {{ props.label }}
+            </legend>
+            <textarea v-model="model" class="textarea h-24 w-full" :placeholder="placeholder"></textarea>
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
+        </fieldset>
+
+         <fieldset class="fieldset" v-if="props.type === 'time'">
+            <legend class="fieldset-legend font-semibold">
+                {{ props.label }}
+            </legend>
+            <input v-model="model" type="time" class="input w-full"  :placeholder="placeholder">
+            <p
+                v-if="props.errors"
+                class="text-red-400 font-semibold bg-red-100 p-1"
+            >
+                {{ props.errors }}
+            </p>
+        </fieldset>
+       
+        <!-- for date inputs -->
+        <fieldset v-if="props.type === 'date'" class="fieldset w-full">
+            <legend class="fieldset-legend font-semibold">
+                {{ props.label }}
+            </legend>
+            <label
+                class="input w-full"
+                :class="props.errors ? 'border-1 border-red-500' : ''"
+            >
+                <slot></slot>
+
+                <input
+                    v-model="model"
+                    type="date"
+                    :placeholder="placeholder"
+                    :min="!props.isUpdate ? minDate : null"
                 />
             </label>
             <p
@@ -54,10 +110,7 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For email inputs -->
-        <fieldset
-            v-if="props.type === 'email'"
-            class="fieldset w-full"
-        >
+        <fieldset v-if="props.type === 'email'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
@@ -83,10 +136,7 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For password inputs with eye toggle -->
-        <fieldset
-            v-if="props.type === 'password'"
-            class="fieldset w-full"
-        >
+        <fieldset v-if="props.type === 'password'" class="fieldset w-full">
             <legend class="fieldset-legend font-semibold">
                 {{ props.label }}
             </legend>
@@ -157,9 +207,9 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For select inputs -->
-        <fieldset v-if="props.type === 'select'" class="fieldset w-full">
+        <fieldset v-if="props.type === 'select'" class="fieldset w-full" :disabled="props.disabled">
             <legend class="fieldset-legend">{{ props.label }}</legend>
-            <select class="select w-full" v-model="model">
+            <select class="select w-full" v-model="model" readonly>
                 <option disabled value="">Select {{ props.label }}</option>
                 <option
                     v-for="(item, index) in props.selectionItems"
@@ -178,7 +228,7 @@ function handleFileChange(e) {
         </fieldset>
 
         <!-- For file inputs -->
-        <fieldset v-if="props.type === 'file'" class="fieldset w-full">
+        <fieldset v-if="props.type === 'file'" class="fieldset w-full text-start">
             <legend class="fieldset-legend">{{ props.label }}</legend>
 
             <input

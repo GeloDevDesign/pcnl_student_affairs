@@ -2,32 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FeedBack;
 use App\Models\Event;
-use App\Models\Instructor;
+use App\Models\FeedBack;
 use App\Models\Form;
+use App\Models\Instructor;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
+use App\Enums\DepartmentList;
 
 class FeedBackController extends Controller
 {
-
     public function index(Request $request)
     {
         $user = $request->user();
 
         // Base queries
-        $instructorsQuery = Instructor::with(['user'])->latest();
-        $formsQuery       = Form::with(['user'])->latest();
-        $eventsQuery      = Event::query()->with([
-            $user->isAdmin() ? 'feedbacks' : 'userFeedback',
-            'user',
-        ])
+        $instructorsQuery = Instructor::with(['user', 'subjects'])->latest();
+        $formsQuery = Form::with(['user'])->latest();
+        $eventsQuery = Event::query()
+            ->when($user->isAdmin(), fn ($q) => $q->with(['feedbacks.user', 'user']))
+            ->unless($user->isAdmin(), fn ($q) => $q->with(['userFeedback.user', 'user']))
             ->withExists([
                 'feedbacks as is_feedback' => function ($q) use ($user) {
                     $q->where('user_id', $user->id);
-                }
+                },
             ])
             ->withCount('feedbacks')
             ->withAvg('feedbacks', 'ratings')
@@ -35,7 +34,7 @@ class FeedBackController extends Controller
 
         // Apply filters based on request page
         if ($request->filled('search')) {
-          
+
             switch ($request->page) {
 
                 case 'feedbacks':
@@ -44,25 +43,36 @@ class FeedBackController extends Controller
                     break;
 
                 case 'instructors':
-                    $instructorsQuery->where('name', 'like', '%' . $request->search . '%');
+                    // dd($request->filter);
+                    if ($request->filled('filter')) {
+                        $instructorsQuery->where('department', $request->filter);
+                    }
+                    
+                    if($request->search !== "1")
+                    {
+                        $instructorsQuery->where('name', 'like', '%'.$request->search.'%');
+                    }
+
                     break;
 
                 case 'forms':
-                    $formsQuery->where('name', 'like', '%' . $request->search . '%');
+                    $formsQuery->where('name', 'like', '%'.$request->search.'%');
                     break;
             }
         }
+      
+    
+        $currentFilter =  $request->filter ?? null;
 
         return Inertia::render('evaluate/index', [
-            'pageTitle'   => 'PCNL - Evaluate',
-            'events'      => $eventsQuery->paginate(10)->onEachSide(1),
+            'pageTitle' => 'PCNL - Evaluate',
+            'currentFilter' => $currentFilter,
+            'subjects' => Subject::latest()->get()->toArray(),
+            'events' => $eventsQuery->paginate(10)->onEachSide(1),
             'instructors' => $instructorsQuery->paginate(10)->onEachSide(1),
-            'forms'       => $formsQuery->paginate(10)->onEachSide(1),
+            'forms' => $formsQuery->paginate(10)->onEachSide(1),
         ]);
     }
-
-
-
 
     /**
      * Store a newly created resource in storage.
@@ -71,7 +81,7 @@ class FeedBackController extends Controller
     {
         $validated = $request->validate([
             'event_id' => 'required|exists:events,id',
-            'ratings'  => 'required|integer|min:1|max:5',
+            'ratings' => 'required|integer|min:1|max:5',
             'comments' => 'nullable|string|max:1000',
         ]);
 
@@ -89,7 +99,6 @@ class FeedBackController extends Controller
         return back()->with('success', 'Feedback submitted successfully.');
     }
 
-
     /**
      * Update the specified resource in storage.
      */
@@ -97,8 +106,8 @@ class FeedBackController extends Controller
     {
 
         $validated = $request->validate([
-            'ratings'  => 'required|integer|min:1|max:5',
-            'comments'  => 'nullable|string|max:1000',
+            'ratings' => 'required|integer|min:1|max:5',
+            'comments' => 'nullable|string|max:1000',
         ]);
 
         $feedBack->update($validated);
@@ -112,6 +121,7 @@ class FeedBackController extends Controller
     public function destroy(FeedBack $feedBack)
     {
         $feedBack->delete();
+
         return redirect()->back()->with('success', 'Feedback deleted successfully.');
     }
 }

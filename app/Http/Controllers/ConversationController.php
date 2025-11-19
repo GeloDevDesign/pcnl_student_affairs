@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\MessageReceivedNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -24,11 +25,13 @@ class ConversationController extends Controller
             ->get()
             ->map(function ($conversation) use ($user) {
                 $otherUser = $conversation->getOtherParticipant($user->id);
+
                 return [
                     'id' => $conversation->id,
                     'other_user' => [
                         'id' => $otherUser->id,
-                        'name' => trim($otherUser->first_name . ' ' . $otherUser->last_name),
+                        // If other user is a student, show as Anonymous
+                        'name' => $otherUser->role === 'student' ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
                         'email' => $otherUser->email,
                         'role' => $otherUser->role,
                         'profile_photo_path' => $otherUser->profile_photo_path,
@@ -59,7 +62,7 @@ class ConversationController extends Controller
                 ->map(function ($admin) {
                     return [
                         'id' => $admin->id,
-                        'name' => trim($admin->first_name . ' ' . $admin->last_name),
+                        'name' => trim($admin->first_name.' '.$admin->last_name),
                         'email' => $admin->email,
                     ];
                 });
@@ -68,33 +71,34 @@ class ConversationController extends Controller
         // If conversation_id is provided, load that conversation's messages
         $activeConversation = null;
         $messages = [];
-        
+
         if ($request->has('conversation_id')) {
             $conversationId = $request->input('conversation_id');
             $conversation = Conversation::find($conversationId);
-            
-            if ($conversation && 
+
+            if ($conversation &&
                 ($conversation->admin_id === $user->id || $conversation->student_id === $user->id)) {
-                
+
                 // Mark messages as read
                 $conversation->messages()
                     ->where('sender_id', '!=', $user->id)
                     ->whereNull('read_at')
                     ->update(['read_at' => now()]);
-                
+
                 $otherUser = $conversation->getOtherParticipant($user->id);
-                
+
                 $activeConversation = [
                     'id' => $conversation->id,
                     'other_user' => [
                         'id' => $otherUser->id,
-                        'name' => trim($otherUser->first_name . ' ' . $otherUser->last_name),
+                        // If other user is a student, show as Anonymous
+                        'name' => $otherUser->role === 'student' ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
                         'email' => $otherUser->email,
                         'role' => $otherUser->role,
                         'profile_photo_path' => $otherUser->profile_photo_path,
                     ],
                 ];
-                
+
                 $messages = $conversation->messages()
                     ->with('sender')
                     ->orderBy('created_at', 'asc')
@@ -106,7 +110,10 @@ class ConversationController extends Controller
                             'is_mine' => $message->sender_id === $user->id,
                             'sender' => [
                                 'id' => $message->sender->id,
-                                'name' => trim($message->sender->first_name . ' ' . $message->sender->last_name),
+                                // Show sender's name as Anonymous if they are a student
+                                'name' => $message->sender->role === 'student'
+                                    ? 'Anonymous'
+                                    : trim($message->sender->first_name.' '.$message->sender->last_name),
                                 'role' => $message->sender->role,
                                 'profile_photo_path' => $message->sender->profile_photo_path,
                             ],
@@ -146,7 +153,7 @@ class ConversationController extends Controller
             ->where('student_id', $user->id)
             ->first();
 
-        if (!$conversation) {
+        if (! $conversation) {
             $conversation = Conversation::create([
                 'admin_id' => $validated['admin_id'],
                 'student_id' => $user->id,
@@ -154,13 +161,15 @@ class ConversationController extends Controller
         }
 
         // Create first message
-        Message::create([
+        $message = Message::create([
             'conversation_id' => $conversation->id,
             'sender_id' => $user->id,
             'body' => $validated['message'],
         ]);
 
-        return redirect()->route('concerns.index', ['conversation_id' => $conversation->id]);
+        // Notify admin
+        $receiver = User::find($validated['admin_id']);
+        $receiver->notify(new MessageReceivedNotification($message, $user));
     }
 
     /**
@@ -178,11 +187,21 @@ class ConversationController extends Controller
             'body' => 'required|string|max:1000',
         ]);
 
-        Message::create([
+        $message = Message::create([
             'conversation_id' => $conversation->id,
             'sender_id' => $user->id,
             'body' => $validated['body'],
         ]);
+
+        // Determine who receives this message
+        $receiverId = $conversation->admin_id == $user->id
+            ? $conversation->student_id
+            : $conversation->admin_id;
+
+        $receiver = User::find($receiverId);
+
+        // Send notification
+        $receiver->notify(new MessageReceivedNotification($message, $user));
 
         // Update timestamp to move conversation to top
         $conversation->touch();

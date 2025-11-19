@@ -1,15 +1,15 @@
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { router, useForm } from "@inertiajs/vue3";
-import { Form, usePage } from "@inertiajs/vue3";
-import { useToastAlert } from "../../composables/useToastAlert.js";
+import { onMounted, ref } from "vue";
+import { useForm, router } from "@inertiajs/vue3";
+import { usePage } from "@inertiajs/vue3";
+import Swal from "sweetalert2";
 import ModalAction from "../../components/ModalAction.vue";
 import InputFields from "../../components/InputFields.vue";
 import Pagination from "../../components/Pagination.vue";
-import Swal from "sweetalert2";
+import { useToastAlert } from "../../composables/useToastAlert.js";
+import Filter from "../../components/Filter.vue";
 
 const { toastAlert } = useToastAlert();
-
 const page = usePage();
 const isLoading = ref(false);
 const selectedItem = ref(null);
@@ -18,12 +18,44 @@ const dialogRef = ref(null);
 const form = useForm({
     name: "",
     department: "",
+    subject_ids: [], // store array of subject IDs
 });
+
+const applyDepartmentFilter = (departmentValue) => {
+    
+    router.get(
+        "/evaluate",
+        { filter: departmentValue, page : "instructors" , search : "1"},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        }
+    );
+};
 
 const props = defineProps({
     instructors: Object,
+    subjects: Array,
     errors: Object,
+    currentFilter: String
 });
+
+const resetForm = () => {
+    form.reset();
+    form.clearErrors();
+    selectedItem.value = null;
+};
+
+const populateFormEdit = (instructor) => {
+    resetForm();
+    selectedItem.value = instructor;
+    form.name = instructor.name;
+    form.department = instructor.department;
+    form.subject_ids = instructor.subjects.map((s) => s.id);
+    console.log(form.subject_ids);
+    dialogRef.value.showModal();
+};
 
 const handleSubmit = ({ closeModal }) => {
     isLoading.value = true;
@@ -36,14 +68,13 @@ const handleSubmit = ({ closeModal }) => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
-            isLoading.value = false;
-        },
+        onError: () => (isLoading.value = false),
     });
 };
 
-const handleUpadte = () => {
+const handleUpdate = () => {
     isLoading.value = true;
+
     form.patch(`/instructor/${selectedItem.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
@@ -51,14 +82,11 @@ const handleUpadte = () => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
-            isLoading.value = false;
-        },
+        onError: () => (isLoading.value = false),
     });
 };
 
 const handleDelete = async (entity) => {
-    // Show confirm dialog
     const { isConfirmed } = await Swal.fire({
         title: "DELETE INSTRUCTOR",
         text: `Are you sure you want to delete "${entity.name}"?`,
@@ -79,27 +107,29 @@ const handleDelete = async (entity) => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
-            isLoading.value = false;
-        },
+        onError: () => (isLoading.value = false),
     });
 };
 
-const resetPopulate = () => {
-    form.reset();
-};
 
-const populateFormEdit = (entity) => {
-    form.reset();
-    form.clearErrors();
-    selectedItem.value = entity;
-    form.name = entity.name;
-    form.department = entity.department;
-};
 </script>
 
 <template>
-    <div class="w-full flex justify-end mb-4">
+    <div class="w-full flex justify-end mb-4 gap-2">
+         <Filter
+                    :buttonName="'Filter Department'"
+                    
+                    :filterItems="[
+                        { value: 1, name: 'BSA' },
+                        { value: 2, name: 'BSBA' },
+                        { value: 3, name: 'BSCRIM' },
+                        { value: 4, name: 'BSIT' },
+                        { value: 5, name: 'BSCE' },
+                        { value: 6, name: 'BEE' },
+                    ]"
+                    :selected="currentFilter"
+                    @filter="applyDepartmentFilter"
+                />
         <ModalAction
             v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"
@@ -108,26 +138,62 @@ const populateFormEdit = (entity) => {
             :buttonAction="
                 isLoading ? 'Adding New Instructor...' : 'Add Instructor'
             "
-            @reset-form="resetPopulate"
+            @reset-form="resetForm"
             @submit-form="handleSubmit"
         >
-            <Form class="space-y-2">
+            <form class="space-y-2">
                 <InputFields
                     v-model="form.name"
-                    :label="'Name'"
-                    :type="'text'"
-                    :placeholder="'Fullname of instructor'"
+                    :label="'Full Name'"
+                    type="text"
+                    placeholder="Full Name of instructor"
                     :errors="form.errors.name"
                 />
 
                 <InputFields
                     v-model="form.department"
+                    type="select"
                     :label="'Department'"
-                    :type="'text'"
-                    :placeholder="'Department'"
+                    :selectionItems="[
+                        { id: 1, name: 'BSA' },
+                        { id: 2, name: 'BSBA' },
+                        { id: 3, name: 'BSCRIM' },
+                        { id: 4, name: 'BSIT' },
+                        { id: 5, name: 'BSCE' },
+                        { id: 6, name: 'BEE' },
+                    ]"
                     :errors="form.errors.department"
                 />
-            </Form>
+
+                <fieldset
+                    class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-6"
+                >
+                    <legend class="fieldset-legend font-semibold">
+                        Subjects
+                    </legend>
+                    <div class="space-y-4">
+                        <label
+                            v-for="subject in subjects"
+                            :key="subject.id"
+                            class="label cursor-pointer ml-2"
+                        >
+                            <input
+                                type="checkbox"
+                                class="checkbox checkbox-primary checkbox-sm"
+                                :value="subject.id"
+                                v-model="form.subject_ids"
+                            />
+                            <span class="label-text">{{ subject.name }}</span>
+                        </label>
+                    </div>
+                    <p
+                        v-if="form.errors.subject_ids"
+                        class="text-red-500 text-sm mt-1"
+                    >
+                        {{ form.errors.subject_ids }}
+                    </p>
+                </fieldset>
+            </form>
         </ModalAction>
     </div>
     <div class="overflow-x-auto bg-white">
@@ -138,7 +204,7 @@ const populateFormEdit = (entity) => {
                     <th></th>
                     <th>Name</th>
                     <th>Department</th>
-
+                    <th>Subjects</th>
                     <th v-if="$page.props.auth.user.role === 'admin'">
                         Action
                     </th>
@@ -154,7 +220,16 @@ const populateFormEdit = (entity) => {
                         }}
                     </th>
                     <td>{{ ins.name }}</td>
-                    <td>{{ ins.department }}</td>
+                    <td>{{ ins.department_name }}</td>
+                    <td class="space-x-1">
+                        <span
+                            v-for="subject in ins.subjects"
+                            :key="subject.id"
+                            class="badge badge-primary badge-soft border-0"
+                        >
+                            {{ subject?.name }}
+                        </span>
+                    </td>
                     <td
                         class="space-x-2"
                         v-if="$page.props.auth.user.role === 'admin'"
@@ -180,54 +255,86 @@ const populateFormEdit = (entity) => {
 
     <Pagination :data="instructors" />
 
-    <dialog ref="dialogRef" id="my_modal_2" class="modal">
+    <dialog ref="dialogRef" class="modal">
         <div class="modal-box">
-            <h3 class="text-lg font-bold">
-                Update Instructor
-                <span class="text-primary">{{ selectedItem?.name }}</span>
+            <h3 class="text-lg font-bold mb-4">
+                Update Instructor - {{ selectedItem?.name }}
             </h3>
-            <div ref="dialogRef" class="modal-action">
-                <form method="dialog" class="w-full">
-                    <div class="w-full">
-                        <Form
-                            :action="`/instructor/${selectedItem}`"
-                            method="post"
-                            class="space-y-2"
-                        >
-                            <InputFields
-                                v-model="form.name"
-                                :label="'Title'"
-                                :type="'text'"
-                                :placeholder="'Instructor Fullname'"
-                                :errors="form.errors.name"
-                            />
+            <form class="space-y-2">
+                <InputFields
+                    v-model="form.name"
+                    label="Full Name"
+                    type="text"
+                    placeholder="Full Name"
+                    :errors="form.errors.name"
+                />
 
-                            <InputFields
-                                v-model="form.department"
-                                :label="'Details'"
-                                :type="'text'"
-                                :placeholder="'Department'"
-                                :errors="form.errors.department"
-                            />
-                        </Form>
-                    </div>
-                    <div class="w-full flex justify-end gap-2 mt-2">
-                        <button class="btn btn-sm btn-soft">Close</button>
-                        <button
-                            :disabled="isLoading"
-                            @click="handleUpadte"
-                            type="button"
-                            class="btn btn-primary btn-sm"
+                <InputFields
+                    v-model="form.department"
+                    type="select"
+                    :label="'Department'"
+                    :selectionItems="[
+                        { id: 1, name: 'BSA' },
+                        { id: 2, name: 'BSBA' },
+                        { id: 3, name: 'BSCRIM' },
+                        { id: 4, name: 'BSIT' },
+                        { id: 5, name: 'BSCE' },
+                        { id: 6, name: 'BEE' },
+                    ]"
+                    :errors="form.errors.department"
+                />
+
+                <fieldset
+                    class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-6"
+                >
+                    <legend class="fieldset-legend font-semibold">
+                        Subjects
+                    </legend>
+                    <div class="space-y-4">
+                        <label
+                            v-for="subject in subjects"
+                            :key="subject.id"
+                            class="label cursor-pointer ml-2"
                         >
-                            Update Instructor
-                            <span
-                                v-if="isLoading"
-                                class="loading loading-spinner loading-xs"
-                            ></span>
-                        </button>
+                            <input
+                                type="checkbox"
+                                class="checkbox checkbox-primary checkbox-sm"
+                                :value="subject.id"
+                                v-model="form.subject_ids"
+                            />
+                            <span class="label-text">{{ subject.name }}</span>
+                        </label>
                     </div>
-                </form>
-            </div>
+                    <p
+                        v-if="form.errors.subject_ids"
+                        class="text-red-500 text-sm mt-1"
+                    >
+                        {{ form.errors.subject_ids }}
+                    </p>
+                </fieldset>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-soft"
+                        @click="dialogRef.close()"
+                    >
+                        Close
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        :disabled="isLoading"
+                        @click="handleUpdate"
+                    >
+                        Update
+                        <span
+                            v-if="isLoading"
+                            class="loading loading-spinner loading-xs"
+                        ></span>
+                    </button>
+                </div>
+            </form>
         </div>
     </dialog>
 </template>

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Mail;
 use App\Mail\UserCreatedMail;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -20,26 +20,24 @@ class UserController extends Controller
     {
         $pageTitle = 'Student List';
 
+        $filterRole = $request->filter ?? 'student';
+
+        $query = User::where('role', $filterRole);
+
         if ($request->filled('search')) {
-            $students = User::whereIn('role', ['student', 'admin'])
-                ->where(function ($query) use ($request) {
-                    $searchTerm = $request->input('search');
-                    $query->where('first_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('email', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('id_number', 'like', '%' . $searchTerm . '%');
-                })
-                ->orderBy('first_name')
-                ->paginate(10)
-                ->withQueryString();
-        } else {
-            $students = User::where('role', 'student')
-                ->orderBy('first_name')
-                ->paginate(10);
+            $query->where(function ($query) use ($request) {
+                $searchTerm = $request->input('search');
+                $query->where('first_name', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('last_name', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('email', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('id_number', 'like', '%'.$searchTerm.'%');
+            });
         }
 
+        $users = $query->orderBy('last_name')->paginate(10)->withQueryString();
+        $currentFilter = $filterRole;
 
-        return inertia('user-management/index', compact('pageTitle', 'students'));
+        return inertia('user-management/index', compact('pageTitle', 'users', 'currentFilter'));
     }
 
     /**
@@ -59,19 +57,26 @@ class UserController extends Controller
 
         // Base validation rules
         $rules = [
-            'first_name'  => 'required|string|max:255',
-            'last_name'   => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
-            'role'        => 'required|in:admin,student',
-            'email'       => 'required|email|unique:users,email',
-            'department'  => 'nullable|integer|in:' . implode(',', array_keys($departments)),
-            'id_number'   => 'nullable|string|unique:users,id_number',
+            'role' => 'required|in:admin,student',
+            'email' => 'required|email|unique:users,email',
+            'department' => 'nullable|integer|in:'.implode(',', array_keys($departments)),
+            'id_number' => 'nullable|string|unique:users,id_number',
         ];
 
         // If the role is student, department & id_number required
         if ($request->role === User::TYPE_STUDENT) {
-            $rules['department'] = 'required|integer|in:' . implode(',', array_keys($departments));
-            $rules['id_number'] = 'required|string|unique:users,id_number';
+            $rules['department'] = 'required|integer|in:'.implode(',', array_keys($departments));
+            $rules['id_number'] = [
+                'required',
+                'string',
+                'unique:users,id_number',
+                'regex:/^[0-9\-]+$/',
+                'min:6',
+                'max:10',
+            ];
         }
 
         $validated = $request->validate($rules);
@@ -86,25 +91,25 @@ class UserController extends Controller
 
         // Create user
         $user = User::create([
-            'first_name'  => $validated['first_name'],
-            'last_name'   => $validated['last_name'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
             'middle_name' => $validated['middle_name'] ?? null,
-            'department'  => $departmentName,
-            'id_number'   => $validated['id_number'] ?? null,
-            'role'        => $validated['role'],
-            'email'       => $validated['email'],
-            'password'    => bcrypt($password),
+            'department' => $departmentName,
+            'id_number' => $validated['id_number'] ?? null,
+            'role' => $validated['role'],
+            'email' => $validated['email'],
+            'password' => bcrypt($password),
         ]);
 
         // If student and no id_number was provided, auto-generate one
         if ($user->isStudent() && empty($user->id_number)) {
-            $user->id_number = 'STU-' . str_pad($user->id, 4, '0', STR_PAD_LEFT);
+            $user->id_number = 'STU-'.str_pad($user->id, 4, '0', STR_PAD_LEFT);
             $user->save();
         }
 
         // Send email with credentials
         Mail::to($user->email)->send(new UserCreatedMail(
-            $user->first_name . ' ' . $user->last_name,
+            $user->first_name.' '.$user->last_name,
             $user->id_number ?? 'N/A',
             $user->email,
             $password
@@ -118,18 +123,62 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $validated = $request->validate([
-            'first_name'  => 'required|string|max:100',
-            'middle_name' => 'nullable|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'department'  => 'required|string|max:150',
-            'email'       => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'id_number'   => ['required', 'string', 'max:50', Rule::unique('users', 'id_number')->ignore($user->id)],
-        ]);
+        // Department mapping (ID to name)
+        $departments = [
+            1 => 'BSA',
+            2 => 'BSBA',
+            3 => 'BSCRIM',
+            4 => 'BSIT',
+            5 => 'BSCE',
+            6 => 'BEE',
+        ];
 
+        // Base validation rules
+        $rules = [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'role' => ['required', Rule::in(['admin', 'student'])],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'department' => 'nullable|integer|in:'.implode(',', array_keys($departments)),
+            'id_number' => [
+                'nullable',
+                'string',
+                Rule::unique('users', 'id_number')->ignore($user->id),
+            ],
+        ];
+
+        // If student → department and id_number become REQUIRED
+        if ($request->role === User::TYPE_STUDENT) {
+            $rules['department'] = 'required|integer|in:'.implode(',', array_keys($departments));
+            $rules['id_number'] = [
+                'required',
+                'string',
+                'regex:/^[0-9\-]+$/',
+                'min:6',
+                'max:10',
+                Rule::unique('users', 'id_number')->ignore($user->id),
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        // Convert department ID → department name
+        $departmentName = $validated['department']
+            ? $departments[$validated['department']]
+            : null;
+
+        // Merge converted department into validated data
+        $validated['department'] = $departmentName;
+
+        // Update user
         $user->update($validated);
 
-        return redirect()->back()->with('success', 'Student updated successfully.');
+        return redirect()->back()->with('success', 'User updated successfully!');
     }
 
     /**
@@ -155,13 +204,13 @@ class UserController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'first_name'     => 'required|string|max:255',
-            'last_name'      => 'required|string|max:255',
-            'middle_name'    => 'nullable|string|max:255',
-            'department'     => 'nullable|string|max:150',
-            'email'          => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'id_number'      => ['nullable', 'string', 'max:50', Rule::unique('users', 'id_number')->ignore($user->id)],
-            'profile_image'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:150',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'id_number' => ['nullable', 'string', 'max:50', Rule::unique('users', 'id_number')->ignore($user->id)],
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         // Handle profile image upload
@@ -194,18 +243,18 @@ class UserController extends Controller
         // }
 
         $validated = $request->validate([
-            'current_password'      => 'required|string',
-            'password'              => 'required|string|min:8|confirmed',
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         // Check if current password is correct
-        if (!Hash::check($validated['current_password'], $user->password)) {
+        if (! Hash::check($validated['current_password'], $user->password)) {
             return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect.']);
         }
 
         // Update password
         $user->update([
-            'password' => Hash::make($validated['password'])
+            'password' => Hash::make($validated['password']),
         ]);
 
         return redirect()->back()->with('success', 'Password updated successfully!');
