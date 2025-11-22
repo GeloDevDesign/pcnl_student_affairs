@@ -93,6 +93,7 @@ const submitEvaluation = () => {
                 onSuccess: () => {
                     Swal.fire('Submitted!', 'Your evaluation has been recorded.', 'success');
                     closeForm();
+                    evalForm.reset()
                 }
             });
         }
