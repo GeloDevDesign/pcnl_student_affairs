@@ -16,20 +16,17 @@ class OfficersController extends Controller
     {
 
 
-        // If a specific election is selected manually
         if ($request->filled('election_id')) {
             $selectedElectionId = $request->election_id;
 
-            // ✅ Set this election as "is_set = true" and unset others
             Election::where('id', '!=', $selectedElectionId)->update(['is_set' => false]);
             Election::where('id', $selectedElectionId)->update(['is_set' => true]);
         }
 
-        // If no election selected, check if there's a set election
+       
         $activeElection = Election::where('is_set', true)->first();
 
         if (!$activeElection) {
-            // If none is set, automatically set the latest one
             $activeElection = Election::latest()->first();
             if ($activeElection) {
                 $activeElection->update(['is_set' => true]);
@@ -38,7 +35,6 @@ class OfficersController extends Controller
 
         $selectedElectionId = $activeElection?->id;
 
-        // Party list & roles remain the same
         $partyList = PartyList::with([
             'candidates' => function ($query) use ($selectedElectionId) {
                 if ($selectedElectionId) {
@@ -60,9 +56,6 @@ class OfficersController extends Controller
             ->get();
 
 
-
-
-        // If election_id not provided, fallback to latest election
         $election = $selectedElectionId
             ? Election::find($selectedElectionId)
             : Election::latest()->first();
@@ -168,10 +161,14 @@ class OfficersController extends Controller
                 return [
                     'id' => $election->id,
                     'name' => $election->name,
+                    'status' => $election->status,
+                    'start_date' => $election->start_date,
+                     'end_date' => $election->end_date,
                 ];
             });
 
             
+        dd($elections);
         return Inertia::render('ssc-officers/index', [
             'pageTitle' => 'PCNL - SCC Officers',
             'partyList' => $partyList,
