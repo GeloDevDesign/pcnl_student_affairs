@@ -178,7 +178,8 @@ class FeedBackController extends Controller
     // --- UPDATED: STORE CYCLE WITH DATES ---
     public function storeCycle(Request $request)
     {
-        if($request->user()->role !== 'admin') abort(403);
+        // if(!$request->user->isAdmin()) abort(403);
+        EvaluationCycle::where('is_active', true)->update(['is_active' => 0]);
 
         // Validate the dates
         $request->validate([
