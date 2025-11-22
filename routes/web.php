@@ -73,6 +73,13 @@ Route::middleware(['web'])->group(function () {
             ]);
         })->name('settings');
 
+          Route::get('/admin-settings', function () {
+            return Inertia::render('Auth/AdminSettings', [
+                'pageTitle' => 'PCNL - Admin Settings',
+                'user' => Auth::user(),
+            ]);
+        })->name('settings');
+
         Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
         Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 
