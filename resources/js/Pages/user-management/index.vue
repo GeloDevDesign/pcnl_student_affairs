@@ -29,12 +29,22 @@ const props = defineProps({
     currentFilter: String,
 });
 
+// --- NEW: Department Name to ID Mapping for Edit Form ---
+const departmentNameToId = {
+    'BSA': 1,
+    'BSBA': 2,
+    'BSCRIM': 3,
+    'BSIT': 4,
+    'BSCE': 5,
+    'BEE': 6,
+};
+
 // Create & Update form
 const form = useForm({
     first_name: "",
     last_name: "",
     middle_name: "",
-    department: 0,
+    department: 1, // Default to a valid ID for new student creation (e.g., 1 for BSA)
     role: "student",
     email: "",
     id_number: "",
@@ -63,6 +73,11 @@ const handleSubmit = ({ closeModal }) => {
 const handleUpdate = () => {
     if (!selectedStudent.value) return;
     isLoading.value = true;
+
+    // Ensure department ID is an integer before submitting, if necessary
+    if (typeof form.department === 'string') {
+        form.department = parseInt(form.department);
+    }
 
     form.patch(`/users/${selectedStudent.value.id}`, {
         preserveScroll: true,
@@ -110,7 +125,7 @@ const handleDelete = async (student) => {
     });
 };
 
-// ✅ Populate Edit Modal
+// ✅ Populate Edit Modal (FIXED)
 const populateFormEdit = (student) => {
     form.reset();
     form.clearErrors();
@@ -118,7 +133,11 @@ const populateFormEdit = (student) => {
     form.first_name = student.first_name;
     form.middle_name = student.middle_name;
     form.last_name = student.last_name;
-    form.department = student.department;
+    
+    // --- FIX APPLIED HERE ---
+    // Convert the department name (string) back to the expected ID (integer)
+    form.department = departmentNameToId[student.department] ?? 1; 
+
     form.role = student.role;
     form.email = student.email;
     form.id_number = student.id_number;
