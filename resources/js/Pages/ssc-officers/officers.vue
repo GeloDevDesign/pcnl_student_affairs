@@ -640,6 +640,7 @@ function setElection() {
     </div>
 
      <ElectionWizard 
+            :existing-roles="existingRoles"
             :isOpen="showWizard" 
             @close="closeWizard"
             @success="handleWizardSuccess"

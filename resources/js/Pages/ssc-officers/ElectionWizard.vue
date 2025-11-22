@@ -1,226 +1,3 @@
-<script setup>
-import { ref, computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
-import Swal from 'sweetalert2';
-
-const props = defineProps({
-    isOpen: {
-        type: Boolean,
-        required: true
-    }
-});
-
-const emit = defineEmits(['close', 'success']);
-
-// Wizard Steps
-const steps = [
-    { title: 'Election', key: 'election' },
-    { title: 'Party Lists', key: 'parties' },
-    { title: 'Roles', key: 'roles' },
-    { title: 'Candidates', key: 'candidates' }
-];
-
-const currentStep = ref(0);
-const isSubmitting = ref(false);
-
-// Step 1: Election Data
-const electionData = ref({
-    name: '',
-    start_date: '',
-    end_date: '',
-    description: ''
-});
-
-// Step 2: Party Lists
-const partyLists = ref([]);
-const newParty = ref({ name: '' });
-
-// Step 3: Roles
-const roles = ref([]);
-const newRole = ref({ name: '', description: '' });
-
-// Step 4: Candidates
-const candidates = ref([]);
-const newCandidate = ref({
-    full_name: '',
-    role_id: '',
-    party_id: ''
-});
-
-// Check if can proceed to next step
-const canProceed = computed(() => {
-    switch(currentStep.value) {
-        case 0:
-            return electionData.value.name.trim() && 
-                   electionData.value.start_date && 
-                   electionData.value.end_date;
-        case 1:
-            return partyLists.value.length > 0;
-        case 2:
-            return roles.value.length > 0;
-        case 3:
-            return true; // Candidates are optional
-        default:
-            return true;
-    }
-});
-
-// Party List Methods
-function addParty() {
-    if (newParty.value.name.trim()) {
-        partyLists.value.push({ name: newParty.value.name.trim() });
-        newParty.value.name = '';
-    }
-}
-
-function removeParty(index) {
-    partyLists.value.splice(index, 1);
-}
-
-// Role Methods
-function addRole() {
-    if (newRole.value.name.trim()) {
-        roles.value.push({
-            name: newRole.value.name.trim(),
-            description: newRole.value.description.trim()
-        });
-        newRole.value = { name: '', description: '' };
-    }
-}
-
-function removeRole(index) {
-    roles.value.splice(index, 1);
-}
-
-// Candidate Methods
-function addCandidate() {
-    if (newCandidate.value.full_name.trim() && 
-        newCandidate.value.role_id !== '' && 
-        newCandidate.value.party_id !== '') {
-        candidates.value.push({
-            full_name: newCandidate.value.full_name.trim(),
-            role_id: newCandidate.value.role_id,
-            party_id: newCandidate.value.party_id
-        });
-        newCandidate.value = { full_name: '', role_id: '', party_id: '' };
-    }
-}
-
-function removeCandidate(index) {
-    candidates.value.splice(index, 1);
-}
-
-// Navigation
-function nextStep() {
-    if (canProceed.value && currentStep.value < steps.length - 1) {
-        currentStep.value++;
-    }
-}
-
-function previousStep() {
-    if (currentStep.value > 0) {
-        currentStep.value--;
-    }
-}
-
-// Submit Election
-async function submitElection() {
-    // Validate minimum requirements
-    if (!canProceed.value) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Incomplete Data',
-            text: 'Please complete all required fields before submitting.'
-        });
-        return;
-    }
-
-    const { isConfirmed } = await Swal.fire({
-        title: 'Create Election?',
-        html: `
-            <div class="text-left">
-                <p class="mb-2"><strong>Election:</strong> ${electionData.value.name}</p>
-                <p class="mb-2"><strong>Parties:</strong> ${partyLists.value.length}</p>
-                <p class="mb-2"><strong>Roles:</strong> ${roles.value.length}</p>
-                <p class="mb-2"><strong>Candidates:</strong> ${candidates.value.length}</p>
-            </div>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Create!',
-        confirmButtonColor: '#3b82f6'
-    });
-
-    if (!isConfirmed) return;
-
-    isSubmitting.value = true;
-
-    try {
-        // Prepare payload for backend
-        const payload = {
-            election: electionData.value,
-            party_lists: partyLists.value,
-            roles: roles.value,
-            candidates: candidates.value
-        };
-
-        // Submit using Inertia form
-        const form = useForm(payload);
-        
-        form.post('/elections/create-wizard', {
-            preserveScroll: true,
-            onSuccess: () => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: 'Election created successfully!',
-                    timer: 2000
-                });
-                emit('success');
-                handleClose();
-            },
-            onError: (errors) => {
-                console.error('Submission errors:', errors);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to create election. Please try again.'
-                });
-            },
-            onFinish: () => {
-                isSubmitting.value = false;
-            }
-        });
-    } catch (error) {
-        console.error('Error submitting election:', error);
-        isSubmitting.value = false;
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An unexpected error occurred.'
-        });
-    }
-}
-
-// Close modal
-function handleClose() {
-    if (isSubmitting.value) return;
-    
-    // Reset all data
-    currentStep.value = 0;
-    electionData.value = { name: '', start_date: '', end_date: '', description: '' };
-    partyLists.value = [];
-    roles.value = [];
-    candidates.value = [];
-    newParty.value = { name: '' };
-    newRole.value = { name: '', description: '' };
-    newCandidate.value = { full_name: '', role_id: '', party_id: '' };
-    
-    emit('close');
-}
-</script>
-
-
 <template>
     <!-- Wizard Modal -->
     <div v-if="isOpen" class="fixed inset-0 z-50 overflow-y-auto">
@@ -380,7 +157,9 @@ function handleClose() {
                     <!-- Step 3: Roles/Positions -->
                     <div v-show="currentStep === 2">
                         <h3 class="text-xl font-semibold text-gray-800 mb-4">Roles & Positions</h3>
-                        <p class="text-sm text-gray-600 mb-4">Define the positions available in this election.</p>
+                        <p class="text-sm text-gray-600 mb-4">
+                            Default positions are already added. You can add more if needed.
+                        </p>
                         
                         <!-- Add Role Form -->
                         <div class="bg-gray-50 p-4 rounded-lg mb-4">
@@ -405,7 +184,7 @@ function handleClose() {
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                     </svg>
-                                    Add Role
+                                    Add Additional Role
                                 </button>
                             </div>
                         </div>
@@ -418,15 +197,24 @@ function handleClose() {
                                 class="flex items-start justify-between p-4 bg-white border border-gray-200 rounded-lg"
                             >
                                 <div class="flex gap-3 flex-1">
-                                    <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-semibold flex-shrink-0">
+                                    <div 
+                                        class="w-8 h-8 rounded-full flex items-center justify-center font-semibold flex-shrink-0"
+                                        :class="role.isExisting ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'"
+                                    >
                                         {{ index + 1 }}
                                     </div>
                                     <div class="flex-1">
-                                        <p class="font-medium text-gray-800">{{ role.name }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-medium text-gray-800">{{ role.name }}</p>
+                                            <span v-if="role.isExisting" class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                                Default
+                                            </span>
+                                        </div>
                                         <p v-if="role.description" class="text-sm text-gray-600 mt-1">{{ role.description }}</p>
                                     </div>
                                 </div>
                                 <button 
+                                    v-if="!role.isExisting"
                                     @click="removeRole(index)" 
                                     class="text-red-500 hover:text-red-700 transition flex-shrink-0 ml-3"
                                 >
@@ -434,6 +222,7 @@ function handleClose() {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                 </button>
+                                <div v-else class="w-5 ml-3"></div>
                             </div>
                             <div v-if="roles.length === 0" class="text-center py-8 text-gray-500">
                                 <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -572,3 +361,245 @@ function handleClose() {
     </div>
 </template>
 
+<script setup>
+import { ref, computed, watch } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+
+const props = defineProps({
+    isOpen: {
+        type: Boolean,
+        required: true
+    },
+    existingRoles: {
+        type: Array,
+        default: () => []
+    }
+});
+
+console.log('Existing Roles Prop:', props.existingRoles);
+
+const emit = defineEmits(['close', 'success']);
+
+// Wizard Steps
+const steps = [
+    { title: 'Election', key: 'election' },
+    { title: 'Party Lists', key: 'parties' },
+    { title: 'Roles', key: 'roles' },
+    { title: 'Candidates', key: 'candidates' }
+];
+
+const currentStep = ref(0);
+const isSubmitting = ref(false);
+
+// Step 1: Election Data
+const electionData = ref({
+    name: '',
+    start_date: '',
+    end_date: '',
+    description: ''
+});
+
+// Step 2: Party Lists
+const partyLists = ref([]);
+const newParty = ref({ name: '' });
+
+// Step 3: Roles - Initialize with existing roles from props
+const roles = ref([]);
+const newRole = ref({ name: '', description: '' });
+
+// Initialize roles from existing roles when modal opens
+watch(() => props.isOpen, (isOpen) => {
+    if (isOpen && props.existingRoles && props.existingRoles.length > 0) {
+        // Copy existing roles to roles array if not already initialized
+        if (roles.value.length === 0) {
+            roles.value = props.existingRoles.map(role => ({
+                name: role.name,
+                description: role.description || '',
+                isExisting: true // Mark as existing role
+            }));
+        }
+    }
+});
+
+// Step 4: Candidates
+const candidates = ref([]);
+const newCandidate = ref({
+    full_name: '',
+    role_id: '',
+    party_id: ''
+});
+
+// Check if can proceed to next step
+const canProceed = computed(() => {
+    switch(currentStep.value) {
+        case 0:
+            return electionData.value.name.trim() && 
+                   electionData.value.start_date && 
+                   electionData.value.end_date;
+        case 1:
+            return partyLists.value.length > 0;
+        case 2:
+            return roles.value.length > 0;
+        case 3:
+            return true; // Candidates are optional
+        default:
+            return true;
+    }
+});
+
+// Party List Methods
+function addParty() {
+    if (newParty.value.name.trim()) {
+        partyLists.value.push({ name: newParty.value.name.trim() });
+        newParty.value.name = '';
+    }
+}
+
+function removeParty(index) {
+    partyLists.value.splice(index, 1);
+}
+
+// Role Methods
+function addRole() {
+    if (newRole.value.name.trim()) {
+        roles.value.push({
+            name: newRole.value.name.trim(),
+            description: newRole.value.description.trim(),
+            isExisting: false // Mark as newly added
+        });
+        newRole.value = { name: '', description: '' };
+    }
+}
+
+function removeRole(index) {
+    roles.value.splice(index, 1);
+}
+
+// Candidate Methods
+function addCandidate() {
+    if (newCandidate.value.full_name.trim() && 
+        newCandidate.value.role_id !== '' && 
+        newCandidate.value.party_id !== '') {
+        candidates.value.push({
+            full_name: newCandidate.value.full_name.trim(),
+            role_id: newCandidate.value.role_id,
+            party_id: newCandidate.value.party_id
+        });
+        newCandidate.value = { full_name: '', role_id: '', party_id: '' };
+    }
+}
+
+function removeCandidate(index) {
+    candidates.value.splice(index, 1);
+}
+
+// Navigation
+function nextStep() {
+    if (canProceed.value && currentStep.value < steps.length - 1) {
+        currentStep.value++;
+    }
+}
+
+function previousStep() {
+    if (currentStep.value > 0) {
+        currentStep.value--;
+    }
+}
+
+// Submit Election
+async function submitElection() {
+    // Validate minimum requirements
+    if (!canProceed.value) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Incomplete Data',
+            text: 'Please complete all required fields before submitting.'
+        });
+        return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+        title: 'Create Election?',
+        html: `
+            <div class="text-left">
+                <p class="mb-2"><strong>Election:</strong> ${electionData.value.name}</p>
+                <p class="mb-2"><strong>Parties:</strong> ${partyLists.value.length}</p>
+                <p class="mb-2"><strong>Roles:</strong> ${roles.value.length}</p>
+                <p class="mb-2"><strong>Candidates:</strong> ${candidates.value.length}</p>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Create!',
+        confirmButtonColor: '#3b82f6'
+    });
+
+    if (!isConfirmed) return;
+
+    isSubmitting.value = true;
+
+    try {
+        // Prepare payload for backend
+        const payload = {
+            election: electionData.value,
+            party_lists: partyLists.value,
+            roles: roles.value,
+            candidates: candidates.value
+        };
+
+        // Submit using Inertia form
+        const form = useForm(payload);
+        
+        form.post('/elections/create-wizard', {
+            preserveScroll: true,
+            onSuccess: () => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Election created successfully!',
+                    timer: 2000
+                });
+                emit('success');
+                handleClose();
+            },
+            onError: (errors) => {
+                console.error('Submission errors:', errors);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to create election. Please try again.'
+                });
+            },
+            onFinish: () => {
+                isSubmitting.value = false;
+            }
+        });
+    } catch (error) {
+        console.error('Error submitting election:', error);
+        isSubmitting.value = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An unexpected error occurred.'
+        });
+    }
+}
+
+// Close modal
+function handleClose() {
+    if (isSubmitting.value) return;
+    
+    // Reset all data
+    currentStep.value = 0;
+    electionData.value = { name: '', start_date: '', end_date: '', description: '' };
+    partyLists.value = [];
+    roles.value = [];
+    candidates.value = [];
+    newParty.value = { name: '' };
+    newRole.value = { name: '', description: '' };
+    newCandidate.value = { full_name: '', role_id: '', party_id: '' };
+    
+    emit('close');
+}
+</script>
