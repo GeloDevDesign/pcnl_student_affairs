@@ -171,7 +171,7 @@ class OfficersController extends Controller
                 ];
             });
 
-
+            
         return Inertia::render('ssc-officers/index', [
             'pageTitle' => 'PCNL - SCC Officers',
             'partyList' => $partyList,
