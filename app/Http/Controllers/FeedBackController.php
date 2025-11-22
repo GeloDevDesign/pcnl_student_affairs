@@ -12,8 +12,8 @@ use App\Models\EvaluationAnswer;
 use App\Models\EvaluationCycle;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Enums\DepartmentList;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class FeedBackController extends Controller
 {
@@ -21,8 +21,8 @@ class FeedBackController extends Controller
     {
         $user = $request->user();
 
-        // --- 1. EXISTING QUERIES (Events, Instructors, Old Forms) ---
-        $instructorsQuery = Instructor::with(['subjects'])->latest(); // Removed 'user' relation if not needed based on previous fix
+        // --- 1. EXISTING QUERIES ---
+        $instructorsQuery = Instructor::with(['subjects'])->latest();
         $formsQuery = Form::with(['user'])->latest();
         
         $eventsQuery = Event::query()
@@ -37,19 +37,15 @@ class FeedBackController extends Controller
             ->withAvg('feedbacks', 'ratings')
             ->latest();
 
-        // --- 2. EXISTING SEARCH/FILTER LOGIC ---
+        // --- 2. FILTERING ---
         if ($request->filled('search')) {
             switch ($request->page) {
                 case 'feedbacks':
                     $eventsQuery->where('id', $request->search);
                     break;
                 case 'instructors':
-                    if ($request->filled('filter')) {
-                        $instructorsQuery->where('department', $request->filter);
-                    }
-                    if($request->search !== "1") {
-                        $instructorsQuery->where('name', 'like', '%'.$request->search.'%');
-                    }
+                    if ($request->filled('filter')) $instructorsQuery->where('department', $request->filter);
+                    if($request->search !== "1") $instructorsQuery->where('name', 'like', '%'.$request->search.'%');
                     break;
                 case 'forms':
                     $formsQuery->where('name', 'like', '%'.$request->search.'%');
@@ -57,13 +53,20 @@ class FeedBackController extends Controller
             }
         }
 
-        // --- 3. NEW FACULTY EVALUATION LOGIC (Merged) ---
-        $activeCycle = EvaluationCycle::where('is_active', true)->first();
+        // --- 3. NEW FACULTY EVALUATION LOGIC (DATE BASED) ---
+        
+        // Find a cycle where TODAY is between start_date and end_date
+        $today = Carbon::now()->format('Y-m-d');
+        
+        $activeCycle = EvaluationCycle::where('is_active', true)
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->latest()
+            ->first();
         
         $adminData = null;
         $studentData = null;
 
-        // A. ADMIN DATA PREPARATION
         if ($user->role === 'admin') {
             $cycles = EvaluationCycle::orderBy('created_at', 'desc')->get();
             $selectedCycleId = $request->input('cycle_id', $activeCycle?->id ?? $cycles->first()?->id);
@@ -92,10 +95,9 @@ class FeedBackController extends Controller
                 'selected_cycle_id' => (int)$selectedCycleId,
                 'results' => $results
             ];
-        } 
-        // B. STUDENT DATA PREPARATION
-        else {
+        } else {
             $evalInstructors = [];
+            // Only load instructors if we have a valid date-based cycle
             if ($activeCycle) {
                 $evalInstructors = Instructor::get()->map(function ($instructor) use ($user, $activeCycle) {
                     $isEvaluated = Evaluation::where('evaluation_cycle_id', $activeCycle->id)
@@ -119,27 +121,27 @@ class FeedBackController extends Controller
         return Inertia::render('evaluate/index', [
             'pageTitle' => 'PCNL - Evaluate',
             'currentFilter' => $request->filter ?? null,
-            
-            // Existing Data
             'subjects' => Subject::latest()->get()->toArray(),
             'events' => $eventsQuery->paginate(10)->onEachSide(1),
             'instructors' => $instructorsQuery->paginate(10)->onEachSide(1),
-            'forms' => $formsQuery->paginate(10)->onEachSide(1), // Old forms logic
-            
-            // New Faculty Evaluation Data
+            'forms' => $formsQuery->paginate(10)->onEachSide(1),
             'active_cycle' => $activeCycle,
             'admin_data' => $adminData,
             'student_data' => $studentData,
         ]);
     }
 
-    // --- ACTIONS: EVALUATION SUBMISSION ---
     public function storeEvaluation(Request $request)
     {
         $request->validate(['ratings' => 'required|array|min:25']);
         
         DB::transaction(function () use ($request) {
-            $activeCycle = EvaluationCycle::where('is_active', true)->firstOrFail();
+            // Double check date validity on submission
+            $today = Carbon::now()->format('Y-m-d');
+            $activeCycle = EvaluationCycle::where('is_active', true)
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->firstOrFail();
             
             $eval = Evaluation::create([
                 'evaluation_cycle_id' => $activeCycle->id,
@@ -159,51 +161,55 @@ class FeedBackController extends Controller
         return redirect()->back()->with('success', 'Evaluation Submitted!');
     }
 
-    // --- ACTIONS: ADMIN CREATE CYCLE ---
+    // --- UPDATED: STORE CYCLE WITH DATES ---
     public function storeCycle(Request $request)
     {
         if($request->user()->role !== 'admin') abort(403);
-        EvaluationCycle::query()->update(['is_active' => false]);
-        EvaluationCycle::create(['name' => $request->name, 'is_active' => true]);
-        return back()->with('success', 'New cycle started!');
+
+        // Validate the dates
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        // Create the new cycle with the date range
+        // We don't strictly need to deactivate old ones (is_active => false) 
+        // because the system now checks if the current date is within the start/end range.
+        EvaluationCycle::create([
+            'name' => $request->name,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => true
+        ]);
+
+        return back()->with('success', 'New evaluation cycle scheduled!');
     }
 
-
     // --- EXISTING METHODS (Store Feedback, etc) ---
-    public function store(Request $request)
-    {
+    
+    public function store(Request $request) {
         $validated = $request->validate([
             'event_id' => 'required|exists:events,id',
             'ratings' => 'required|integer|min:1|max:5',
             'comments' => 'nullable|string|max:1000',
         ]);
-
         $event = Event::findOrFail($validated['event_id']);
-        if ($event->is_feedback) {
-            return back()->withErrors('You have already given feedback for this event.');
-        }
-
+        if ($event->is_feedback) return back()->withErrors('Feedback already given.');
         $request->user()->feedbacks()->create($validated);
-        return back()->with('success', 'Feedback submitted successfully.');
+        return back()->with('success', 'Feedback submitted.');
     }
 
-    public function update(Request $request, FeedBack $feedBack)
-    {
-        $validated = $request->validate([
-            'ratings' => 'required|integer|min:1|max:5',
-            'comments' => 'nullable|string|max:1000',
-        ]);
-        $feedBack->update($validated);
-        return redirect()->back()->with('success', 'Feedback updated successfully.');
+    public function update(Request $request, FeedBack $feedBack) {
+        $feedBack->update($request->validate(['ratings'=>'required|integer','comments'=>'nullable|string']));
+        return back()->with('success', 'Updated.');
     }
-
-    public function destroy(FeedBack $feedBack)
-    {
+    
+    public function destroy(FeedBack $feedBack) {
         $feedBack->delete();
-        return redirect()->back()->with('success', 'Feedback deleted successfully.');
+        return back()->with('success', 'Deleted.');
     }
 
-    // --- HELPERS ---
     private function getVerbalInterpretation($score) {
         if ($score >= 3.50) return 'Excellent';
         if ($score >= 2.50) return 'Very Good';

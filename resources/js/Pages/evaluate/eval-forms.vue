@@ -9,7 +9,7 @@ const page = usePage();
 const isLoading = ref(false);
 
 const props = defineProps({
-    active_cycle: Object, // { id, name, is_active }
+    active_cycle: Object, // { id, name, start_date, end_date }
     admin_data: Object,   // Data for Admin
     student_data: Object  // Data for Student
 });
@@ -17,7 +17,12 @@ const props = defineProps({
 // =========================================
 // ADMIN LOGIC
 // =========================================
-const cycleForm = useForm({ name: "" });
+// Updated form with dates
+const cycleForm = useForm({ 
+    name: "",
+    start_date: "",
+    end_date: ""
+});
 
 const createCycle = ({ closeModal }) => {
     isLoading.value = true;
@@ -26,7 +31,7 @@ const createCycle = ({ closeModal }) => {
             closeModal(); 
             cycleForm.reset(); 
             isLoading.value = false; 
-            Swal.fire('Success', 'New cycle started!', 'success');
+            Swal.fire('Success', 'New cycle scheduled successfully!', 'success');
         },
         onError: () => {
             isLoading.value = false;
@@ -99,11 +104,15 @@ const submitEvaluation = () => {
             <div class="w-full flex flex-col md:flex-row justify-between items-end md:items-center mb-6 gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Evaluation Analytics</h1>
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-gray-500 mt-1">
                         Current Cycle: 
-                        <span :class="active_cycle ? 'text-green-600 font-bold' : 'text-red-500 font-bold'">
-                            {{ active_cycle ? active_cycle.name : 'No Active Cycle' }}
+                        <span v-if="active_cycle" class="text-green-600 font-bold">
+                            {{ active_cycle.name }} 
+                            <span class="text-xs text-gray-400 ml-1">
+                                ({{ new Date(active_cycle.start_date).toLocaleDateString() }} - {{ new Date(active_cycle.end_date).toLocaleDateString() }})
+                            </span>
                         </span>
+                        <span v-else class="text-red-500 font-bold">No Active Cycle (Check Dates)</span>
                     </p>
                 </div>
 
@@ -116,29 +125,42 @@ const submitEvaluation = () => {
                     >
                         <option disabled value="">Select History</option>
                         <option v-for="c in admin_data.cycles" :key="c.id" :value="c.id">
-                            {{ c.name }} {{ c.is_active ? '(Active)' : '' }}
+                            {{ c.name }}
                         </option>
                     </select>
 
                     <!-- Create Cycle Modal -->
                     <ModalAction 
                         :isLoading="isLoading"
-                        :modalTitle="'Start New Cycle'" 
-                        :buttonName="'Start New Cycle'" 
-                        :buttonAction="isLoading ? 'Starting...' : 'Start Cycle'"
+                        :modalTitle="'Start/Schedule New Cycle'" 
+                        :buttonName="'New Cycle'" 
+                        :buttonAction="isLoading ? 'Saving...' : 'Create Cycle'"
                         @submit-form="createCycle"
                     >
-                        <form class="space-y-2">
-                            <div class="alert alert-warning text-xs mb-2">
-                                ⚠️ Starting a new cycle will close the previous one.
-                            </div>
+                        <form class="space-y-3">
                             <InputFields 
                                 v-model="cycleForm.name" 
-                                label="Cycle Name (e.g. 1st Sem 2025)" 
+                                label="Cycle Name" 
                                 type="text" 
-                                placeholder="Enter cycle name..."
+                                placeholder="e.g. 1st Sem 2025"
                                 :errors="cycleForm.errors.name"
                             />
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <InputFields 
+                                    v-model="cycleForm.start_date" 
+                                    label="Start Date" 
+                                    type="date" 
+                                    :errors="cycleForm.errors.start_date"
+                                />
+                                <InputFields 
+                                    v-model="cycleForm.end_date" 
+                                    label="End Date" 
+                                    type="date" 
+                                    :errors="cycleForm.errors.end_date"
+                                />
+                            </div>
+                            <p class="text-xs text-gray-500">Evaluation will be open strictly between these dates.</p>
                         </form>
                     </ModalAction>
                 </div>
@@ -191,10 +213,13 @@ const submitEvaluation = () => {
                 <div class="mb-6">
                     <h1 class="text-2xl font-bold text-gray-800">Faculty Evaluation</h1>
                     <div v-if="active_cycle" class="text-sm text-green-600 font-medium">
-                        Open Period: {{ active_cycle.name }}
+                        Open Period: {{ active_cycle.name }} 
+                        <span class="text-gray-500 font-normal ml-1">
+                            (Until {{ new Date(active_cycle.end_date).toLocaleDateString() }})
+                        </span>
                     </div>
                     <div v-else class="mt-2 inline-block px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full">
-                        Evaluations Closed
+                        Evaluations Closed (No Active Dates)
                     </div>
                 </div>
 
@@ -338,13 +363,3 @@ const submitEvaluation = () => {
 
     </div>
 </template>
-
-<style scoped>
-.animate-fade-in {
-    animation: fadeIn 0.3s ease-out forwards;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>

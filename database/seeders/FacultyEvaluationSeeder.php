@@ -9,6 +9,7 @@ use App\Models\EvaluationCycle;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class FacultyEvaluationSeeder extends Seeder
 {
@@ -17,7 +18,7 @@ class FacultyEvaluationSeeder extends Seeder
         // 1. FETCH Existing Students (IDs > 1)
         $students = User::where('id', '>', 1)->take(3)->get();
 
-        // 2. Create Instructors (JUST A LIST, NO USER ACCOUNTS)
+        // 2. Create Instructors
         $instructorsData = [
             ['name' => 'Mr. John Doe', 'department' => 4], 
             ['name' => 'Ms. Jane Smith', 'department' => 1], 
@@ -35,15 +36,26 @@ class FacultyEvaluationSeeder extends Seeder
             );
         }
 
-        // 3. Create Evaluation Cycles
+        // 3. Create Evaluation Cycles WITH DATES
+        
+        // Active Cycle (Now)
         $activeCycle = EvaluationCycle::firstOrCreate(
             ['name' => '1st Semester 2024-2025'],
-            ['is_active' => true]
+            [
+                'start_date' => Carbon::now()->subMonth(), // Started a month ago
+                'end_date' => Carbon::now()->addMonth(),   // Ends a month from now
+                'is_active' => true
+            ]
         );
 
+        // Inactive Cycle (Past)
         EvaluationCycle::firstOrCreate(
             ['name' => '2nd Semester 2023-2024'],
-            ['is_active' => false]
+            [
+                'start_date' => Carbon::now()->subMonths(6),
+                'end_date' => Carbon::now()->subMonths(2),
+                'is_active' => false
+            ]
         );
 
         // 4. Generate Mock Evaluations
@@ -63,7 +75,6 @@ class FacultyEvaluationSeeder extends Seeder
 
     private function createMockEvaluation($cycle, $student, $instructor, $baseRating)
     {
-        // Check uniqueness
         $exists = Evaluation::where('evaluation_cycle_id', $cycle->id)
             ->where('student_id', $student->id)
             ->where('instructor_id', $instructor->id)
@@ -71,7 +82,6 @@ class FacultyEvaluationSeeder extends Seeder
 
         if ($exists) return;
 
-        // Create Header
         $eval = Evaluation::create([
             'evaluation_cycle_id' => $cycle->id,
             'student_id' => $student->id,
@@ -80,7 +90,6 @@ class FacultyEvaluationSeeder extends Seeder
             'comments_subject' => 'Generated via Seeder',
         ]);
 
-        // Create 25 Answers
         $answers = [];
         for ($q = 1; $q <= 25; $q++) {
             $rating = rand(max(1, $baseRating - 1), min(4, $baseRating));

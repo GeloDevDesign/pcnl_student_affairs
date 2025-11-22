@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('evaluation_cycles', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // e.g., "1st Sem 2024-2025"
-            $table->boolean('is_active')->default(false); // Only one should be active
+            $table->string('name'); // e.g., "1st Sem 2025"
+            $table->date('start_date'); // NEW
+            $table->date('end_date');   // NEW
+            $table->boolean('is_active')->default(true); // Manual override to close early if needed
             $table->timestamps();
         });
 

@@ -30,7 +30,8 @@ class FacultyEvaluationController extends Controller
 
             $results = [];
             if ($selectedCycleId) {
-                $results = Instructor::with('user')->get()->map(function ($instructor) use ($selectedCycleId) {
+                // FIX: Removed ::with('user') because instructors no longer have user accounts
+                $results = Instructor::get()->map(function ($instructor) use ($selectedCycleId) {
                     $evalIds = Evaluation::where('evaluation_cycle_id', $selectedCycleId)
                                 ->where('instructor_id', $instructor->id)->pluck('id');
                     
@@ -76,7 +77,6 @@ class FacultyEvaluationController extends Controller
             ];
         }
 
-        // POINTING TO YOUR SPECIFIC FILE
         return Inertia::render('evaluate/eval-forms', $props);
     }
 
@@ -92,7 +92,7 @@ class FacultyEvaluationController extends Controller
                 'student_id' => $request->user()->id,
                 'instructor_id' => $request->instructor_id,
                 'comments_teacher' => $request->comments_teacher,
-                'comments_subject' => $request->comments_subject,
+                'comments_subject' => $request->comments_subject
             ]);
 
             $answers = [];
