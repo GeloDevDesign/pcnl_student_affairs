@@ -1,5 +1,5 @@
 <script setup>
-import { ref,computed } from "vue";
+import { ref,computed ,onMounted } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
@@ -19,30 +19,18 @@ const props = defineProps({
     selectedElection: Object,
 });
 
+
+
 const showWizard = ref(false);
 
-const existingRoles = computed(() => {
-    if (!props.roles) return [];
-    
-    // Get unique roles by name
-    const uniqueRoles = [];
-    const roleNames = new Set();
-    
-    // Convert roles object to array and filter unique by name
-    const rolesArray = Array.isArray(props.roles) ? props.roles : Object.values(props.roles);
-    
-    rolesArray.forEach(role => {
-        if (!roleNames.has(role.name)) {
-            roleNames.add(role.name);
-            uniqueRoles.push({
-                name: role.name,
-                description: role.description || ''
-            });
-        }
-    });
-    
-    return uniqueRoles;
-});
+const existingRoles = ref([
+    { name: 'President', description: '' },
+    { name: 'Vice President', description: '' },
+    { name: 'Secretary', description: '' },
+    { name: 'Treasurer', description: '' },
+    { name: 'Auditor', description: '' },
+    { name: 'P.I.O', description: '' }
+]);
 
 function openWizard() {
     showWizard.value = true;
@@ -590,6 +578,10 @@ function setElection() {
         { preserveScroll: true }
     );
 }
+
+onMounted(()=>{
+    console.log(props.roles);
+})
 </script>
 
 <template>
