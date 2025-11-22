@@ -71,7 +71,7 @@ class UserController extends Controller
                 'max:10',
             ],
         ]);
-        
+
         $validated['role'] = 'student';
 
         $this->createUser($validated);
@@ -92,7 +92,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'id_number' => 'nullable|string|unique:users,id_number',
         ]);
-            
+
         $validated['department'] = null;
         $validated['role'] = 'admin';
 
@@ -100,7 +100,6 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'Administrator created and email sent successfully!');
     }
-
 
     /**
      * Private helper method to handle the common logic of user creation and notification.
@@ -144,7 +143,6 @@ class UserController extends Controller
         return $user;
     }
 
-
     /**
      * Update the specified student in storage.
      */
@@ -170,7 +168,8 @@ class UserController extends Controller
         ];
 
         // If student → department and id_number become REQUIRED
-        if ($request->role === User::TYPE_STUDENT) {
+        // Note: Assumes User::TYPE_STUDENT is defined or is 'student' string
+        if ($request->role === 'student') {
             $rules['department'] = 'required|integer|in:'.implode(',', array_keys(self::DEPARTMENTS));
             $rules['id_number'] = [
                 'required',
@@ -184,12 +183,17 @@ class UserController extends Controller
 
         $validated = $request->validate($rules);
 
+        // --- FIX APPLIED HERE: Safely retrieve department ID ---
+        $departmentId = data_get($validated, 'department');
+
         // Convert department ID → department name
-        $departmentName = $validated['department']
-            ? self::DEPARTMENTS[$validated['department']]
+        $departmentName = ($departmentId !== null) && array_key_exists($departmentId, self::DEPARTMENTS)
+            ? self::DEPARTMENTS[$departmentId]
             : null;
 
         // Merge converted department into validated data
+        // If $departmentName is null (e.g., for an admin where department is not required/set),
+        // it correctly sets the field to null in the database.
         $validated['department'] = $departmentName;
 
         // Update user
