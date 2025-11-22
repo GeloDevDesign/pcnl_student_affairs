@@ -63,6 +63,7 @@ Route::middleware(['web'])->group(function () {
         Route::get('/lost-and-found', [ItemController::class, 'index'])->name('lost-found');
         Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluate');
         Route::get('/scc-officers', [OfficersController::class, 'index'])->name('scc-officers');
+         
 
         Route::get('/settings', function () {
             return Inertia::render('Auth/Settings', [
@@ -106,12 +107,14 @@ Route::middleware(['web'])->group(function () {
                 Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
             });
 
+            Route::post('/elections/create-wizard', [OfficersController::class, 'createWizard'])->name('elections.createWizard');
+
             // Subjects
             Route::prefix('subjects')->name('subjects.')->group(function () {
                 Route::get('/', [SubjectController::class, 'index'])->name('index');
                 Route::post('/', [SubjectController::class, 'store'])->name('store');
-                Route::patch('/{subjects}', [SubjectController::class, 'update'])->name('update');
-                Route::delete('/{subjects}', [SubjectController::class, 'destroy'])->name('destroy');
+                Route::patch('/{subject}', [SubjectController::class, 'update'])->name('update');
+                Route::delete('/{subject}', [SubjectController::class, 'destroy'])->name('destroy');
             });
 
             // Backup

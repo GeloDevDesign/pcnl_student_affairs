@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vote;
 use App\Models\Election;
 use App\Models\Role;
+use App\Models\Vote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 
 class VoteController extends Controller
 {
     public function store(Request $request)
     {
-        // Validate the input
+       
         $validated = $request->validate([
             'votes' => 'required|array',
             'votes.*.election_id' => 'required|exists:elections,id',
@@ -22,75 +21,80 @@ class VoteController extends Controller
             'votes.*.candidate_id' => 'required|exists:candidates,id',
         ]);
 
-        // dd($validated);
+    
 
         $userId = auth()->id();
-        if (!$userId) {
+        if (! $userId) {
             Log::error('No authenticated user found');
+
             return back()->with('error', 'You must be logged in to vote.');
         }
 
         $electionId = $validated['votes'][0]['election_id'];
 
-        // Check if user has already voted in this election
+    
         $hasVoted = Vote::where('user_id', $userId)
             ->where('election_id', $electionId)
             ->exists();
 
         if ($hasVoted) {
             Log::warning('User already voted', ['user_id' => $userId, 'election_id' => $electionId]);
+
             return back()->with('error', 'You have already voted in this election!');
         }
 
-        // Check if election is active
+      
         $election = Election::find($electionId);
-        if (!$election) {
+        if (! $election) {
             Log::error('Election not found', ['election_id' => $electionId]);
+
             return back()->with('error', 'Invalid election.');
         }
 
         $now = now();
-        if ($now < $election->start_date || $now > $election->end_date) {
+
+   
+        $startDate = \Carbon\Carbon::parse($election->start_date);
+        $endDate = \Carbon\Carbon::parse($election->end_date)->endOfDay(); 
+
+        if ($now < $startDate || $now > $endDate) {
             Log::warning('Election not active', [
                 'election_id' => $electionId,
-                'now' => $now,
-                'start_date' => $election->start_date,
-                'end_date' => $election->end_date,
+                'now' => $now->toDateTimeString(),
+                'start_date' => $startDate->toDateTimeString(),
+                'end_date' => $endDate->toDateTimeString(),
             ]);
+
             return back()->with('error', 'Voting is not currently open for this election!');
         }
 
-        // Get all roles for this election to verify complete ballot
-        $requiredRoles = Role::whereHas('candidates', function ($query) use ($electionId) {
-            $query->where('election_id', $electionId);
-        })->pluck('id')->toArray();
-
+       
         $votedRoles = collect($validated['votes'])->pluck('role_id')->unique()->toArray();
 
-        if (count($votedRoles) <= 0) {
-
-            return back()->with('error', 'Please vote for all positions!');
+    
+        if (count($votedRoles) < 1) {
+            return back()->with('error', 'Please vote for at least one position!');
         }
 
         try {
             DB::beginTransaction();
 
-            // Log the input data for debugging
+
             Log::info('Vote submission attempt', [
                 'user_id' => $userId,
                 'election_id' => $electionId,
                 'votes' => $validated['votes'],
             ]);
 
-            // Create votes
+            
             foreach ($validated['votes'] as $voteData) {
-                // Verify candidate belongs to the role and election
+               
                 $candidate = \App\Models\Candidate::where('id', $voteData['candidate_id'])
                     ->where('role_id', $voteData['role_id'])
                     ->where('election_id', $voteData['election_id'])
                     ->first();
 
-                if (!$candidate) {
+                if (! $candidate) {
                     Log::error('Invalid candidate', [
                         'candidate_id' => $voteData['candidate_id'],
                         'role_id' => $voteData['role_id'],
@@ -107,7 +111,7 @@ class VoteController extends Controller
                     'voted_at' => now(),
                 ]);
 
-                // Log each vote creation
+               
                 Log::info('Vote created', [
                     'vote_id' => $vote->id,
                     'user_id' => $userId,
@@ -124,13 +128,13 @@ class VoteController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Log the error for debugging
+            
             Log::error('Vote submission failed', [
                 'error' => $e->getMessage(),
                 'stack' => $e->getTraceAsString(),
             ]);
 
-            return back()->with('error', 'Failed to submit vote: ' . $e->getMessage());
+            return back()->with('error', 'Failed to submit vote: '.$e->getMessage());
         }
     }
 

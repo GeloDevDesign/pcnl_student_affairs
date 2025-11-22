@@ -46,6 +46,7 @@ const handleSubmit = ({ closeModal }) => {
 
 // ✅ Update Subject
 const handleUpdate = () => {
+   
     if (!selectedSubject.value) return;
     isLoading.value = true;
     form.patch(`/subjects/${selectedSubject.value.id}`, {

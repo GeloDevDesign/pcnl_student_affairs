@@ -2,34 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Candidate;
+use App\Models\Election;
 use App\Models\PartyList;
 use App\Models\Role;
-use App\Models\Election;
-use App\Models\Candidate;
 use App\Models\Vote;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OfficersController extends Controller
 {
     public function index(Request $request)
     {
 
-
-        // If a specific election is selected manually
         if ($request->filled('election_id')) {
             $selectedElectionId = $request->election_id;
 
-            // ✅ Set this election as "is_set = true" and unset others
             Election::where('id', '!=', $selectedElectionId)->update(['is_set' => false]);
             Election::where('id', $selectedElectionId)->update(['is_set' => true]);
         }
 
-        // If no election selected, check if there's a set election
         $activeElection = Election::where('is_set', true)->first();
 
-        if (!$activeElection) {
-            // If none is set, automatically set the latest one
+        if (! $activeElection) {
             $activeElection = Election::latest()->first();
             if ($activeElection) {
                 $activeElection->update(['is_set' => true]);
@@ -38,18 +35,16 @@ class OfficersController extends Controller
 
         $selectedElectionId = $activeElection?->id;
 
-        // Party list & roles remain the same
         $partyList = PartyList::with([
             'candidates' => function ($query) use ($selectedElectionId) {
                 if ($selectedElectionId) {
                     $query->where('election_id', $selectedElectionId);
                 }
             },
-            'user'
+            'user',
         ])
             ->where('election_id', $selectedElectionId)
             ->get();
-
 
         $roles = Role::where('election_id', $selectedElectionId)
             ->with(['candidates' => function ($q) use ($selectedElectionId) {
@@ -59,10 +54,6 @@ class OfficersController extends Controller
             }])
             ->get();
 
-
-
-
-        // If election_id not provided, fallback to latest election
         $election = $selectedElectionId
             ? Election::find($selectedElectionId)
             : Election::latest()->first();
@@ -71,7 +62,7 @@ class OfficersController extends Controller
 
         if ($election) {
 
-            $canViewResults =  $election->status == 2 || $request->user()->isAdmin();
+            $canViewResults = $election->status == 2 || $request->user()->isAdmin();
 
             $totalVoters = Vote::where('election_id', $election->id)
                 ->distinct('user_id')
@@ -107,7 +98,7 @@ class OfficersController extends Controller
                     ];
                 }
 
-                usort($candidatesWithVotes, fn($a, $b) => $b['votes'] - $a['votes']);
+                usort($candidatesWithVotes, fn ($a, $b) => $b['votes'] - $a['votes']);
 
                 if (count($candidatesWithVotes) > 0) {
                     $results[] = [
@@ -137,7 +128,7 @@ class OfficersController extends Controller
                         'total_votes' => $totalVotes,
                     ];
                 })
-                ->filter(fn($party) => $party['total_votes'] > 0)
+                ->filter(fn ($party) => $party['total_votes'] > 0)
                 ->sortByDesc('total_votes')
                 ->values();
 
@@ -156,7 +147,6 @@ class OfficersController extends Controller
             ];
         }
 
-
         $elections = Election::select('id', 'name', 'status', 'start_date', 'end_date')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -168,16 +158,134 @@ class OfficersController extends Controller
                 return [
                     'id' => $election->id,
                     'name' => $election->name,
+                    'status' => $election->status,
+                    'start_date' => $election->start_date,
+                    'end_date' => $election->end_date,
                 ];
             });
 
-
+        // dd($elections);
         return Inertia::render('ssc-officers/index', [
             'pageTitle' => 'PCNL - SCC Officers',
             'partyList' => $partyList,
             'roles' => $roles,
             'resultsData' => $resultsData,
-            'elections' => $elections
+            'elections' => $elections,
         ]);
+    }
+
+    public function createWizard(Request $request)
+    {
+        // Validate the entire wizard submission
+        $validated = $request->validate([
+            'election.name' => 'required|string|max:255',
+            'election.start_date' => 'required|date',
+            'election.end_date' => 'required|date|after_or_equal:election.start_date',
+            'election.description' => 'nullable|string',
+            'party_lists' => 'required|array|min:1',
+            'party_lists.*.name' => 'required|string|max:255',
+            'roles' => 'required|array|min:1',
+            'roles.*.name' => 'required|string|max:255',
+            'roles.*.description' => 'nullable|string',
+            'candidates' => 'nullable|array',
+            'candidates.*.full_name' => 'required|string|max:255',
+            'candidates.*.role_id' => 'required|integer',
+            'candidates.*.party_id' => 'required|integer',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Step 1: Create Election
+            $election = Election::create([
+                'name' => $validated['election']['name'],
+                'start_date' => $validated['election']['start_date'],
+                'end_date' => $validated['election']['end_date'],
+                'description' => $validated['election']['description'] ?? null,
+                'status' => 0, // Not started
+                'is_set' => false,
+                'user_id' => auth()->id(),
+            ]);
+
+            Log::info('Election created', ['election_id' => $election->id]);
+
+            // Step 2: Create Party Lists
+            $partyMapping = []; // To map temporary IDs to actual IDs
+            foreach ($validated['party_lists'] as $index => $partyData) {
+                $party = PartyList::create([
+                    'name' => $partyData['name'],
+                    'election_id' => $election->id,
+                    'user_id' => auth()->id(), // Assuming party creator is current admin
+                ]);
+                $partyMapping[$index] = $party->id;
+                Log::info('Party created', ['party_id' => $party->id, 'election_id' => $election->id]);
+            }
+
+            // Step 3: Create Roles
+            $roleMapping = []; // To map temporary IDs to actual IDs
+            foreach ($validated['roles'] as $index => $roleData) {
+                $role = Role::create([
+                    'name' => $roleData['name'],
+                    'description' => $roleData['description'] ?? null,
+                    'election_id' => $election->id,
+                ]);
+                $roleMapping[$index] = $role->id;
+                Log::info('Role created', ['role_id' => $role->id, 'election_id' => $election->id]);
+            }
+
+            // Step 4: Create Candidates (if any)
+            if (! empty($validated['candidates'])) {
+                foreach ($validated['candidates'] as $candidateData) {
+                    // Map temporary IDs to actual IDs
+                    $actualRoleId = $roleMapping[$candidateData['role_id']] ?? null;
+                    $actualPartyId = $partyMapping[$candidateData['party_id']] ?? null;
+
+                    if (! $actualRoleId || ! $actualPartyId) {
+                        Log::error('Invalid role or party mapping', [
+                            'candidate' => $candidateData,
+                            'role_mapping' => $roleMapping,
+                            'party_mapping' => $partyMapping,
+                        ]);
+
+                        continue; // Skip invalid candidate
+                    }
+
+                    $candidate = Candidate::create([
+                        'full_name' => $candidateData['full_name'],
+                        'role_id' => $actualRoleId,
+                        'party_id' => $actualPartyId,
+                        'election_id' => $election->id,
+                    ]);
+
+                    Log::info('Candidate created', [
+                        'candidate_id' => $candidate->id,
+                        'election_id' => $election->id,
+                        'role_id' => $actualRoleId,
+                        'party_id' => $actualPartyId,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            Log::info('Election wizard completed successfully', [
+                'election_id' => $election->id,
+                'parties_count' => count($partyMapping),
+                'roles_count' => count($roleMapping),
+                'candidates_count' => count($validated['candidates'] ?? []),
+            ]);
+
+            return back()->with('success', 'Election created successfully with all details!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Election wizard failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->with('error', 'Failed to create election: '.$e->getMessage());
+        }
     }
 }

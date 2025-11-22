@@ -1,11 +1,12 @@
 <script setup>
-import { ref } from "vue";
+import { ref,computed ,onMounted } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import InputFields from "../../components/InputFields.vue";
 import EntityAction from "../../components/EntityAction.vue";
 import { useToastAlert } from "../../composables/useToastAlert.js";
+import ElectionWizard from "./ElectionWizard.vue"
 
 const { toastAlert } = useToastAlert();
 const page = usePage();
@@ -17,6 +18,32 @@ const props = defineProps({
     errors: Object,
     selectedElection: Object,
 });
+
+
+
+const showWizard = ref(false);
+
+const existingRoles = ref([
+    { name: 'President', description: '' },
+    { name: 'Vice President', description: '' },
+    { name: 'Secretary', description: '' },
+    { name: 'Treasurer', description: '' },
+    { name: 'Auditor', description: '' },
+    { name: 'P.I.O', description: '' }
+]);
+
+function openWizard() {
+    showWizard.value = true;
+}
+
+function closeWizard() {
+    showWizard.value = false;
+}
+
+function handleWizardSuccess() {
+ 
+    location.reload(); 
+}
 
 const isLoading = ref(false);
 const dialogRef = ref(null);
@@ -551,6 +578,10 @@ function setElection() {
         { preserveScroll: true }
     );
 }
+
+onMounted(()=>{
+    console.log(props.roles);
+})
 </script>
 
 <template>
@@ -589,14 +620,23 @@ function setElection() {
             </svg>
         </button>
 
-        <!-- Create New Election Button -->
-        <button
-            class="btn btn-primary flex items-center justify-center md:mt-0"
-            @click="openAddElectionModal"
-        >
-            Create New Election
-        </button>
+         <button 
+                @click="openWizard"
+                class="btn btn-primary text-white gap-2"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Election
+            </button>
     </div>
+
+     <ElectionWizard 
+            :existing-roles="existingRoles"
+            :isOpen="showWizard" 
+            @close="closeWizard"
+            @success="handleWizardSuccess"
+        />
 
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-6 mt-6">
         <!-- Left Column: Election Details & Party List -->

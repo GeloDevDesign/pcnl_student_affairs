@@ -26,10 +26,7 @@ class SubjectController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        return view('subjects.create');
-    }
+   
 
     public function store(Request $request)
     {
@@ -42,13 +39,11 @@ class SubjectController extends Controller
         return redirect()->route('subjects.index')->with('success', 'Subject created successfully.');
     }
 
-    public function edit(Subject $subject)
-    {
-        return view('subjects.edit', compact('subject'));
-    }
+   
 
     public function update(Request $request, Subject $subject)
     {
+
         $validated = $request->validate([
             'name' => ['required', 'min:2', 'max:255', Rule::unique('subjects')->ignore($subject->id)],
         ]);
