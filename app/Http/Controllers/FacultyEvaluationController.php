@@ -2,75 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
-use App\Models\FeedBack;
-use App\Models\Form;
 use App\Models\Instructor;
-use App\Models\Subject;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationCycle;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use App\Enums\DepartmentList;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
-class FeedBackController extends Controller
+class FacultyEvaluationController extends Controller
 {
     public function index(Request $request)
     {
         $user = $request->user();
-
-        // --- 1. EXISTING QUERIES (Events, Instructors, Old Forms) ---
-        $instructorsQuery = Instructor::with(['subjects'])->latest(); // Removed 'user' relation if not needed based on previous fix
-        $formsQuery = Form::with(['user'])->latest();
-        
-        $eventsQuery = Event::query()
-            ->when($user->isAdmin(), fn ($q) => $q->with(['feedbacks.user', 'user']))
-            ->unless($user->isAdmin(), fn ($q) => $q->with(['userFeedback.user', 'user']))
-            ->withExists([
-                'feedbacks as is_feedback' => function ($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                },
-            ])
-            ->withCount('feedbacks')
-            ->withAvg('feedbacks', 'ratings')
-            ->latest();
-
-        // --- 2. EXISTING SEARCH/FILTER LOGIC ---
-        if ($request->filled('search')) {
-            switch ($request->page) {
-                case 'feedbacks':
-                    $eventsQuery->where('id', $request->search);
-                    break;
-                case 'instructors':
-                    if ($request->filled('filter')) {
-                        $instructorsQuery->where('department', $request->filter);
-                    }
-                    if($request->search !== "1") {
-                        $instructorsQuery->where('name', 'like', '%'.$request->search.'%');
-                    }
-                    break;
-                case 'forms':
-                    $formsQuery->where('name', 'like', '%'.$request->search.'%');
-                    break;
-            }
-        }
-
-        // --- 3. NEW FACULTY EVALUATION LOGIC (Merged) ---
         $activeCycle = EvaluationCycle::where('is_active', true)->first();
-        
-        $adminData = null;
-        $studentData = null;
 
-        // A. ADMIN DATA PREPARATION
+        // Common Data
+        $props = [
+            'active_cycle' => $activeCycle,
+            'auth_role' => $user->role, // 'admin' or 'student'
+        ];
+
+        // --- ADMIN DATA ---
         if ($user->role === 'admin') {
             $cycles = EvaluationCycle::orderBy('created_at', 'desc')->get();
             $selectedCycleId = $request->input('cycle_id', $activeCycle?->id ?? $cycles->first()?->id);
 
             $results = [];
             if ($selectedCycleId) {
-                $results = Instructor::get()->map(function ($instructor) use ($selectedCycleId) {
+                $results = Instructor::with('user')->get()->map(function ($instructor) use ($selectedCycleId) {
                     $evalIds = Evaluation::where('evaluation_cycle_id', $selectedCycleId)
                                 ->where('instructor_id', $instructor->id)->pluck('id');
                     
@@ -87,17 +47,17 @@ class FeedBackController extends Controller
                 });
             }
 
-            $adminData = [
+            $props['admin_data'] = [
                 'cycles' => $cycles,
                 'selected_cycle_id' => (int)$selectedCycleId,
                 'results' => $results
             ];
         } 
-        // B. STUDENT DATA PREPARATION
+        // --- STUDENT DATA ---
         else {
-            $evalInstructors = [];
+            $instructors = [];
             if ($activeCycle) {
-                $evalInstructors = Instructor::get()->map(function ($instructor) use ($user, $activeCycle) {
+                $instructors = Instructor::get()->map(function ($instructor) use ($user, $activeCycle) {
                     $isEvaluated = Evaluation::where('evaluation_cycle_id', $activeCycle->id)
                         ->where('student_id', $user->id)
                         ->where('instructor_id', $instructor->id)
@@ -110,31 +70,17 @@ class FeedBackController extends Controller
                     ];
                 });
             }
-            $studentData = [
-                'instructors' => $evalInstructors,
+            $props['student_data'] = [
+                'instructors' => $instructors,
                 'form_data' => $this->getEvaluationFormStructure()
             ];
         }
 
-        return Inertia::render('evaluate/index', [
-            'pageTitle' => 'PCNL - Evaluate',
-            'currentFilter' => $request->filter ?? null,
-            
-            // Existing Data
-            'subjects' => Subject::latest()->get()->toArray(),
-            'events' => $eventsQuery->paginate(10)->onEachSide(1),
-            'instructors' => $instructorsQuery->paginate(10)->onEachSide(1),
-            'forms' => $formsQuery->paginate(10)->onEachSide(1), // Old forms logic
-            
-            // New Faculty Evaluation Data
-            'active_cycle' => $activeCycle,
-            'admin_data' => $adminData,
-            'student_data' => $studentData,
-        ]);
+        // POINTING TO YOUR SPECIFIC FILE
+        return Inertia::render('evaluate/eval-forms', $props);
     }
 
-    // --- ACTIONS: EVALUATION SUBMISSION ---
-    public function storeEvaluation(Request $request)
+    public function store(Request $request)
     {
         $request->validate(['ratings' => 'required|array|min:25']);
         
@@ -159,7 +105,6 @@ class FeedBackController extends Controller
         return redirect()->back()->with('success', 'Evaluation Submitted!');
     }
 
-    // --- ACTIONS: ADMIN CREATE CYCLE ---
     public function storeCycle(Request $request)
     {
         if($request->user()->role !== 'admin') abort(403);
@@ -168,42 +113,6 @@ class FeedBackController extends Controller
         return back()->with('success', 'New cycle started!');
     }
 
-
-    // --- EXISTING METHODS (Store Feedback, etc) ---
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'event_id' => 'required|exists:events,id',
-            'ratings' => 'required|integer|min:1|max:5',
-            'comments' => 'nullable|string|max:1000',
-        ]);
-
-        $event = Event::findOrFail($validated['event_id']);
-        if ($event->is_feedback) {
-            return back()->withErrors('You have already given feedback for this event.');
-        }
-
-        $request->user()->feedbacks()->create($validated);
-        return back()->with('success', 'Feedback submitted successfully.');
-    }
-
-    public function update(Request $request, FeedBack $feedBack)
-    {
-        $validated = $request->validate([
-            'ratings' => 'required|integer|min:1|max:5',
-            'comments' => 'nullable|string|max:1000',
-        ]);
-        $feedBack->update($validated);
-        return redirect()->back()->with('success', 'Feedback updated successfully.');
-    }
-
-    public function destroy(FeedBack $feedBack)
-    {
-        $feedBack->delete();
-        return redirect()->back()->with('success', 'Feedback deleted successfully.');
-    }
-
-    // --- HELPERS ---
     private function getVerbalInterpretation($score) {
         if ($score >= 3.50) return 'Excellent';
         if ($score >= 2.50) return 'Very Good';

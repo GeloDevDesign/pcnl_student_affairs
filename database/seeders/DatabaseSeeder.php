@@ -21,7 +21,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PartyListSeeder::class,
             CandidateSeeder::class,
-            SubjectSeeder::class
+            SubjectSeeder::class,
+            FacultyEvaluationSeeder::class,
         ]);
     }
 }

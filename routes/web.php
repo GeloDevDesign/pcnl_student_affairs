@@ -22,6 +22,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FacultyEvaluationController;
 use Inertia\Inertia;
 
 Route::middleware(['web'])->group(function () {
@@ -189,4 +190,10 @@ Route::middleware(['web'])->group(function () {
         Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
         Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
     });
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluations.index');
+    Route::post('/evaluate/store', [FeedBackController::class, 'storeEvaluation'])->name('evaluations.store');
+    Route::post('/evaluate/cycles', [FeedBackController::class, 'storeCycle'])->name('evaluations.cycles.store');
 });

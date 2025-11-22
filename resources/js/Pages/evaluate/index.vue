@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, watch, onMounted } from "vue";
 import { Head } from "@inertiajs/vue3";
-import { Form } from "@inertiajs/vue3";
 import { useNavigatePageStore } from "../../stores/NavigatePageStore";
 import { useSearchAndFilter } from "../../composables/useSearchAndFilter";
 import { useForm, usePage } from "@inertiajs/vue3";
@@ -27,14 +26,19 @@ watch(
 );
 const { applySearch } = useSearchAndFilter(searchIndex);
 
-defineProps({
+const props = defineProps({
     pageTitle: String,
     events: Object,
     subjects: Array,
     instructors: Object,
     feedbacks: Object,
-    forms: Object,
+    forms: Object, // This is for old forms logic if needed
     currentFilter: String,
+    
+    // --- NEW PROPS FOR EVALUATION ---
+    active_cycle: Object,
+    admin_data: Object,
+    student_data: Object
 });
 
 onMounted(() => {
@@ -61,9 +65,7 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                 </template>
             </Banner>
 
-            <div
-                class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
-            >
+            <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8">
                 <NavCard
                     :cardTitle="'EVENT FEEDBACKS'"
                     :cardDescription="'Event Feedbacks Review'"
@@ -71,46 +73,29 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
-                        <img
-                            src="/public/icons/announce.svg"
-                            alt=""
-                            class="w-16 h-16"
-                        />
+                        <img src="/public/icons/announce.svg" alt="" class="w-16 h-16"/>
                     </template>
                 </NavCard>
 
                 <NavCard
                     :cardTitle="'INSTRUCTORS'"
-                  
-                    :cardDescription="
-                        $page.props.auth.user.role === 'admin'
-                            ? 'Evaluation Review'
-                            : 'List of Instructors'
-                    "
+                    :cardDescription="$page.props.auth.user.role === 'admin' ? 'Evaluation Review' : 'List of Instructors'"
                     :cardValue="'instructors'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
-                        <img
-                            src="/public/icons/instructor.svg"
-                            alt=""
-                            class="w-16 h-16"
-                        />
+                        <img src="/public/icons/instructor.svg" alt="" class="w-16 h-16"/>
                     </template>
                 </NavCard>
 
                 <NavCard
                     :cardTitle="'EVALUATION FORMS'"
-                    :cardDescription="'Evaluation Forms for Instructor'"
+                    :cardDescription="'Faculty Evaluation System'"
                     :cardValue="'forms'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
-                        <img
-                            src="/public/icons/form.svg"
-                            alt=""
-                            class="w-16 h-16"
-                        />
+                        <img src="/public/icons/form.svg" alt="" class="w-16 h-16"/>
                     </template>
                 </NavCard>
             </div>
@@ -126,9 +111,12 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                 v-if="pageStore.currentPage === 'instructors'"
             />
 
+            <!-- UPDATED EVAL FORMS WITH NEW PROPS -->
             <EvalForms
-                :forms="forms"
                 v-if="pageStore.currentPage === 'forms'"
+                :active_cycle="active_cycle"
+                :admin_data="admin_data"
+                :student_data="student_data"
             />
         </div>
     </Layout>
