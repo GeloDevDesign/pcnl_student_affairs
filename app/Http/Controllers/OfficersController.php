@@ -9,6 +9,8 @@ use App\Models\Role;
 use App\Models\Vote;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OfficersController extends Controller
 {
@@ -202,6 +204,7 @@ class OfficersController extends Controller
                 'description' => $validated['election']['description'] ?? null,
                 'status' => 0, // Not started
                 'is_set' => false,
+                'user_id' => auth()->id(),
             ]);
 
             Log::info('Election created', ['election_id' => $election->id]);

@@ -220,11 +220,12 @@ function handleClose() {
 }
 </script>
 
+
 <template>
     <!-- Wizard Modal -->
     <div v-if="isOpen" class="fixed inset-0 z-50 overflow-y-auto">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="handleClose"></div>
+        <div class="fixed inset-0 bg-white bg-opacity-95 transition-opacity" @click="handleClose"></div>
         
         <!-- Modal Content -->
         <div class="flex min-h-full items-center justify-center p-4">

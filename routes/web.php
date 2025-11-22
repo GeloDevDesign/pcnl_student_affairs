@@ -63,7 +63,7 @@ Route::middleware(['web'])->group(function () {
         Route::get('/lost-and-found', [ItemController::class, 'index'])->name('lost-found');
         Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluate');
         Route::get('/scc-officers', [OfficersController::class, 'index'])->name('scc-officers');
-         Route::get('/elections/create-wizard', [OfficersController::class, 'createWizard'])->name('elections.createWizard');
+         
 
         Route::get('/settings', function () {
             return Inertia::render('Auth/Settings', [
@@ -106,6 +106,8 @@ Route::middleware(['web'])->group(function () {
                 Route::patch('/{announcement}', [AnnouncementController::class, 'update'])->name('update');
                 Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
             });
+
+            Route::post('/elections/create-wizard', [OfficersController::class, 'createWizard'])->name('elections.createWizard');
 
             // Subjects
             Route::prefix('subjects')->name('subjects.')->group(function () {
