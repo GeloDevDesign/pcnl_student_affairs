@@ -36,29 +36,37 @@ class HandBookController extends Controller
     /**
      * Update an existing handbook.
      */
-    public function update(Request $request, HandBook $handbook)
-    {
-        $validated = $request->validate([
-            'title'       => 'required|string|max:255|min:5',
-            'description' => 'required|string',
-            'file_url'        => 'nullable|file|mimes:pdf,doc,docx|max:10240',
-        ]);
+   public function update(Request $request, HandBook $handbook)
+{
+    $validated = $request->validate([
+        'title'       => 'required|string|max:255|min:5',
+        'description' => 'required|string',
+        // Still validate the input, but we will handle its absence below
+        'file_url'    => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+    ]);
 
-        // Replace file only if a new one was uploaded
-        if ($request->hasFile('file_url')) {
-            // Delete old file if it exists
-            if ($handbook->file_url) {
-                Storage::disk('public')->delete($handbook->file_url);
-            }
-
-            $filename = time() . '-' . $request->file('file_url')->getClientOriginalName();
-            $validated['file_url'] = $request->file('file_url')->storeAs('handbooks', $filename, 'public');
+  
+    unset($validated['file_url']);
+    
+ 
+    if ($request->hasFile('file_url')) {
+        
+    
+        if ($handbook->file_url) {
+         
+            Storage::disk('public')->delete($handbook->file_url); 
         }
 
-        $handbook->update($validated);
-
-        return redirect()->back()->with('success', 'Handbook updated successfully!');
+        $filename = time() . '-' . $request->file('file_url')->getClientOriginalName();
+     
+        $validated['file_url'] = $request->file('file_url')->storeAs('handbooks', $filename, 'public');
     }
+
+    // Update the handbook (the file_url field is only included if a new file was uploaded)
+    $handbook->update($validated);
+
+    return redirect()->back()->with('success', 'Handbook updated successfully!');
+}
 
     /**
      * Delete a handbook and its stored file.

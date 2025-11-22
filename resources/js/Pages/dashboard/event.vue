@@ -50,9 +50,10 @@ const handleUpadte = () => {
     form.patch(`/events/${selectedItem.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
-            dialogRef.value.close();
+            dialogRef.value.close();    
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
+            form.reset();
         },
         onError: () => {
             isLoading.value = false;

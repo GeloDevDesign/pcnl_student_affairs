@@ -53,6 +53,16 @@ class UserSeeders extends Seeder
                 'role'       => 'student',
                 'department' => 'BSIT',
             ],
+
+               [
+                'first_name' => 'Angelo',
+                'last_name'  => 'Serenuela',
+                'id_number'  => '20250011',
+                'email'      => 'angeloserenuela524@gmail.com',
+                'password'   => Hash::make('Password123'),
+                'role'       => 'student',
+                'department' => 'BSIT',
+            ],
             [
                 'first_name' => 'Jolina',
                 'last_name'  => 'Mapalo',

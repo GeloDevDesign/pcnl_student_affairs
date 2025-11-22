@@ -53,6 +53,9 @@ Route::middleware(['web'])->group(function () {
 
         Route::resource('/users', UserController::class)->middleware('role:admin');
 
+        Route::post('users/student', [UserController::class, 'storeStudent'])->name('users.storeStudent')->middleware('role:admin');
+        Route::post('users/admin', [UserController::class, 'storeAdmin'])->name('users.storeAdmin')->middleware('role:admin');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
         Route::resource('/elections', ElectionController::class)->middleware('role:admin');
@@ -63,11 +66,17 @@ Route::middleware(['web'])->group(function () {
         Route::get('/lost-and-found', [ItemController::class, 'index'])->name('lost-found');
         Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluate');
         Route::get('/scc-officers', [OfficersController::class, 'index'])->name('scc-officers');
-         
 
         Route::get('/settings', function () {
             return Inertia::render('Auth/Settings', [
                 'pageTitle' => 'PCNL - Settings',
+                'user' => Auth::user(),
+            ]);
+        })->name('settings');
+
+        Route::get('/admin-settings', function () {
+            return Inertia::render('Auth/AdminSettings', [
+                'pageTitle' => 'PCNL - Admin Settings',
                 'user' => Auth::user(),
             ]);
         })->name('settings');
@@ -189,4 +198,10 @@ Route::middleware(['web'])->group(function () {
         Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
         Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
     });
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluations.index');
+    Route::post('/evaluate/store', [FeedBackController::class, 'storeEvaluation'])->name('evaluations.store');
+    Route::post('/evaluate/cycles', [FeedBackController::class, 'storeCycle'])->name('evaluations.cycles.store');
 });

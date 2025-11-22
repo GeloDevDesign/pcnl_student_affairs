@@ -69,35 +69,42 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item)
 {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255|min:5',
-            'description' => 'required|string|max:255|min:5',
-            'image_url'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'status'      => 'required|in:0,1,2',
-            'found_by'    => 'required|string|max:255',
-            'remarks'     => 'nullable|string|max:500',
-        ]);
+    $validated = $request->validate([
+        'name'          => 'required|string|max:255|min:5',
+        'description'   => 'required|string|max:255|min:5',
+        'image_url'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+        'status'        => 'required|in:0,1,2',
+        'found_by'      => 'required|string|max:255',
+        'remarks'       => 'nullable|string|max:500',
+    ]);
 
-        if ($request->status == 1) {
-            $validated['found_at'] = now();
-        }
+    // --- FIX: Remove image_url from mass assignment for now ---
+    // This prevents existing $item->image_url from being overwritten by null if no new file is uploaded.
+    unset($validated['image_url']);
 
 
-        // Only handle new image if uploaded
-        if ($request->hasFile('image_url')) {
-            // Delete old image if exists
-            if ($item->image_url) {
-                Storage::disk('public')->delete($item->image_url);
-            }
-
-            $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
-            $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
-        }
-
-        $item->update($validated);
-
-        return redirect()->back()->with('success', 'Item updated successfully!');
+    if ($request->status == 1) {
+        $validated['found_at'] = now();
     }
+
+
+    // Only handle new image if one is uploaded
+    if ($request->hasFile('image_url')) {
+        // Delete old image if exists
+        if ($item->image_url) {
+            Storage::disk('public')->delete($item->image_url);
+        }
+
+        $filename = time() . '-' . $request->file('image_url')->getClientOriginalName();
+        $validated['image_url'] = $request->file('image_url')->storeAs('items', $filename, 'public');
+    }
+
+    // Now update the item with the validated data (which includes the new image_url 
+    // ONLY if a new file was uploaded, otherwise the old value persists).
+    $item->update($validated);
+
+    return redirect()->back()->with('success', 'Item updated successfully!');
+}
 
     /**
      * Delete an item and its image.
