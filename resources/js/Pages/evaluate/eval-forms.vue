@@ -9,20 +9,30 @@ const page = usePage();
 const isLoading = ref(false);
 
 const props = defineProps({
-    active_cycle: Object, // { id, name, start_date, end_date }
-    admin_data: Object,   // Data for Admin
-    student_data: Object  // Data for Student
+    active_cycle: Object, 
+    admin_data: Object,   
+    student_data: Object  
 });
 
 // =========================================
 // ADMIN LOGIC
 // =========================================
-// Updated form with dates
 const cycleForm = useForm({ 
     name: "",
     start_date: "",
     end_date: ""
 });
+
+// --- NEW: COMMENTS MODAL LOGIC ---
+const selectedComments = ref([]);
+const commentsModalRef = ref(null);
+const selectedInstructorName = ref("");
+
+const openCommentsModal = (instructorName, comments) => {
+    selectedInstructorName.value = instructorName;
+    selectedComments.value = comments;
+    commentsModalRef.value.showModal();
+};
 
 const createCycle = ({ closeModal }) => {
     isLoading.value = true;
@@ -33,9 +43,7 @@ const createCycle = ({ closeModal }) => {
             isLoading.value = false; 
             Swal.fire('Success', 'New cycle scheduled successfully!', 'success');
         },
-        onError: () => {
-            isLoading.value = false;
-        }
+        onError: () => { isLoading.value = false; }
     });
 };
 
@@ -112,12 +120,11 @@ const submitEvaluation = () => {
                                 ({{ new Date(active_cycle.start_date).toLocaleDateString() }} - {{ new Date(active_cycle.end_date).toLocaleDateString() }})
                             </span>
                         </span>
-                        <span v-else class="text-red-500 font-bold">No Active Cycle (Check Dates)</span>
+                        <span v-else class="text-red-500 font-bold">No Active Cycle</span>
                     </p>
                 </div>
 
                 <div class="flex gap-2 items-center">
-                     <!-- History Filter -->
                     <select 
                         :value="admin_data.selected_cycle_id" 
                         @change="filterHistory" 
@@ -129,7 +136,6 @@ const submitEvaluation = () => {
                         </option>
                     </select>
 
-                    <!-- Create Cycle Modal -->
                     <ModalAction 
                         :isLoading="isLoading"
                         :modalTitle="'Start/Schedule New Cycle'" 
@@ -145,22 +151,10 @@ const submitEvaluation = () => {
                                 placeholder="e.g. 1st Sem 2025"
                                 :errors="cycleForm.errors.name"
                             />
-                            
                             <div class="grid grid-cols-2 gap-4">
-                                <InputFields 
-                                    v-model="cycleForm.start_date" 
-                                    label="Start Date" 
-                                    type="date" 
-                                    :errors="cycleForm.errors.start_date"
-                                />
-                                <InputFields 
-                                    v-model="cycleForm.end_date" 
-                                    label="End Date" 
-                                    type="date" 
-                                    :errors="cycleForm.errors.end_date"
-                                />
+                                <InputFields v-model="cycleForm.start_date" label="Start Date" type="date" :errors="cycleForm.errors.start_date" />
+                                <InputFields v-model="cycleForm.end_date" label="End Date" type="date" :errors="cycleForm.errors.end_date" />
                             </div>
-                            <p class="text-xs text-gray-500">Evaluation will be open strictly between these dates.</p>
                         </form>
                     </ModalAction>
                 </div>
@@ -176,14 +170,13 @@ const submitEvaluation = () => {
                             <th class="text-center">Respondents</th>
                             <th class="text-center">Avg. Rating</th>
                             <th>Verdict</th>
+                            <th class="text-center">Feedback</th> <!-- NEW COLUMN -->
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="res in admin_data.results" :key="res.id" class="hover:bg-gray-50 transition">
                             <td class="pl-6 font-bold text-gray-700">{{ res.instructor }}</td>
-                            <td>
-                                <span class="badge badge-sm badge-ghost">{{ res.department }}</span>
-                            </td>
+                            <td><span class="badge badge-sm badge-ghost">{{ res.department }}</span></td>
                             <td class="text-center">{{ res.respondents }}</td>
                             <td class="text-center">
                                 <span :class="res.average_rating >= 3 ? 'text-green-600 font-bold' : 'text-orange-500 font-bold'">
@@ -191,24 +184,74 @@ const submitEvaluation = () => {
                                 </span>
                             </td>
                             <td class="text-sm">{{ res.verbal_interpretation }}</td>
+                            
+                            <!-- NEW: VIEW COMMENTS BUTTON -->
+                            <td class="text-center">
+                                <button 
+                                    @click="openCommentsModal(res.instructor, res.comments)"
+                                    class="btn btn-xs btn-ghost text-blue-600"
+                                    :disabled="res.comments.length === 0"
+                                >
+                                    {{ res.comments.length > 0 ? 'View Comments' : 'No Comments' }}
+                                </button>
+                            </td>
                         </tr>
                         <tr v-if="admin_data.results.length === 0">
-                            <td colspan="5" class="text-center py-10 text-gray-400">
-                                No evaluation data available for this period.
-                            </td>
+                            <td colspan="6" class="text-center py-10 text-gray-400">No data available.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- NEW: ANONYMOUS COMMENTS MODAL -->
+            <dialog ref="commentsModalRef" class="modal">
+                <div class="modal-box w-11/12 max-w-3xl">
+                    <form method="dialog">
+                        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                    </form>
+                    <h3 class="font-bold text-lg mb-4">Feedback for {{ selectedInstructorName }}</h3>
+                    
+                    <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                        <div v-if="selectedComments.length === 0" class="text-center text-gray-500 py-8">
+                            No written comments provided.
+                        </div>
+
+                        <div 
+                            v-for="(comment, idx) in selectedComments" 
+                            :key="idx" 
+                            class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm"
+                        >
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="badge badge-xs badge-primary">Anonymous Student</span>
+                            </div>
+                            
+                            <div v-if="comment.teacher" class="mb-2">
+                                <span class="font-bold text-gray-700 block text-xs uppercase">On Teacher:</span>
+                                <p class="text-gray-600 italic">"{{ comment.teacher }}"</p>
+                            </div>
+                            
+                            <div v-if="comment.subject">
+                                <span class="font-bold text-gray-700 block text-xs uppercase">On Subject:</span>
+                                <p class="text-gray-600 italic">"{{ comment.subject }}"</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-action">
+                        <form method="dialog">
+                            <button class="btn">Close</button>
+                        </form>
+                    </div>
+                </div>
+            </dialog>
         </div>
 
-
         <!-- ============================================================ -->
-        <!-- ROLE: STUDENT DASHBOARD -->
+        <!-- ROLE: STUDENT DASHBOARD (Unchanged Logic) -->
         <!-- ============================================================ -->
         <div v-else class="max-w-6xl mx-auto">
-            
-            <!-- VIEW A: LIST OF INSTRUCTORS (Cards) -->
+            <!-- ... (Same student code as before) ... -->
+             <!-- VIEW A: LIST OF INSTRUCTORS (Cards) -->
             <div v-if="!selectedInstructor">
                 <div class="mb-6">
                     <h1 class="text-2xl font-bold text-gray-800">Faculty Evaluation</h1>

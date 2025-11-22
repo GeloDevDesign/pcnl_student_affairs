@@ -74,10 +74,23 @@ class FeedBackController extends Controller
             $results = [];
             if ($selectedCycleId) {
                 $results = Instructor::get()->map(function ($instructor) use ($selectedCycleId) {
-                    $evalIds = Evaluation::where('evaluation_cycle_id', $selectedCycleId)
-                                ->where('instructor_id', $instructor->id)->pluck('id');
+                    // FETCH EVALUATIONS WITH COMMENTS
+                    $evaluations = Evaluation::where('evaluation_cycle_id', $selectedCycleId)
+                                ->where('instructor_id', $instructor->id)
+                                ->get(); // Get full collection to extract comments
                     
+                    $evalIds = $evaluations->pluck('id');
                     $avg = $evalIds->isEmpty() ? 0 : EvaluationAnswer::whereIn('evaluation_id', $evalIds)->avg('rating');
+
+                    // FILTER COMMENTS (Remove empty ones)
+                    $comments = $evaluations->map(function($eval) {
+                        return [
+                            'teacher' => $eval->comments_teacher,
+                            'subject' => $eval->comments_subject
+                        ];
+                    })->filter(function($c) {
+                        return !empty($c['teacher']) || !empty($c['subject']);
+                    })->values();
 
                     return [
                         'id' => $instructor->id,
@@ -85,7 +98,8 @@ class FeedBackController extends Controller
                         'department' => $instructor->department_name,
                         'respondents' => $evalIds->count(),
                         'average_rating' => round($avg, 2),
-                        'verbal_interpretation' => $this->getVerbalInterpretation($avg)
+                        'verbal_interpretation' => $this->getVerbalInterpretation($avg),
+                        'comments' => $comments // <--- PASS COMMENTS HERE
                     ];
                 });
             }
