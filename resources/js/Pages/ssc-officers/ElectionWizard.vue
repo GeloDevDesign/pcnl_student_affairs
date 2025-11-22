@@ -347,7 +347,7 @@
                         <button 
                             v-else
                             @click="submitElection" 
-                            class="btn btn-success text-white"
+                            class="btn btn-primary text-white"
                             :disabled="isSubmitting"
                         >
                             <span v-if="isSubmitting" class="loading loading-spinner loading-sm mr-2"></span>
