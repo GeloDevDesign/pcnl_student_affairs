@@ -17,7 +17,7 @@ const page = usePage();
 const user = page.props.auth?.user;
 
 // Stop idle checker if not logged in or unauthorized role
-if (user && ["admin", "manager"].includes(user.role)) {
+if (user && ["admin", "student"].includes(user.role)) {
     let idleTimer;
     let warningTimer;
     let alertShown = false;
@@ -86,7 +86,7 @@ if (user && ["admin", "manager"].includes(user.role)) {
 </script>
 
 <template>
-    <!-- Pages Header -->
+    <!-- Pages Header -->   
     <Head :title="pageTitle ?? 'Home Page'" />
     <div class="min-h-screen bg-gray-50">
         <!-- Desktop Sidebar -->

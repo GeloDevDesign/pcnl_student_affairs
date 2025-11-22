@@ -106,7 +106,7 @@ const submitEvaluation = () => {
         <!-- ============================================================ -->
         <!-- ROLE: ADMIN DASHBOARD -->
         <!-- ============================================================ -->
-        <div v-if="$page.props.auth.user.role === 'admin'" class="max-w-7xl mx-auto">
+        <div v-if="$page.props.auth.user.role === 'admin'" class="w-full    ">
             
             <!-- Top Action Bar -->
             <div class="w-full flex flex-col md:flex-row justify-between items-end md:items-center mb-6 gap-4">
@@ -161,7 +161,7 @@ const submitEvaluation = () => {
             </div>
 
             <!-- Analytics Table -->
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 overflow-x-auto">
                 <table class="table w-full">
                     <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                         <tr>
@@ -249,7 +249,7 @@ const submitEvaluation = () => {
         <!-- ============================================================ -->
         <!-- ROLE: STUDENT DASHBOARD (Unchanged Logic) -->
         <!-- ============================================================ -->
-        <div v-else class="max-w-6xl mx-auto">
+        <div v-else class="w-full">
             <!-- ... (Same student code as before) ... -->
              <!-- VIEW A: LIST OF INSTRUCTORS (Cards) -->
             <div v-if="!selectedInstructor">
@@ -280,7 +280,7 @@ const submitEvaluation = () => {
                                 </h2>
                                 <div :class="[
                                     'badge badge-sm font-semibold', 
-                                    inst.is_evaluated ? 'badge-success text-white' : 'badge-warning text-white'
+                                    inst.is_evaluated ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
                                 ]">
                                     {{ inst.is_evaluated ? 'Completed' : 'Pending' }}
                                 </div>

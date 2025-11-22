@@ -13,7 +13,7 @@ class Election extends Model
     const ARCHIVE    = 3;
 
     protected $fillable = [
-        'user_id',
+        'user_id',  
         'name',
         'start_date',
         'end_date',
