@@ -43,7 +43,7 @@ const form = useForm({
 // ✅ Add New Student
 const handleSubmit = ({ closeModal }) => {
     isLoading.value = true;
-    form.post("/users", {
+    form.post("/users/student", {
         preserveScroll: true,
         onSuccess: () => {
             resetPopulate();
@@ -52,7 +52,8 @@ const handleSubmit = ({ closeModal }) => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
         },
     });
@@ -72,7 +73,8 @@ const handleUpdate = () => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
         },
     });

@@ -22,7 +22,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FacultyEvaluationController;
 use Inertia\Inertia;
 
 Route::middleware(['web'])->group(function () {
@@ -54,6 +53,9 @@ Route::middleware(['web'])->group(function () {
 
         Route::resource('/users', UserController::class)->middleware('role:admin');
 
+        Route::post('users/student', [UserController::class, 'storeStudent'])->name('users.storeStudent')->middleware('role:admin');
+        Route::post('users/admin', [UserController::class, 'storeAdmin'])->name('users.storeAdmin')->middleware('role:admin');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
         Route::resource('/elections', ElectionController::class)->middleware('role:admin');
@@ -64,7 +66,6 @@ Route::middleware(['web'])->group(function () {
         Route::get('/lost-and-found', [ItemController::class, 'index'])->name('lost-found');
         Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluate');
         Route::get('/scc-officers', [OfficersController::class, 'index'])->name('scc-officers');
-         
 
         Route::get('/settings', function () {
             return Inertia::render('Auth/Settings', [
@@ -73,7 +74,7 @@ Route::middleware(['web'])->group(function () {
             ]);
         })->name('settings');
 
-          Route::get('/admin-settings', function () {
+        Route::get('/admin-settings', function () {
             return Inertia::render('Auth/AdminSettings', [
                 'pageTitle' => 'PCNL - Admin Settings',
                 'user' => Auth::user(),

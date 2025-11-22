@@ -13,6 +13,16 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    // Department mapping (ID to name) - made constant for accessibility
+    protected const DEPARTMENTS = [
+        1 => 'BSA',
+        2 => 'BSBA',
+        3 => 'BSCRIM',
+        4 => 'BSIT',
+        5 => 'BSCE',
+        6 => 'BEE',
+    ];
+
     /**
      * Display a listing of the resource.
      */
@@ -43,47 +53,63 @@ class UserController extends Controller
     /**
      * Store a newly created student in storage.
      */
-    public function store(Request $request)
+    public function storeStudent(Request $request)
     {
-        // Department mapping (ID to name)
-        $departments = [
-            1 => 'BSA',
-            2 => 'BSBA',
-            3 => 'BSCRIM',
-            4 => 'BSIT',
-            5 => 'BSCE',
-            6 => 'BEE',
-        ];
-
-        // Base validation rules
-        $rules = [
+        // Student-specific validation rules
+        $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
-            'role' => 'required|in:admin,student',
             'email' => 'required|email|unique:users,email',
-            'department' => 'nullable|integer|in:'.implode(',', array_keys($departments)),
-            'id_number' => 'nullable|string|unique:users,id_number',
-        ];
-
-        // If the role is student, department & id_number required
-        if ($request->role === User::TYPE_STUDENT) {
-            $rules['department'] = 'required|integer|in:'.implode(',', array_keys($departments));
-            $rules['id_number'] = [
+            'department' => 'required|integer|in:'.implode(',', array_keys(self::DEPARTMENTS)),
+            'id_number' => [
                 'required',
                 'string',
                 'unique:users,id_number',
                 'regex:/^[0-9\-]+$/',
                 'min:6',
                 'max:10',
-            ];
-        }
+            ],
+        ]);
+        
+        $validated['role'] = 'student';
 
-        $validated = $request->validate($rules);
+        $this->createUser($validated);
 
+        return redirect()->back()->with('success', 'Student created and email sent successfully!');
+    }
+
+    /**
+     * Store a newly created administrator in storage.
+     */
+    public function storeAdmin(Request $request)
+    {
+        // Admin-specific validation rules (less strict on department/ID)
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'id_number' => 'nullable|string|unique:users,id_number',
+        ]);
+            
+        $validated['department'] = null;
+        $validated['role'] = 'admin';
+
+        $this->createUser($validated);
+
+        return redirect()->back()->with('success', 'Administrator created and email sent successfully!');
+    }
+
+
+    /**
+     * Private helper method to handle the common logic of user creation and notification.
+     */
+    private function createUser(array $validated): User
+    {
         // Get department name based on selected ID
         $departmentName = $validated['department']
-            ? $departments[$validated['department']]
+            ? self::DEPARTMENTS[$validated['department']]
             : null;
 
         // Generate a random password
@@ -98,11 +124,11 @@ class UserController extends Controller
             'id_number' => $validated['id_number'] ?? null,
             'role' => $validated['role'],
             'email' => $validated['email'],
-            'password' => bcrypt($password),
+            'password' => Hash::make($password),
         ]);
 
         // If student and no id_number was provided, auto-generate one
-        if ($user->isStudent() && empty($user->id_number)) {
+        if ($user->role === 'student' && empty($user->id_number)) {
             $user->id_number = 'STU-'.str_pad($user->id, 4, '0', STR_PAD_LEFT);
             $user->save();
         }
@@ -115,24 +141,15 @@ class UserController extends Controller
             $password
         ));
 
-        return redirect()->back()->with('success', 'User created and email sent successfully!');
+        return $user;
     }
+
 
     /**
      * Update the specified student in storage.
      */
     public function update(Request $request, User $user)
     {
-        // Department mapping (ID to name)
-        $departments = [
-            1 => 'BSA',
-            2 => 'BSBA',
-            3 => 'BSCRIM',
-            4 => 'BSIT',
-            5 => 'BSCE',
-            6 => 'BEE',
-        ];
-
         // Base validation rules
         $rules = [
             'first_name' => 'required|string|max:255',
@@ -144,7 +161,7 @@ class UserController extends Controller
                 'email',
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
-            'department' => 'nullable|integer|in:'.implode(',', array_keys($departments)),
+            'department' => 'nullable|integer|in:'.implode(',', array_keys(self::DEPARTMENTS)),
             'id_number' => [
                 'nullable',
                 'string',
@@ -154,7 +171,7 @@ class UserController extends Controller
 
         // If student → department and id_number become REQUIRED
         if ($request->role === User::TYPE_STUDENT) {
-            $rules['department'] = 'required|integer|in:'.implode(',', array_keys($departments));
+            $rules['department'] = 'required|integer|in:'.implode(',', array_keys(self::DEPARTMENTS));
             $rules['id_number'] = [
                 'required',
                 'string',
@@ -169,7 +186,7 @@ class UserController extends Controller
 
         // Convert department ID → department name
         $departmentName = $validated['department']
-            ? $departments[$validated['department']]
+            ? self::DEPARTMENTS[$validated['department']]
             : null;
 
         // Merge converted department into validated data
@@ -236,11 +253,6 @@ class UserController extends Controller
     public function updatePassword(Request $request)
     {
         $user = $request->user();
-
-        // Only admin can change password
-        // if (!$user->isAdmin()) {
-        //     return redirect()->back()->withErrors(['error' => 'Unauthorized action.']);
-        // }
 
         $validated = $request->validate([
             'current_password' => 'required|string',

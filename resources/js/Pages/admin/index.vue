@@ -34,7 +34,6 @@ const form = useForm({
     first_name: "",
     last_name: "",
     middle_name: "",
-    department: 0,
     role: "admin",
     email: "",
     id_number: "",
@@ -43,7 +42,7 @@ const form = useForm({
 // ✅ Add New Student
 const handleSubmit = ({ closeModal }) => {
     isLoading.value = true;
-    form.post("/users", {
+    form.post("/users/admin", {
         preserveScroll: true,
         onSuccess: () => {
             resetPopulate();
@@ -52,7 +51,8 @@ const handleSubmit = ({ closeModal }) => {
             toastAlert(page.props.flash.success, "success");
             isLoading.value = false;
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error);
             isLoading.value = false;
         },
     });
@@ -117,7 +117,7 @@ const populateFormEdit = (student) => {
     form.first_name = student.first_name;
     form.middle_name = student.middle_name;
     form.last_name = student.last_name;
-    form.department = student.department;
+   
     form.role = student.role;
     form.email = student.email;
     form.id_number = student.id_number;
