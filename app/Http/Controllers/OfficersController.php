@@ -168,7 +168,7 @@ class OfficersController extends Controller
             });
 
             
-        dd($elections);
+        // dd($elections);
         return Inertia::render('ssc-officers/index', [
             'pageTitle' => 'PCNL - SCC Officers',
             'partyList' => $partyList,
