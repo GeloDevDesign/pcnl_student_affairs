@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import InputFields from "../../components/InputFields.vue";
 import EntityAction from "../../components/EntityAction.vue";
 import { useToastAlert } from "../../composables/useToastAlert.js";
+import ElectionWizard from "./ElectionWizard.vue"
 
 const { toastAlert } = useToastAlert();
 const page = usePage();
@@ -17,6 +18,21 @@ const props = defineProps({
     errors: Object,
     selectedElection: Object,
 });
+
+const showWizard = ref(false);
+
+function openWizard() {
+    showWizard.value = true;
+}
+
+function closeWizard() {
+    showWizard.value = false;
+}
+
+function handleWizardSuccess() {
+ 
+    location.reload(); 
+}
 
 const isLoading = ref(false);
 const dialogRef = ref(null);
@@ -589,14 +605,22 @@ function setElection() {
             </svg>
         </button>
 
-        <!-- Create New Election Button -->
-        <button
-            class="btn btn-primary flex items-center justify-center md:mt-0"
-            @click="openAddElectionModal"
-        >
-            Create New Election
-        </button>
+         <button 
+                @click="openWizard"
+                class="btn btn-primary text-white gap-2"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Election
+            </button>
     </div>
+
+     <ElectionWizard 
+            :isOpen="showWizard" 
+            @close="closeWizard"
+            @success="handleWizardSuccess"
+        />
 
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-6 mt-6">
         <!-- Left Column: Election Details & Party List -->

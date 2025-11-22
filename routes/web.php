@@ -63,6 +63,7 @@ Route::middleware(['web'])->group(function () {
         Route::get('/lost-and-found', [ItemController::class, 'index'])->name('lost-found');
         Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluate');
         Route::get('/scc-officers', [OfficersController::class, 'index'])->name('scc-officers');
+         Route::get('/elections/create-wizard', [OfficersController::class, 'createWizard'])->name('elections.createWizard');
 
         Route::get('/settings', function () {
             return Inertia::render('Auth/Settings', [

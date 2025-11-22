@@ -1,3 +1,197 @@
+<script setup>
+import { ref, computed, onMounted } from "vue";
+import { useForm, usePage } from "@inertiajs/vue3";
+import { useToastAlert } from "../../composables/useToastAlert.js";
+import Swal from "sweetalert2";
+
+const { toastAlert } = useToastAlert();
+const page = usePage();
+
+const props = defineProps({
+    election: Object,
+    roles: Array,
+    hasAlreadyVoted: Boolean,
+});
+
+// State for votes - { roleId: candidateId }
+const votes = ref({});
+const isLoading = ref(false);
+const hasVoted = ref(props.hasAlreadyVoted || false);
+const isCheckingVote = ref(true);
+
+// Election status: 0 = Not started, 1 = Ongoing, 2 = Closed, 3 = Archived
+const electionStatus = computed(() => {
+    return props.election?.status ?? 0;
+});
+
+// Date-based computed properties
+const currentDate = computed(() => new Date());
+
+const isElectionStarted = computed(() => {
+    if (!props.election?.start_date) return false;
+    const startDate = new Date(props.election.start_date);
+    return currentDate.value >= startDate;
+});
+
+const isElectionEnded = computed(() => {
+    if (!props.election?.end_date) return false;
+    const endDate = new Date(props.election.end_date);
+    // Set end date to end of day (23:59:59)
+    endDate.setHours(23, 59, 59, 999);
+    return currentDate.value > endDate;
+});
+
+const isElectionOngoing = computed(() => {
+    return isElectionStarted.value && !isElectionEnded.value;
+});
+
+// Form for submission
+const voteForm = useForm({
+    votes: [],
+});
+
+// Check if user has already voted
+async function checkVoteStatus() {
+    try {
+        const electionId = props.election?.id || 1;
+        const response = await fetch(
+            `/votes/status?election_id=${electionId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                credentials: "same-origin",
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to check vote status");
+        }
+
+        const data = await response.json();
+        hasVoted.value = data.has_voted || false;
+    } catch (error) {
+        console.error("Error checking vote status:", error);
+        hasVoted.value = props.hasAlreadyVoted || false;
+    } finally {
+        isCheckingVote.value = false;
+    }
+}
+
+// Check vote status on mount
+onMounted(async () => {
+    console.log('Election data:', props.election);
+    console.log('Is election started:', isElectionStarted.value);
+    console.log('Is election ended:', isElectionEnded.value);
+    console.log('Is election ongoing:', isElectionOngoing.value);
+    await checkVoteStatus();
+});
+
+// Check if at least one vote has been cast
+const isAllVoted = computed(() => {
+    return Object.keys(votes.value).length > 0;
+});
+
+// Handle candidate selection
+function selectCandidate(roleId, candidateId) {
+    votes.value[roleId] = candidateId;
+}
+
+// Get selected candidate for a role
+function getSelectedCandidate(roleId) {
+    const candidateId = votes.value[roleId];
+    const role = props.roles.find((r) => r.id === roleId);
+    return role?.candidates.find((c) => c.id === candidateId);
+}
+
+async function handleSubmitVotes() {
+    if (!isAllVoted.value) {
+        toastAlert("Please vote for at least one candidate before submitting.", "error");
+        return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+        title: "CONFIRM YOUR VOTE",
+        html: generateVoteConfirmationHTML(),
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Submit My Vote!",
+        confirmButtonColor: "#3b82f6",
+        cancelButtonColor: "#6b7280",
+        cancelButtonText: "Review Again",
+    });
+
+    if (!isConfirmed) return;
+
+    // Format votes for backend
+    const votesPayload = Object.entries(votes.value).map(
+        ([roleId, candidateId]) => ({
+            election_id: props.election?.id || 1,
+            role_id: parseInt(roleId),
+            candidate_id: parseInt(candidateId),
+        })
+    );
+
+    console.log("Submitting votes:", votesPayload);
+
+    isLoading.value = true;
+    voteForm.votes = votesPayload;
+
+    voteForm.post("/votes", {
+        preserveScroll: true,
+        onSuccess: () => {
+            hasVoted.value = true;
+            toastAlert(
+                page.props.flash.success || "Vote submitted successfully!",
+                "success"
+            );
+            isLoading.value = false;
+        },
+        onError: (errors) => {
+            console.error("Vote submission errors:", errors);
+            toastAlert(
+                errors.votes ||
+                    page.props.flash.error ||
+                    "Failed to submit vote!",
+                "error"
+            );
+            isLoading.value = false;
+        },
+    });
+}
+
+// Generate HTML for confirmation dialog
+function generateVoteConfirmationHTML() {
+    let html = '<div class="text-left space-y-2">';
+    props.roles.forEach((role) => {
+        const candidate = getSelectedCandidate(role.id);
+        if (candidate) {
+            html += `
+                <div style="padding: 8px; background: #f3f4f6; border-radius: 6px; margin-bottom: 8px;">
+                    <p style="font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;">${role.name}</p>
+                    <p style="font-weight: 600; color: #111827; margin-top: 4px;">${candidate.full_name}</p>
+                    <p style="font-size: 14px; color: #6b7280;">${candidate.party_list?.name || 'Independent'}</p>
+                </div>
+            `;
+        }
+    });
+    html += "</div>";
+    return html;
+}
+
+// Format date helper
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    });
+}
+</script>
+
 <template>
     <!-- Loading State -->
     <div v-if="isCheckingVote" class="mt-6">
@@ -220,196 +414,3 @@
     </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from "vue";
-import { useForm, usePage } from "@inertiajs/vue3";
-import { useToastAlert } from "../../composables/useToastAlert.js";
-import Swal from "sweetalert2";
-
-const { toastAlert } = useToastAlert();
-const page = usePage();
-
-const props = defineProps({
-    election: Object,
-    roles: Array,
-    hasAlreadyVoted: Boolean,
-});
-
-// State for votes - { roleId: candidateId }
-const votes = ref({});
-const isLoading = ref(false);
-const hasVoted = ref(props.hasAlreadyVoted || false);
-const isCheckingVote = ref(true);
-
-// Election status: 0 = Not started, 1 = Ongoing, 2 = Closed, 3 = Archived
-const electionStatus = computed(() => {
-    return props.election?.status ?? 0;
-});
-
-// Date-based computed properties
-const currentDate = computed(() => new Date());
-
-const isElectionStarted = computed(() => {
-    if (!props.election?.start_date) return false;
-    const startDate = new Date(props.election.start_date);
-    return currentDate.value >= startDate;
-});
-
-const isElectionEnded = computed(() => {
-    if (!props.election?.end_date) return false;
-    const endDate = new Date(props.election.end_date);
-    // Set end date to end of day (23:59:59)
-    endDate.setHours(23, 59, 59, 999);
-    return currentDate.value > endDate;
-});
-
-const isElectionOngoing = computed(() => {
-    return isElectionStarted.value && !isElectionEnded.value;
-});
-
-// Form for submission
-const voteForm = useForm({
-    votes: [],
-});
-
-// Check if user has already voted
-async function checkVoteStatus() {
-    try {
-        const electionId = props.election?.id || 1;
-        const response = await fetch(
-            `/votes/status?election_id=${electionId}`,
-            {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                },
-                credentials: "same-origin",
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error("Failed to check vote status");
-        }
-
-        const data = await response.json();
-        hasVoted.value = data.has_voted || false;
-    } catch (error) {
-        console.error("Error checking vote status:", error);
-        hasVoted.value = props.hasAlreadyVoted || false;
-    } finally {
-        isCheckingVote.value = false;
-    }
-}
-
-// Check vote status on mount
-onMounted(async () => {
-    console.log('Election data:', props.election);
-    console.log('Is election started:', isElectionStarted.value);
-    console.log('Is election ended:', isElectionEnded.value);
-    console.log('Is election ongoing:', isElectionOngoing.value);
-    await checkVoteStatus();
-});
-
-// Check if at least one vote has been cast
-const isAllVoted = computed(() => {
-    return Object.keys(votes.value).length > 0;
-});
-
-// Handle candidate selection
-function selectCandidate(roleId, candidateId) {
-    votes.value[roleId] = candidateId;
-}
-
-// Get selected candidate for a role
-function getSelectedCandidate(roleId) {
-    const candidateId = votes.value[roleId];
-    const role = props.roles.find((r) => r.id === roleId);
-    return role?.candidates.find((c) => c.id === candidateId);
-}
-
-async function handleSubmitVotes() {
-    if (!isAllVoted.value) {
-        toastAlert("Please vote for at least one candidate before submitting.", "error");
-        return;
-    }
-
-    const { isConfirmed } = await Swal.fire({
-        title: "CONFIRM YOUR VOTE",
-        html: generateVoteConfirmationHTML(),
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, Submit My Vote!",
-        confirmButtonColor: "#3b82f6",
-        cancelButtonColor: "#6b7280",
-        cancelButtonText: "Review Again",
-    });
-
-    if (!isConfirmed) return;
-
-    // Format votes for backend
-    const votesPayload = Object.entries(votes.value).map(
-        ([roleId, candidateId]) => ({
-            election_id: props.election?.id || 1,
-            role_id: parseInt(roleId),
-            candidate_id: parseInt(candidateId),
-        })
-    );
-
-    console.log("Submitting votes:", votesPayload);
-
-    isLoading.value = true;
-    voteForm.votes = votesPayload;
-
-    voteForm.post("/votes", {
-        preserveScroll: true,
-        onSuccess: () => {
-            hasVoted.value = true;
-            toastAlert(
-                page.props.flash.success || "Vote submitted successfully!",
-                "success"
-            );
-            isLoading.value = false;
-        },
-        onError: (errors) => {
-            console.error("Vote submission errors:", errors);
-            toastAlert(
-                errors.votes ||
-                    page.props.flash.error ||
-                    "Failed to submit vote!",
-                "error"
-            );
-            isLoading.value = false;
-        },
-    });
-}
-
-// Generate HTML for confirmation dialog
-function generateVoteConfirmationHTML() {
-    let html = '<div class="text-left space-y-2">';
-    props.roles.forEach((role) => {
-        const candidate = getSelectedCandidate(role.id);
-        if (candidate) {
-            html += `
-                <div style="padding: 8px; background: #f3f4f6; border-radius: 6px; margin-bottom: 8px;">
-                    <p style="font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;">${role.name}</p>
-                    <p style="font-weight: 600; color: #111827; margin-top: 4px;">${candidate.full_name}</p>
-                    <p style="font-size: 14px; color: #6b7280;">${candidate.party_list?.name || 'Independent'}</p>
-                </div>
-            `;
-        }
-    });
-    html += "</div>";
-    return html;
-}
-
-// Format date helper
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-    });
-}
-</script>
