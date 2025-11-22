@@ -202,15 +202,37 @@ class FeedBackController extends Controller
 
     // --- EXISTING METHODS (Store Feedback, etc) ---
     
-    public function store(Request $request) {
+   public function store(Request $request) {
+        // 1. Validate
         $validated = $request->validate([
             'event_id' => 'required|exists:events,id',
-            'ratings' => 'required|integer|min:1|max:5',
+            // Change integer to numeric to accept calculated averages (e.g. 4.5)
+            'ratings' => 'required|numeric|min:1|max:5', 
             'comments' => 'nullable|string|max:1000',
+            'survey_details' => 'nullable' // Accept the survey array from frontend
         ]);
+
         $event = Event::findOrFail($validated['event_id']);
-        if ($event->is_feedback) return back()->withErrors('Feedback already given.');
-        $request->user()->feedbacks()->create($validated);
+        
+        if ($event->is_feedback) {
+            return back()->withErrors('Feedback already given.');
+        }
+
+        // 2. Data Processing (The "Soft" Modification)
+        // If survey details exist, we append them to the comment so admins can see the breakdown
+        // without needing a new database table.
+        if (!empty($request->survey_details)) {
+            // Create a readable string like: [Relevance: 5, Time: 4, ...]
+            $details = "Survey Breakdown: " . json_encode($request->survey_details) . "\n---\nUser Comment: ";
+            $validated['comments'] = $details . ($validated['comments'] ?? 'No text comment.');
+        }
+        
+        // 3. Create
+        // We remove 'survey_details' from the array before saving because the DB doesn't have that column
+        $dataToSave = collect($validated)->except(['survey_details'])->toArray();
+        
+        $request->user()->feedbacks()->create($dataToSave);
+
         return back()->with('success', 'Feedback submitted.');
     }
 
