@@ -165,7 +165,7 @@ const logout = () => {
 
                     <nav class="space-y-4 px-3">
                         <Link
-                            href="/admin-settings"
+                            :href=" $page.props.auth.user.role === 'admin' ? '/admin-settings' : '/settings' "
                             :isCollapsed="isCollapsed"
                             method="GET"
                             as="button"
@@ -341,7 +341,7 @@ const logout = () => {
 
             <nav class="space-y-4 px-3 pb-20">
                 <Link
-                    href="/admin-settings"
+                   :href=" $page.props.auth.user.role === 'admin' ? '/admin-settings' : '/settings' "
                     :isCollapsed="isCollapsed"
                     method="GET"
                     as="button"

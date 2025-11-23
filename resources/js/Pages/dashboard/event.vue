@@ -120,7 +120,7 @@ const populateFormEdit = (entity) => {
                     v-model="form.title"
                     :label="'Title'"
                     :type="'text'"
-                    :placeholder="'Title of eventouncement'"
+                    :placeholder="'Title of event'"
                     :errors="form.errors.title"
                 />
 

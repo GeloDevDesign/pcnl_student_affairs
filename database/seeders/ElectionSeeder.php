@@ -18,7 +18,9 @@ class ElectionSeeder extends Seeder
             'user_id' => 1,
             'name' => '2024 PCNL Supreme Student Council Election',
             'start_date' => Carbon::create(2024, 4, 1),
+            'start_time' => '08:00:00', // 8:00 AM
             'end_date' => Carbon::create(2024, 4, 30),
+            'end_time' => '17:00:00',   // 5:00 PM
             'status' => 2, // Closed
             'is_set' => false,
         ]);
@@ -28,7 +30,9 @@ class ElectionSeeder extends Seeder
             'user_id' => 1,
             'name' => '2025 PCNL Supreme Student Council Election',
             'start_date' => Carbon::create(2025, 11, 23),
+            'start_time' => '08:00:00', // 8:00 AM
             'end_date' => Carbon::create(2025, 11, 30),
+            'end_time' => '17:00:00',   // 5:00 PM
             'status' => 1, // Ongoing
             'is_set' => true, // Make this the currently active one
         ]);

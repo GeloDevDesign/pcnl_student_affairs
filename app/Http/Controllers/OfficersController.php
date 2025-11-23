@@ -16,7 +16,6 @@ class OfficersController extends Controller
 {
     public function index(Request $request)
     {
-
         if ($request->filled('election_id')) {
             $selectedElectionId = $request->election_id;
 
@@ -61,7 +60,6 @@ class OfficersController extends Controller
         $resultsData = null;
 
         if ($election) {
-
             $canViewResults = $election->status == 2 || $request->user()->isAdmin();
 
             $totalVoters = Vote::where('election_id', $election->id)
@@ -137,7 +135,9 @@ class OfficersController extends Controller
                     'id' => $election->id,
                     'name' => $election->name,
                     'start_date' => $election->start_date,
+                    'start_time' => $election->start_time, // ADDED THIS
                     'end_date' => $election->end_date,
+                    'end_time' => $election->end_time,     // ADDED THIS
                     'status' => $election->status,
                 ],
                 'results' => $results,
@@ -147,11 +147,8 @@ class OfficersController extends Controller
             ];
         }
 
-        $elections = Election::select('id', 'name', 'status', 'start_date', 'end_date')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $elections = Election::select('id', 'name', 'status', 'start_date', 'end_date')
+        // Removed duplicate query. Keep this mapped one.
+        $elections = Election::select('id', 'name', 'status', 'start_date', 'end_date', 'end_time', 'start_time')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($election) {
@@ -161,16 +158,18 @@ class OfficersController extends Controller
                     'status' => $election->status,
                     'start_date' => $election->start_date,
                     'end_date' => $election->end_date,
+                    'start_time' => $election->start_time,
+                    'end_time' => $election->end_time,
                 ];
             });
 
-        // dd($elections);
         return Inertia::render('ssc-officers/index', [
             'pageTitle' => 'PCNL - SCC Officers',
             'partyList' => $partyList,
             'roles' => $roles,
             'resultsData' => $resultsData,
             'elections' => $elections,
+            'selectedElection' => $election, // PASS THE SELECTED ELECTION PROP
         ]);
     }
 
@@ -180,7 +179,9 @@ class OfficersController extends Controller
         $validated = $request->validate([
             'election.name' => 'required|string|max:255',
             'election.start_date' => 'required|date',
+            'election.start_time' => 'required|date_format:H:i', // Added
             'election.end_date' => 'required|date|after_or_equal:election.start_date',
+            'election.end_time' => 'required|date_format:H:i',   // Added
             'election.description' => 'nullable|string',
             'party_lists' => 'required|array|min:1',
             'party_lists.*.name' => 'required|string|max:255',
@@ -200,7 +201,9 @@ class OfficersController extends Controller
             $election = Election::create([
                 'name' => $validated['election']['name'],
                 'start_date' => $validated['election']['start_date'],
+                'start_time' => $validated['election']['start_time'], // Added
                 'end_date' => $validated['election']['end_date'],
+                'end_time' => $validated['election']['end_time'],     // Added
                 'description' => $validated['election']['description'] ?? null,
                 'status' => 0, // Not started
                 'is_set' => false,

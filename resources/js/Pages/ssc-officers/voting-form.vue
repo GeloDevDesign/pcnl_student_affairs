@@ -29,15 +29,34 @@ const currentDate = computed(() => new Date());
 
 const isElectionStarted = computed(() => {
     if (!props.election?.start_date) return false;
+    
     const startDate = new Date(props.election.start_date);
+    
+    // UPDATED: Respect the specific Start Time
+    if (props.election.start_time) {
+        const [hours, minutes] = props.election.start_time.split(':');
+        startDate.setHours(hours, minutes, 0, 0);
+    } else {
+        startDate.setHours(0, 0, 0, 0);
+    }
+
     return currentDate.value >= startDate;
 });
 
 const isElectionEnded = computed(() => {
     if (!props.election?.end_date) return false;
+    
     const endDate = new Date(props.election.end_date);
-    // Set end date to end of day (23:59:59)
-    endDate.setHours(23, 59, 59, 999);
+    
+    // UPDATED: Respect the specific End Time
+    if (props.election.end_time) {
+        const [hours, minutes] = props.election.end_time.split(':');
+        endDate.setHours(hours, minutes, 0, 0);
+    } else {
+        // Only default to end of day if NO time is provided
+        endDate.setHours(23, 59, 59, 999);
+    }
+    
     return currentDate.value > endDate;
 });
 
@@ -83,9 +102,6 @@ async function checkVoteStatus() {
 // Check vote status on mount
 onMounted(async () => {
     console.log('Election data:', props.election);
-    console.log('Is election started:', isElectionStarted.value);
-    console.log('Is election ended:', isElectionEnded.value);
-    console.log('Is election ongoing:', isElectionOngoing.value);
     await checkVoteStatus();
 });
 
@@ -134,8 +150,6 @@ async function handleSubmitVotes() {
         })
     );
 
-    console.log("Submitting votes:", votesPayload);
-
     isLoading.value = true;
     voteForm.votes = votesPayload;
 
@@ -181,14 +195,31 @@ function generateVoteConfirmationHTML() {
     return html;
 }
 
-// Format date helper
-function formatDate(dateString) {
+// UPDATED: Format date helper to include Time
+function formatDate(dateString, timeString = null) {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString("en-US", {
+    
+    const date = new Date(dateString).toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
         year: "numeric",
     });
+
+    if (timeString) {
+        const [hours, minutes] = timeString.split(':');
+        const timeObj = new Date();
+        timeObj.setHours(hours);
+        timeObj.setMinutes(minutes);
+        
+        const time = timeObj.toLocaleTimeString("en-US", {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        return `${date} at ${time}`;
+    }
+
+    return date;
 }
 </script>
 
@@ -250,12 +281,14 @@ function formatDate(dateString) {
             <h2 class="text-2xl font-bold text-yellow-800 mb-2">
                 Voting Has Not Started Yet
             </h2>
+            <!-- UPDATED: Pass Start Time -->
             <p class="text-yellow-700 mb-4">
-                The election will begin on {{ formatDate(election.start_date) }}
+                The election will begin on {{ formatDate(election.start_date, election.start_time) }}
             </p>
             <div class="text-sm text-yellow-600 bg-yellow-100 inline-block px-4 py-2 rounded-lg">
                 <p><strong>Election Period:</strong></p>
-                <p>{{ formatDate(election.start_date) }} - {{ formatDate(election.end_date) }}</p>
+                <!-- UPDATED: Pass Times -->
+                <p>{{ formatDate(election.start_date, election.start_time) }} - {{ formatDate(election.end_date, election.end_time) }}</p>
             </div>
         </div>
     </div>
@@ -275,7 +308,8 @@ function formatDate(dateString) {
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Voting ends on {{ formatDate(election.end_date) }}</span>
+                    <!-- UPDATED: Pass End Time -->
+                    <span>Voting ends on {{ formatDate(election.end_date, election.end_time) }}</span>
                 </div>
             </div>
 
@@ -403,7 +437,7 @@ function formatDate(dateString) {
             <p class="text-green-700 mb-3">
                 {{
                     isElectionEnded
-                        ? `The election period ended on ${formatDate(election.end_date)}. Thank you for participating!`
+                        ? `The election period ended on ${formatDate(election.end_date, election.end_time)}. Thank you for participating!`
                         : "Thank you for participating. Please wait for results."
                 }}
             </p>
@@ -413,4 +447,3 @@ function formatDate(dateString) {
         </div>
     </div>
 </template>
-

@@ -171,7 +171,7 @@ function populateFormEdit() {
                             v-model="form.title"
                             :label="'Title'"
                             :type="'text'"
-                            :placeholder="'Title of eventouncement'"
+                            :placeholder="'Title of Hand-Book'"
                             :errors="form.errors.title"
                         />
 
@@ -179,7 +179,7 @@ function populateFormEdit() {
                             v-model="form.description"
                             :label="'Description'"
                             :type="'text'"
-                            :placeholder="'Description for event'"
+                            :placeholder="'Description for Hand-Book'"
                             :errors="form.errors.description"
                         />
 

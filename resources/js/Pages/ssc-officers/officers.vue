@@ -66,12 +66,35 @@ const selectedCandidate = ref(null);
 const election = ref(props.selectedElection);
 const CURRENT_ELECTION = ref(null);
 
-const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
+const formatDate = (dateString, timeString = null) => {
+    if (!dateString) return ""; 
+    
+    const date = new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
         day: "numeric",
         year: "numeric",
     });
+    
+    // Check if timeString exists and is actually a string
+    if (timeString && typeof timeString === 'string') {
+        const [hours, minutes] = timeString.split(':');
+        
+        // Validate we actually got hours and minutes
+        if(hours !== undefined && minutes !== undefined) {
+            const timeObj = new Date();
+            timeObj.setHours(hours);
+            timeObj.setMinutes(minutes);
+            
+            const time = timeObj.toLocaleTimeString("en-US", {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            return `${date} at ${time}`;
+        }
+    }
+
+    return date;
 };
 
 const SCHEDULED = 0;
@@ -137,7 +160,9 @@ const editRoleForm = useForm({
 const electionForm = useForm({
     name: "",
     start_date: "",
+    start_time: "", // Add this
     end_date: "",
+    end_time: "",   // Add this
     description: "",
 });
 
@@ -146,7 +171,9 @@ const editElectionForm = useForm({
     name: "",
     status: null,
     start_date: "",
+    start_time: "", // Add this
     end_date: "",
+    end_time: "",   // Add this
     description: "",
 });
 
@@ -390,7 +417,9 @@ function openEditElectionModal() {
     editElectionForm.id = election.value.id;
     editElectionForm.name = election.value.name;
     editElectionForm.start_date = election.value.start_date;
+    editElectionForm.start_time = election.value.start_time; // Add this
     editElectionForm.end_date = election.value.end_date;
+    editElectionForm.end_time = election.value.end_time;     // Add this
     editElectionForm.status = election.value.status;
     editElectionDialog.value.showModal();
 }
@@ -579,9 +608,11 @@ function setElection() {
     );
 }
 
-onMounted(()=>{
-    console.log(props.roles);
-})
+onMounted(() => {
+    console.log("Full Election Data:", election.value);
+    console.log("Start Time:", election.value.start_time);
+    console.log("End Time:", election.value.end_time);
+});
 </script>
 
 <template>
@@ -696,7 +727,7 @@ onMounted(()=>{
                                     Start Date
                                 </p>
                                 <p class="text-sm font-semibold text-gray-900">
-                                    {{ formatDate(election.start_date) }}
+                                    {{ formatDate(election.start_date, election.start_time) }}
                                 </p>
                             </div>
                         </div>
@@ -728,7 +759,7 @@ onMounted(()=>{
                                     End Date
                                 </p>
                                 <p class="text-sm font-semibold text-gray-900">
-                                    {{ formatDate(election.end_date) }}
+                                    {{ formatDate(election.end_date,election.end_time) }}
                                 </p>
                             </div>
                         </div>
@@ -1173,6 +1204,7 @@ onMounted(()=>{
                     :errors="editElectionForm.errors.name"
                 />
                 <div class="grid grid-cols-2 gap-4">
+                    <!-- Start Schedule -->
                     <InputFields
                         v-model="editElectionForm.start_date"
                         label="Start Date"
@@ -1180,10 +1212,24 @@ onMounted(()=>{
                         :errors="editElectionForm.errors.start_date"
                     />
                     <InputFields
+                        v-model="editElectionForm.start_time"
+                        label="Start Time"
+                        type="time"
+                        :errors="editElectionForm.errors.start_time"
+                    />
+
+                    <!-- End Schedule -->
+                    <InputFields
                         v-model="editElectionForm.end_date"
                         label="End Date"
                         type="date"
                         :errors="editElectionForm.errors.end_date"
+                    />
+                    <InputFields
+                        v-model="editElectionForm.end_time"
+                        label="End Time"
+                        type="time"
+                        :errors="editElectionForm.errors.end_time"
                     />
                 </div>
 

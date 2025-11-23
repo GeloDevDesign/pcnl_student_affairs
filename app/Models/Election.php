@@ -10,18 +10,18 @@ class Election extends Model
     const SCHEDULED = 0;
     const ONGOING   = 1;
     const CLOSED    = 2;
-    const ARCHIVE    = 3;
+    const ARCHIVE   = 3;
 
     protected $fillable = [
         'user_id',  
         'name',
         'start_date',
+        'start_time', // Add this
         'end_date',
+        'end_time',   // Add this
         'status',
         'is_set'
     ];
-
-    protected $dates = ['start_date', 'end_date'];
 
     // Keep database format (Y-m-d) for input fields
     public function getStartDateAttribute($value)
@@ -34,16 +34,25 @@ class Election extends Model
         return $value ? Carbon::parse($value)->format('Y-m-d') : null;
     }
 
-    // Human-readable format for display
+    // Human-readable format for display (COMBINED DATE AND TIME)
     public function getStartDateFormattedAttribute()
     {
-        return $this->start_date ? Carbon::parse($this->start_date)->format('M d, Y') : null;
-        // Example: "Oct 20, 2025"
+        if (!$this->start_date) return null;
+        
+        $date = Carbon::parse($this->start_date)->format('M d, Y');
+        $time = $this->start_time ? Carbon::parse($this->start_time)->format('h:i A') : '';
+        
+        return trim("$date $time");
     }
 
     public function getEndDateFormattedAttribute()
     {
-        return $this->end_date ? Carbon::parse($this->end_date)->format('M d, Y') : null;
+        if (!$this->end_date) return null;
+
+        $date = Carbon::parse($this->end_date)->format('M d, Y');
+        $time = $this->end_time ? Carbon::parse($this->end_time)->format('h:i A') : '';
+        
+        return trim("$date $time");
     }
 
     public function user()

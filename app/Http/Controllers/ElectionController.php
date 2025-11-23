@@ -9,13 +9,14 @@ class ElectionController extends Controller
 {
 
 
-
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|min:3|max:255',
             'start_date' => 'required|date',
+            'start_time' => 'required', // Add validation
             'end_date' => 'required|date|after_or_equal:start_date',
+            'end_time' => 'required',   // Add validation
         ]);
 
         $election = $request->user()->elections()->create($validated);
@@ -27,14 +28,18 @@ class ElectionController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:3|max:255',
             'start_date' => 'required|date',
+            'start_time' => 'required', // Add validation
             'end_date' => 'required|date|after_or_equal:start_date',
+            'end_time' => 'required',   // Add validation
             'status' => 'required|in:0,1,2,3'
         ]);
-
 
         $election->update($validated);
         return redirect()->back()->with('success', 'Election updated successfully!');
     }
+   
+
+    
 
 
     /**

@@ -15,8 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name');
+            
+            // Start fields (Order matters here: start_time will be created after start_date)
             $table->dateTime('start_date');
+            $table->time('start_time')->nullable(); 
+
+            // End fields
             $table->dateTime('end_date');
+            $table->time('end_time')->nullable();
+
             $table->tinyInteger('status')->nullable()->default(0);
             $table->boolean('is_set')->default(false);
             $table->timestamps();

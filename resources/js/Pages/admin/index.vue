@@ -118,7 +118,7 @@ const populateFormEdit = (student) => {
     form.middle_name = student.middle_name;
     form.last_name = student.last_name;
    
-    form.role = student.role;
+    // form.role = student.role;
     form.email = student.email;
     form.id_number = student.id_number;
 };
@@ -198,7 +198,7 @@ const resetPopulate = () => {
                             placeholder="Enter ID number"
                             :errors="form.errors.id_number"
                         />
-                        <InputFields
+                        <!-- <InputFields
                            :disabled="true"
                             v-model="form.role"
                             :label="'Role'"
@@ -208,7 +208,7 @@ const resetPopulate = () => {
                                 { id: 'student', name: 'Student' },
                             ]"
                             :errors="form.errors.role"
-                        />
+                        /> -->
                     </form>
                 </ModalAction>
             </div>
@@ -324,7 +324,7 @@ const resetPopulate = () => {
                                     placeholder="Enter ID number"
                                     :errors="form.errors.id_number"
                                 />
-                                <InputFields
+                                <!-- <InputFields
                                     v-model="form.role"
                                     :label="'Role'"
                                     type="select"
@@ -333,7 +333,7 @@ const resetPopulate = () => {
                                         { id: 'student', name: 'Student' },
                                     ]"
                                     :errors="form.errors.role"
-                                />
+                                /> -->
                             </div>
 
                             <div class="w-full flex justify-end gap-2 mt-2">
