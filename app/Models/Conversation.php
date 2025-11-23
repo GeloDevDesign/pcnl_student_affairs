@@ -15,12 +15,12 @@ class Conversation extends Model
 
     public function admin(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'admin_id');
+        return $this->belongsTo(User::class, 'admin_id')->withTrashed();
     }
 
     public function student(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(User::class, 'student_id')->withTrashed();
     }
 
     public function messages(): HasMany

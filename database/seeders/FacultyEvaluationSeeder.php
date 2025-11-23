@@ -86,8 +86,8 @@ class FacultyEvaluationSeeder extends Seeder
             'evaluation_cycle_id' => $cycle->id,
             'student_id' => $student->id,
             'instructor_id' => $instructor->id,
-            'comments_teacher' => 'Generated via Seeder',
-            'comments_subject' => 'Generated via Seeder',
+            'comments_teacher' => 'test comment for teachers',
+            'comments_subject' => 'test comment for subjects',
         ]);
 
         $answers = [];

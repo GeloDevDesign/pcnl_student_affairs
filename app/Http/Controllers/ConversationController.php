@@ -8,33 +8,47 @@ use App\Models\User;
 use App\Notifications\MessageReceivedNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class ConversationController extends Controller
 {
     /**
      * Display conversation list + available admins (1 page only)
      */
-    public function index(Request $request)
+ public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        // Get all conversations of current user
+        // 1. Get all conversations of the current user
         $conversations = Conversation::where('admin_id', $user->id)
             ->orWhere('student_id', $user->id)
             ->with(['admin', 'student', 'latestMessage'])
             ->get()
             ->map(function ($conversation) use ($user) {
+                
                 $otherUser = $conversation->getOtherParticipant($user->id);
 
+                // Check for soft-deleted user and exclude the conversation
+                if (is_null($otherUser)) {
+                    return null;
+                }
+
+                $isStudent = $otherUser->role === 'student';
+                
+                // Determine the profile photo path: null if student, actual path if admin
+                $profilePhotoPath = $isStudent ? null : $otherUser->profile_photo_path;
+
+                // Map the conversation data
                 return [
                     'id' => $conversation->id,
                     'other_user' => [
                         'id' => $otherUser->id,
                         // If other user is a student, show as Anonymous
-                        'name' => $otherUser->role === 'student' ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
+                        'name' => $isStudent ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
                         'email' => $otherUser->email,
                         'role' => $otherUser->role,
-                        'profile_photo_path' => $otherUser->profile_photo_path,
+                        // 🔑 CHANGE 1: Conditionally exclude profile photo path for students
+                        'profile_photo_path' => $profilePhotoPath, 
                     ],
                     'latest_message' => $conversation->latestMessage ? [
                         'body' => $conversation->latestMessage->body,
@@ -45,10 +59,11 @@ class ConversationController extends Controller
                     'updated_at' => $conversation->updated_at,
                 ];
             })
+            ->filter()
             ->sortByDesc('updated_at')
             ->values();
 
-        // For students: get admins they haven't started a conversation with
+        // 2. For students: get admins they haven't started a conversation with
         $availableAdmins = [];
         if ($user->role === 'student') {
             $existingAdminIds = Conversation::where('student_id', $user->id)
@@ -68,62 +83,77 @@ class ConversationController extends Controller
                 });
         }
 
-        // If conversation_id is provided, load that conversation's messages
+        // 3. Load active conversation messages if ID is provided
         $activeConversation = null;
         $messages = [];
 
         if ($request->has('conversation_id')) {
             $conversationId = $request->input('conversation_id');
-            $conversation = Conversation::find($conversationId);
+            
+            $conversation = Conversation::with(['admin', 'student'])->find($conversationId);
 
             if ($conversation &&
                 ($conversation->admin_id === $user->id || $conversation->student_id === $user->id)) {
 
-                // Mark messages as read
-                $conversation->messages()
-                    ->where('sender_id', '!=', $user->id)
-                    ->whereNull('read_at')
-                    ->update(['read_at' => now()]);
-
                 $otherUser = $conversation->getOtherParticipant($user->id);
 
-                $activeConversation = [
-                    'id' => $conversation->id,
-                    'other_user' => [
-                        'id' => $otherUser->id,
-                        // If other user is a student, show as Anonymous
-                        'name' => $otherUser->role === 'student' ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
-                        'email' => $otherUser->email,
-                        'role' => $otherUser->role,
-                        'profile_photo_path' => $otherUser->profile_photo_path,
-                    ],
-                ];
+                // Check: Ensure the other user is not null (i.e., not soft-deleted)
+                if ($otherUser) {
+                    // Mark messages as read
+                    $conversation->messages()
+                        ->where('sender_id', '!=', $user->id)
+                        ->whereNull('read_at')
+                        ->update(['read_at' => now()]);
+                        
+                    $isStudent = $otherUser->role === 'student';
 
-                $messages = $conversation->messages()
-                    ->with('sender')
-                    ->orderBy('created_at', 'asc')
-                    ->get()
-                    ->map(function ($message) use ($user) {
-                        return [
-                            'id' => $message->id,
-                            'body' => $message->body,
-                            'is_mine' => $message->sender_id === $user->id,
-                            'sender' => [
-                                'id' => $message->sender->id,
-                                // Show sender's name as Anonymous if they are a student
-                                'name' => $message->sender->role === 'student'
-                                    ? 'Anonymous'
-                                    : trim($message->sender->first_name.' '.$message->sender->last_name),
-                                'role' => $message->sender->role,
-                                'profile_photo_path' => $message->sender->profile_photo_path,
-                            ],
-                            'created_at' => $message->created_at,
-                            'read_at' => $message->read_at,
-                        ];
-                    });
+                    $activeConversation = [
+                        'id' => $conversation->id,
+                        'other_user' => [
+                            'id' => $otherUser->id,
+                            // If other user is a student, show as Anonymous
+                            'name' => $isStudent ? 'Anonymous' : trim($otherUser->first_name.' '.$otherUser->last_name),
+                            'email' => $otherUser->email,
+                            'role' => $otherUser->role,
+                            // 🔑 CHANGE 2: Conditionally exclude profile photo path for students
+                            'profile_photo_path' => $isStudent ? null : $otherUser->profile_photo_path,
+                        ],
+                    ];
+
+                    $messages = $conversation->messages()
+                        ->with('sender')
+                        ->orderBy('created_at', 'asc')
+                        ->get()
+                        ->map(function ($message) use ($user) {
+                            $senderExists = !is_null($message->sender);
+                            $isSenderStudent = $senderExists && $message->sender->role === 'student';
+
+                            return [
+                                'id' => $message->id,
+                                'body' => $message->body,
+                                'is_mine' => $message->sender_id === $user->id,
+                                'sender' => [
+                                    'id' => $senderExists ? $message->sender->id : null,
+                                    
+                                    // Handle sender's name
+                                    'name' => $senderExists
+                                        ? ($isSenderStudent ? 'Anonymous' : trim($message->sender->first_name.' '.$message->sender->last_name))
+                                        : '[Deleted User]',
+                                    
+                                    'role' => $senderExists ? $message->sender->role : 'deleted',
+                                    
+                                    // 🔑 Safety Check and Conditional exclusion: null if student, actual path otherwise
+                                    'profile_photo_path' => $senderExists && !$isSenderStudent ? $message->sender->profile_photo_path : null,
+                                ],
+                                'created_at' => $message->created_at,
+                                'read_at' => $message->read_at,
+                            ];
+                        });
+                }
             }
         }
 
+        // 4. Render the Inertia view
         return Inertia::render('concerns/index', [
             'conversations' => $conversations,
             'availableAdmins' => $availableAdmins,
@@ -132,6 +162,7 @@ class ConversationController extends Controller
             'pageTitle' => 'Concerns & Messages',
         ]);
     }
+
 
     /**
      * Create new conversation (students only)
