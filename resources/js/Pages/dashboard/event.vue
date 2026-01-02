@@ -127,7 +127,7 @@ const populateFormEdit = (entity) => {
                 <InputFields
                     v-model="form.description"
                     :label="'Description'"
-                    :type="'text'"
+                    :type="'textarea'"
                     :placeholder="'Description for event'"
                     :errors="form.errors.description"
                 />
@@ -227,7 +227,7 @@ const populateFormEdit = (entity) => {
                             <InputFields
                                 v-model="form.description"
                                 :label="'Description'"
-                                :type="'text'"
+                                :type="'textarea'"
                                 :placeholder="'Description for event'"
                                 :errors="form.errors.description"
                             />
