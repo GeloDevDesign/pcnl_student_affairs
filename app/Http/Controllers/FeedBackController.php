@@ -7,13 +7,14 @@ use App\Models\EvaluationAnswer;
 use App\Models\EvaluationCycle;
 use App\Models\Event;
 use App\Models\FeedBack;
+use App\Models\Form;
 use App\Models\Instructor;
+use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use App\Models\Subject;
-use App\Models\Form;
+
 class FeedBackController extends Controller
 {
     public function index(Request $request)
@@ -118,7 +119,7 @@ class FeedBackController extends Controller
                         'average_rating' => round($finalWeightedRating, 2),
                         'verbal_interpretation' => $this->getVerbalInterpretation($finalWeightedRating),
                         'comments' => $evaluations->map(fn ($e) => [
-                            'student_name' => $e->student->first_name . ' ' . $e->student->last_name ?? 'Unknown Student',
+                            'student_name' => $e->student->first_name.' '.$e->student->last_name ?? 'Unknown Student',
                             'teacher' => $e->comments_teacher,
                             'subject' => $e->comments_subject,
                         ])->filter(fn ($c) => ! empty($c['teacher']) || ! empty($c['subject']))->values(),
@@ -131,29 +132,86 @@ class FeedBackController extends Controller
                 'cycles' => $cycles,
                 'selected_cycle_id' => (int) $selectedCycleId,
                 'results' => $results,
+                'form_data' => $this->getEvaluationFormStructure()
             ];
         } else {
             // Student Logic: Instructor cards with subject list
             $evalInstructors = [];
+
             if ($activeCycle) {
+                // Inside FeedBackController.php -> index method -> Student Logic else block
                 $evalInstructors = Instructor::with('subjects')->get()->map(function ($instructor) use ($user, $activeCycle) {
-                    $isEvaluated = Evaluation::where('evaluation_cycle_id', $activeCycle->id)
+                    $evaluation = Evaluation::where('evaluation_cycle_id', $activeCycle->id)
                         ->where('student_id', $user->id)
                         ->where('instructor_id', $instructor->id)
-                        ->exists();
+                        ->first();
 
-                    return [
+                    if ($evaluation) {
+                        $answers = EvaluationAnswer::where('evaluation_id', $evaluation->id)
+                            ->pluck('rating', 'question_index')
+                            ->toArray();
+                    } else {
+                        $answers = [];
+                    }
+
+                    $data = [
                         'id' => $instructor->id,
                         'name' => $instructor->name,
                         'department' => $instructor->department_name,
-                        'is_evaluated' => $isEvaluated,
+                        'is_evaluated' => (bool) $evaluation, // Converts to true/false
                         'subjects' => $instructor->subjects->pluck('name')->take(2)->join(', '),
+                        'result' => null, // Default if no evaluation exists
                     ];
+
+                    if ($evaluation) {
+                        $evalIds = [$evaluation->id];
+
+                        // Fetch ratings: [question_index => rating_value]
+                        $answers = EvaluationAnswer::whereIn('evaluation_id', $evalIds)
+                            ->pluck('rating', 'question_index')
+                            ->toArray();
+
+                        $categories = [
+                            'personality' => ['range' => range(1, 11), 'weight' => 0.3],
+                            'mastery' => ['range' => range(12, 17), 'weight' => 0.4],
+                            'management' => ['range' => range(18, 25), 'weight' => 0.3],
+                        ];
+
+                        $scores = [];
+                        $total = 0;
+
+                        foreach ($categories as $key => $config) {
+                            $sum = EvaluationAnswer::whereIn('evaluation_id', $evalIds)
+                                ->whereIn('question_index', $config['range'])
+                                ->sum('rating');
+
+                            // Items count: Personality(11), Mastery(6), Management(8)
+                            $numItems = count($config['range']);
+
+                            // Calculate weighted score
+                            $avg = $sum / $numItems;
+                            $weighted = $avg * $config['weight'];
+
+                            $scores[$key] = round($weighted, 2);
+                            $total += $weighted;
+                        }
+
+                        $data['result'] = [
+                            'ratings' => $answers,
+                            'category_scores' => $scores,
+                            'average_rating' => round($total, 2),
+                            'verbal_interpretation' => $this->getVerbalInterpretation($total),
+                            'comments_teacher' => $evaluation->comments_teacher,
+                            'comments_subject' => $evaluation->comments_subject,
+                        ];
+                    }
+
+                    return $data;
                 });
             }
             $studentData = [
                 'instructors' => $evalInstructors,
-                'form_data' => $this->getEvaluationFormStructure(),
+               'form_data' => $this->getEvaluationFormStructure()
             ];
         }
 

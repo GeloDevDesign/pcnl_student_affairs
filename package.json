@@ -25,6 +25,7 @@
         "sweetalert": "^2.1.2",
         "sweetalert2": "^11.4.8",
         "vue-router": "^4.5.1",
+        "vue3-print-nb": "^0.1.4",
         "ziggy-js": "^2.6.0"
     }
 }
