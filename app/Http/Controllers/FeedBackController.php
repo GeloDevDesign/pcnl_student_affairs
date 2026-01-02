@@ -123,6 +123,7 @@ class FeedBackController extends Controller
                         'name' => $instructor->name,
                         'department' => $instructor->department_name,
                         'is_evaluated' => $isEvaluated,
+                        'subjects' => $instructor->subjects->pluck('name')->join(', ')
                     ];
                 });
             }
@@ -131,7 +132,7 @@ class FeedBackController extends Controller
                 'form_data' => $this->getEvaluationFormStructure()
             ];
         }
-
+        // dd($instructorsQuery->get()->toArray());
         return Inertia::render('evaluate/index', [
             'pageTitle' => 'PCNL - Evaluate',
             'currentFilter' => $request->filter ?? null,

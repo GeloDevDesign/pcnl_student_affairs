@@ -11,6 +11,7 @@ const isLoading = ref(false);
 const props = defineProps({
     active_cycle: Object, 
     admin_data: Object,   
+    instructors: Array,   
     student_data: Object  
 });
 
@@ -32,6 +33,7 @@ const openCommentsModal = (instructorName, comments) => {
     selectedInstructorName.value = instructorName;
     selectedComments.value = comments;
     commentsModalRef.value.showModal();
+    console.log(selectedInstructorName.value);
 };
 
 const createCycle = ({ closeModal }) => {
@@ -63,6 +65,7 @@ const evalForm = useForm({
 });
 
 const openForm = (inst) => {
+    console.log(inst);
     selectedInstructor.value = inst;
     evalForm.reset();
     evalForm.instructor_id = inst.id;
@@ -70,7 +73,9 @@ const openForm = (inst) => {
 };
 
 const closeForm = () => {
+     console.log(selectedInstructor.value);
     selectedInstructor.value = null;
+   
 };
 
 const submitEvaluation = () => {
@@ -82,7 +87,7 @@ const submitEvaluation = () => {
     }
 
     Swal.fire({
-        title: 'Submit Evaluation?',
+        title: 'Submit Evaluation? burat',
         text: "You cannot undo this action.",
         icon: 'warning',
         showCancelButton: true,
@@ -323,6 +328,7 @@ const submitEvaluation = () => {
                     <div>
                         <h2 class="font-bold text-xl text-gray-800">{{ selectedInstructor.name }}</h2>
                         <p class="text-xs text-gray-500 uppercase">{{ selectedInstructor.department }} Department</p>
+                        <div class="text-sm font-medium text-primary">Teaching: {{ selectedInstructor.subjects }}</div>
                     </div>
                     <button @click="closeForm" class="btn btn-sm btn-ghost">
                         Cancel
