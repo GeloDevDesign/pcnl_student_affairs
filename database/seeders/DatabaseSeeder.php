@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             CandidateSeeder::class,
             SubjectSeeder::class,
             FacultyEvaluationSeeder::class,
+    
+            EvaluationQuestionSeeder::class,
         ]);
     }
 }

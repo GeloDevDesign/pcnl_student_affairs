@@ -32,13 +32,13 @@ const props = defineProps({
     subjects: Array,
     instructors: Object,
     feedbacks: Object,
-    forms: Object, // This is for old forms logic if needed
+    forms: Object, // This is for old formaccs logic if needed
     currentFilter: String,
-    
+    questionnaire: Object,
     // --- NEW PROPS FOR EVALUATION ---
     active_cycle: Object,
     admin_data: Object,
-    student_data: Object
+    student_data: Object,
 });
 
 onMounted(() => {
@@ -65,7 +65,9 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                 </template>
             </Banner>
 
-            <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8">
+            <div
+                class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 pb-8"
+            >
                 <NavCard
                     :cardTitle="'EVENT FEEDBACKS'"
                     :cardDescription="'Event Feedbacks Review'"
@@ -73,18 +75,30 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
-                        <img src="/public/icons/announce.svg" alt="" class="w-16 h-16"/>
+                        <img
+                            src="/public/icons/announce.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
                     </template>
                 </NavCard>
 
                 <NavCard
                     :cardTitle="'INSTRUCTORS'"
-                    :cardDescription="$page.props.auth.user.role === 'admin' ? 'Evaluation Review' : 'List of Instructors'"
+                    :cardDescription="
+                        $page.props.auth.user.role === 'admin'
+                            ? 'Evaluation Review'
+                            : 'List of Instructors'
+                    "
                     :cardValue="'instructors'"
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
-                        <img src="/public/icons/instructor.svg" alt="" class="w-16 h-16"/>
+                        <img
+                            src="/public/icons/instructor.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
                     </template>
                 </NavCard>
 
@@ -95,7 +109,11 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                     @navigate-action="pageStore.navigatePage"
                 >
                     <template #icon>
-                        <img src="/public/icons/form.svg" alt="" class="w-16 h-16"/>
+                        <img
+                            src="/public/icons/form.svg"
+                            alt=""
+                            class="w-16 h-16"
+                        />
                     </template>
                 </NavCard>
             </div>
@@ -117,6 +135,7 @@ const breadCrumbPages = ["Feedbacks", "Instructors"];
                 :active_cycle="active_cycle"
                 :admin_data="admin_data"
                 :student_data="student_data"
+                :questionnaire="questionnaire"
             />
         </div>
     </Layout>

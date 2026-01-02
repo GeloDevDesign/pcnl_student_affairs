@@ -204,4 +204,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/evaluate', [FeedBackController::class, 'index'])->name('evaluations.index');
     Route::post('/evaluate/store', [FeedBackController::class, 'storeEvaluation'])->name('evaluations.store');
     Route::post('/evaluate/cycles', [FeedBackController::class, 'storeCycle'])->name('evaluations.cycles.store');
+    Route::post('/evaluate/questions', [FeedBackController::class, 'storeQuestion'])->name('evaluations.questions.store');
+    Route::patch('/evaluate/questions/{question}', [FeedBackController::class, 'updateQuestion'])->name('evaluations.questions.update');
+    Route::delete('/evaluate/questions/{question}', [FeedBackController::class, 'destroyQuestion'])->name('evaluations.questions.destroy');
 });
