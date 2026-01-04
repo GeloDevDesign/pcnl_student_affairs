@@ -16,6 +16,8 @@ return new class extends Migration
             // $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name');
             $table->string('department');
+            $table->string('start_time')->default('08:00:00');
+            $table->string('end_time')->default('10:00:00');
             $table->timestamps();
         });
     }

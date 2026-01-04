@@ -17,15 +17,16 @@ const dialogRef = ref(null);
 
 const form = useForm({
     name: "",
+    start_time: "",
+    end_time: "",
     department: "",
     subject_ids: [], // store array of subject IDs
 });
 
 const applyDepartmentFilter = (departmentValue) => {
-    
     router.get(
         "/evaluate",
-        { filter: departmentValue, page : "instructors" , search : "1"},
+        { filter: departmentValue, page: "instructors", search: "1" },
         {
             preserveState: true,
             preserveScroll: true,
@@ -38,7 +39,7 @@ const props = defineProps({
     instructors: Object,
     subjects: Array,
     errors: Object,
-    currentFilter: String
+    currentFilter: String,
 });
 
 const resetForm = () => {
@@ -52,6 +53,8 @@ const populateFormEdit = (instructor) => {
     selectedItem.value = instructor;
     form.name = instructor.name;
     form.department = instructor.department;
+    form.start_time = instructor.start_time;
+    form.end_time = instructor.end_time;
     form.subject_ids = instructor.subjects.map((s) => s.id);
     console.log(form.subject_ids);
     dialogRef.value.showModal();
@@ -110,26 +113,23 @@ const handleDelete = async (entity) => {
         onError: () => (isLoading.value = false),
     });
 };
-
-
 </script>
 
 <template>
     <div class="w-full flex justify-end mb-4 gap-2">
-         <Filter
-                    :buttonName="'Filter Department'"
-                    
-                    :filterItems="[
-                        { value: 1, name: 'BSA' },
-                        { value: 2, name: 'BSBA' },
-                        { value: 3, name: 'BSCRIM' },
-                        { value: 4, name: 'BSIT' },
-                        { value: 5, name: 'BSCE' },
-                        { value: 6, name: 'BEE' },
-                    ]"
-                    :selected="currentFilter"
-                    @filter="applyDepartmentFilter"
-                />
+        <Filter
+            :buttonName="'Filter Department'"
+            :filterItems="[
+                { value: 1, name: 'BSA' },
+                { value: 2, name: 'BSBA' },
+                { value: 3, name: 'BSCRIM' },
+                { value: 4, name: 'BSIT' },
+                { value: 5, name: 'BSCE' },
+                { value: 6, name: 'BEE' },
+            ]"
+            :selected="currentFilter"
+            @filter="applyDepartmentFilter"
+        />
         <ModalAction
             v-if="$page.props.auth.user.role === 'admin'"
             :isLoading="isLoading"
@@ -193,6 +193,22 @@ const handleDelete = async (entity) => {
                         {{ form.errors.subject_ids }}
                     </p>
                 </fieldset>
+                <div class="flex gap-4 items-center">
+                    <InputFields
+                        v-model="form.start_time"
+                        :label="'Start Time'"
+                        type="time"
+                        placeholder="Start Time of instructor"
+                        :errors="form.errors.start_time"
+                    />
+                    <InputFields
+                        v-model="form.end_time"
+                        :label="'End Time'"
+                        type="time"
+                        placeholder="End Time of instructor"
+                        :errors="form.errors.end_time"
+                    />
+                </div>
             </form>
         </ModalAction>
     </div>
@@ -205,6 +221,7 @@ const handleDelete = async (entity) => {
                     <th>Name</th>
                     <th>Department</th>
                     <th>Subjects</th>
+                    <th>Time</th>
                     <th v-if="$page.props.auth.user.role === 'admin'">
                         Action
                     </th>
@@ -230,6 +247,7 @@ const handleDelete = async (entity) => {
                             {{ subject?.name }}
                         </span>
                     </td>
+                    <td>{{ ins.start_time }} - {{ ins.end_time }}</td>
                     <td
                         class="space-x-2"
                         v-if="$page.props.auth.user.role === 'admin'"
@@ -312,6 +330,22 @@ const handleDelete = async (entity) => {
                         {{ form.errors.subject_ids }}
                     </p>
                 </fieldset>
+                <div class="flex gap-4 items-center">
+                    <InputFields
+                        v-model="form.start_time"
+                        :label="'Start Time'"
+                        type="time"
+                        placeholder="Start Time of instructor"
+                        :errors="form.errors.start_time"
+                    />
+                    <InputFields
+                        v-model="form.end_time"
+                        :label="'End Time'"
+                        type="time"
+                        placeholder="End Time of instructor"
+                        :errors="form.errors.end_time"
+                    />
+                </div>
 
                 <div class="flex justify-end gap-2 mt-4">
                     <button

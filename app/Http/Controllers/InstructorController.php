@@ -20,6 +20,8 @@ class InstructorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|min:2|max:255|unique:instructors,name',
+            'start_time' => 'required', // Add validation
+            'end_time' => 'required|date|after_or_equal:start_time',   // Add validation
             'department' => ['nullable', 'integer', Rule::in(DepartmentList::ids())],
             'subject_ids' => ['required', 'array'],
             'subject_ids.*' => ['integer', 'exists:subjects,id'],
@@ -27,6 +29,8 @@ class InstructorController extends Controller
 
         // Create instructor
         $instructor = $request->user()->instructors()->create([
+            'start_time' => $validated['start_time'], // Add validation
+            'end_time' => $validated['end_time'],   // Add validation
             'name' => $validated['name'],
             'department' => $validated['department'] ?? null,
         ]);
@@ -53,11 +57,15 @@ class InstructorController extends Controller
             'department' => ['nullable', 'integer', Rule::in(DepartmentList::ids())],
             'subject_ids' => ['required', 'array'],
             'subject_ids.*' => ['required','integer', 'exists:subjects,id'],
+            'start_time' => 'required', // Add validation
+            'end_time' => 'required|after_or_equal:start_time',   // Add validation
         ]);
 
         // Update instructor info
         $instructor->update([
             'name' => $validated['name'],
+            'start_time' => $validated['start_time'], // Add validation
+            'end_time' => $validated['end_time'],   // Add validation
             'department' => $validated['department'] ?? null,
         ]);
 

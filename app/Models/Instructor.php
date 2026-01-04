@@ -10,6 +10,8 @@ class Instructor extends Model
         'user_id',
         'name',
         'department',
+        'start_time',
+        'end_time',
     ];
 
     protected $appends = ['department_name'];

@@ -32,7 +32,9 @@ class FacultyEvaluationSeeder extends Seeder
         foreach ($instructorsData as $data) {
             $instructors[] = Instructor::firstOrCreate(
                 ['name' => $data['name']], 
-                ['department' => $data['department']]
+                ['department' => $data['department']],
+                ['start_time' => '08:00:00'],
+                ['end_time' => '10:00:00'],
             );
         }
 

@@ -154,6 +154,7 @@ const openForm = (inst) => {
     selectedInstructor.value = inst;
     evalForm.reset();
     evalForm.instructor_id = inst.id;
+    console.log(inst);
     window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
@@ -493,9 +494,17 @@ const submitEvaluation = () => {
                 <div
                     class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg sticky top-0 z-20 border shadow-sm"
                 >
-                    <h2 class="font-bold text-xl">
+                   <div>
+                     <h2 class="font-bold text-xl">
                         {{ selectedInstructor.name }}
                     </h2>
+                    <p class="text-sm opacity-60">
+                        Subjects: {{ selectedInstructor.subjects}} 
+                    </p>
+                     <p class="text-sm opacity-60">
+                        Time: {{ selectedInstructor.start_time }} - {{ selectedInstructor.end_time }}
+                    </p>
+                   </div>
                     <button @click="closeForm" class="btn btn-sm btn-ghost">
                         Cancel
                     </button>
